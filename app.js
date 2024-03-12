@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const pageRouter = require('./routes/routes');
-// const route = require('./routes/routes');
 
 app.use(express.static(__dirname + "/public"));
 
