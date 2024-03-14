@@ -1,0 +1,358 @@
+<%- include ('partial/header') %>
+
+<!-- Main Container -->
+<main id="main-container">
+  <!-- <div class="bg-body-light">
+          <div class="content content-full" >
+            <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center">
+              <h1 class="flex-grow-1 fs-6 fw-normal my-3 my-sm-3">Agency</h1>
+              <nav class="flex-shrink-0 my-2 my-sm-0 ms-sm-3" aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item flex-grow-1 fs-6 fw-normal my-3 my-sm-3">Accounts</li>
+                  <li class="breadcrumb-item active flex-grow-1 fs-6 fw-normal my-3 my-sm-3"" aria-current="page">Agency</li>
+                </ol>
+              </nav>
+            </div>
+          </div>
+        </div>         -->
+  <!-- Page Content -->
+  <div class="content">
+    <!-- Dynamic Table Responsive -->
+    <div class="block block-rounded">
+      <div class="block-header block-header-default">
+        <h3 class="block-title">
+          <small>Accounts / Agency</small>
+        </h3>
+        <nav class="flex-shrink-0 my-2 my-sm-0 ms-sm-3" aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create-user">
+              <i class="fa fa-plus" aria-hidden="true"></i> New Record
+            </button>
+          </ol>
+        </nav>
+      </div>
+      <div class="block-content block-content-full">
+        <table class="table table-bordered table-vcenter js-dataTable-responsive">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 20px">
+                <input type="checkbox" name="" id="" />
+              </th>
+              <th>Name</th>
+              <th class="d-none d-sm-table-cell" style="width: 30%">Email</th>
+              <th class="d-none d-sm-table-cell" style="width: 15%">Access</th>
+              <th style="width: 15%">Registered</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Thomas Riley</td>
+              <td class="d-none d-sm-table-cell">
+                client1<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">8 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Lori Moore</td>
+              <td class="d-none d-sm-table-cell">
+                client2<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">2 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Amber Harvey</td>
+              <td class="d-none d-sm-table-cell">
+                client3<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-warning">Trial</span>
+              </td>
+              <td>
+                <em class="text-muted">6 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">David Fuller</td>
+              <td class="d-none d-sm-table-cell">
+                client4<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-warning">Trial</span>
+              </td>
+              <td>
+                <em class="text-muted">10 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Megan Fuller</td>
+              <td class="d-none d-sm-table-cell">
+                client5<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-warning">Trial</span>
+              </td>
+              <td>
+                <em class="text-muted">5 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Danielle Jones</td>
+              <td class="d-none d-sm-table-cell">
+                client6<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-success">VIP</span>
+              </td>
+              <td>
+                <em class="text-muted">3 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Laura Carr</td>
+              <td class="d-none d-sm-table-cell">
+                client7<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-success">VIP</span>
+              </td>
+              <td>
+                <em class="text-muted">6 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Helen Jacobs</td>
+              <td class="d-none d-sm-table-cell">
+                client8<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-success">VIP</span>
+              </td>
+              <td>
+                <em class="text-muted">10 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Alice Moore</td>
+              <td class="d-none d-sm-table-cell">
+                client9<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-danger">Disabled</span>
+              </td>
+              <td>
+                <em class="text-muted">7 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Jack Greene</td>
+              <td class="d-none d-sm-table-cell">
+                client10<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">2 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Brian Cruz</td>
+              <td class="d-none d-sm-table-cell">
+                client11<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-success">VIP</span>
+              </td>
+              <td>
+                <em class="text-muted">8 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Jeffrey Shaw</td>
+              <td class="d-none d-sm-table-cell">
+                client12<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-primary">Personal</span>
+              </td>
+              <td>
+                <em class="text-muted">8 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Lisa Jenkins</td>
+              <td class="d-none d-sm-table-cell">
+                client13<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">2 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Carl Wells</td>
+              <td class="d-none d-sm-table-cell">
+                client14<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">10 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">David Fuller</td>
+              <td class="d-none d-sm-table-cell">
+                client15<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">4 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Betty Kelley</td>
+              <td class="d-none d-sm-table-cell">
+                client16<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-info">Business</span>
+              </td>
+              <td>
+                <em class="text-muted">7 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Alice Moore</td>
+              <td class="d-none d-sm-table-cell">
+                client17<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-danger">Disabled</span>
+              </td>
+              <td>
+                <em class="text-muted">5 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Jose Mills</td>
+              <td class="d-none d-sm-table-cell">
+                client18<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-primary">Personal</span>
+              </td>
+              <td>
+                <em class="text-muted">9 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Lori Moore</td>
+              <td class="d-none d-sm-table-cell">
+                client19<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-warning">Trial</span>
+              </td>
+              <td>
+                <em class="text-muted">3 days ago</em>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-center">
+                <input type="checkbox" name="" id="" />
+              </td>
+              <td class="fw-normal">Ryan Flores</td>
+              <td class="d-none d-sm-table-cell">
+                client20<em class="text-muted">@example.com</em>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <span class="badge bg-warning">Trial</span>
+              </td>
+              <td>
+                <em class="text-muted">5 days ago</em>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Dynamic Table Responsive -->
+  </div>
+  <!-- END Page Content -->
+</main>
+<!-- END Main Container -->
+
+<%- include ('partial/footer') %>

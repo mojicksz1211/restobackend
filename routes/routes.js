@@ -3,19 +3,27 @@ const pageRouter = express.Router();
 const path = require('path');
 
 
-module.exports = function(pageRouter) {
-    pageRouter.get ('/', (req, res, next) => {
-        res.render('login');
-    })
+// module.exports = function(pageRouter) {
+//     pageRouter.use((req, res, next) => {
+//         const allowUrls = ['/login'];
+//         if (allowUrls.indexOf(req.path) !==1) {
+//             return res.redirect('/');
+//         }
+//         next();
+//     })
 
-    pageRouter.get('/login', (req, res, next) => {
-        res.render('login');
-    })
+//     pageRouter.get ('/', (req, res, next) => {
+//         res.render('login');
+//     })
 
-    pageRouter.get("/dashboard", (req, res, next) => {
-      res.render("login");
-    });  
-}
+//     pageRouter.get('/login', (req, res, next) => {
+//         res.render('login');
+//     })
+
+//     pageRouter.get("/dashboard", (req, res, next) => {
+//       res.render("login");
+//     });  
+// }
 
 
 
@@ -35,5 +43,14 @@ pageRouter.get("/dashboard", function (req, res) {
 pageRouter.get("/agency", function (req, res) {
   res.render("agency");
 });
+
+pageRouter.get("/agent", function (req, res) {
+  res.render("agent");
+});
+
+pageRouter.get("/account", function (req, res) {
+  res.render("account");
+});
+
 
 module.exports = pageRouter;
