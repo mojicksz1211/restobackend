@@ -30845,6 +30845,10 @@ div.dataTables_wrapper div.dataTables_paginate ul.pagination {
 
 /* custome CSS */
 
+.bg-info {
+  font-size: 15px !important;
+}
+
 .flex-sm-row {
     height: 9px !important;
 }
@@ -30857,7 +30861,11 @@ div.dataTables_wrapper div.dataTables_paginate ul.pagination {
 }
 
 .table {
-  font-size: 15px;
+  font-size: 14px;
+}
+
+th {
+  color: #808080;
 }
 
 thead th:first-child {
@@ -30872,12 +30880,8 @@ tbody {
   border-bottom-left-radius: 5px;
 }
 
-.tbody td:last-child{
-  border-right: 1px !important;
-}
-
-
 td {
+    color: #808080;
     padding-top: 9px !important;
     padding-bottom: 9px !important;
 }
