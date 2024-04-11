@@ -12,7 +12,7 @@
         </h3>
         <nav class="flex-shrink-0 my-2 my-sm-0 ms-sm-3" aria-label="breadcrumb">
           <ol class="breadcrumb">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-new-agency">
+            <button type="button" class="btn btn-primary" onclick="add_user_modal()">
               <i class="fa fa-plus" aria-hidden="true"></i> New Record
             </button>
           </ol>
@@ -20,7 +20,7 @@
       </div>
       <div class="block-content block-content-full">
         <!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-        <table id="#dataTable" class="table table-bordered table-vcenter js-dataTable-responsive">
+        <table id="usersTable" class="table table-bordered table-vcenter js-dataTable-responsive">
           <thead>
             <tr>
               <th class="d-none d-sm-table-cell" >LAST NAME</th>
@@ -32,37 +32,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td class="fw-normal">RILEY</td>
-              <td class="d-none d-sm-table-cell">THOMAS</td>
-              <td class="d-none d-sm-table-cell">rthomas</td>
-              <td class="d-none d-md-table-cell text-center">
-                <span class="badge bg-info">Administrator</span>
-              </td>
-              <td class="d-none d-md-table-cell text-center">
-                <span class="badge bg-info">Active</span>
-              </td>              
-              <td class="d-none d-sm-table-cell text-center">
-                <div class="btn-group">
-
-                  <div class="dropdown">
-                    <button type="button" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-ellipsis-vertical"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" >
-                      <a class="dropdown-item" href="javascript:void(0)">Details</a>
-                      <a class="dropdown-item" href="javascript:void(0)"> Archive</a>
-                      <div role="separator" class="dropdown-divider"></div>
-                      <a class="dropdown-item" href="javascript:void(0)">Delete</a>
-                    </div>
-                  </div>
-                  <button type="button" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
-                    data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
-                    <i class="fa fa-pencil-alt"></i>
-                  </button>
-
-                </div>
-              </td>              
-            </tr>
+            
           </tbody>
         </table>
       </div>
@@ -74,9 +44,11 @@
 <!-- END Main Container -->
 
 <%- include ('../modals/user_accounts/new_user_account'); %>
+<%- include ('../modals/user_accounts/edit_user_account'); %>
 
 <%- include ('../partial/footer'); %>
 
 <script src="/assets/js/datatables/manage_users_tables_datatable.min.js"></script>
+<script src="/assets/js/functions/manage_user.js"></script>
 
 <%- include ('../partial/ending'); %>

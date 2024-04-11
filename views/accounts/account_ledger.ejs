@@ -8,11 +8,11 @@
     <div class="block block-rounded">
       <div class="block-header block-header-default">
         <h3 class="block-title">
-          <small>Accounts / Agent</small>
+          <small>Accounts / Account Ledger</small>
         </h3>
         <nav class="flex-shrink-0 my-2 my-sm-0 ms-sm-3" aria-label="breadcrumb">
           <ol class="breadcrumb">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-new-account">
+            <button type="button" class="btn btn-primary" onclick="addAccount()">
               <i class="fa fa-plus" aria-hidden="true"></i> New Record
             </button>
           </ol>
@@ -20,57 +20,20 @@
       </div>
       <div class="block-content block-content-full">
         <!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-        <table id="#dataTable" class="table table-bordered table-vcenter js-dataTable-responsive">
+        <table id="account-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
           <thead>
             <tr>
               <th class="d-none d-sm-table-cell" >ACCOUNT CODE</th>
               <th class="d-none d-sm-table-cell">AGENCY LINE</th>
               <th class="d-none d-sm-table-cell">AGENT CODE</th>
               <th class="d-none d-sm-table-cell">NAME</th>
-              <th class="d-none d-sm-table-cell">CONTACT No</th>
+              <th class="d-none d-sm-table-cell">MEMBERSHIP No</th>
               <th class="text-center" style="width: 150px;">STATUS</th>
               <th class="text-center" style="width: 100px;">ACTION</th>       
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td class="fw-normal">Thomas Riley</td>
-              <td class="d-none d-sm-table-cell">
-                client1<em class="text-muted">@example.com</em>
-              </td>
-              <td class="d-none d-sm-table-cell">
-                client1<em class="text-muted">@example.com</em>
-              </td>
-              <td class="d-none d-sm-table-cell">
-                client1<em class="text-muted">@example.com</em>
-              </td>
-              <td class="d-none d-sm-table-cell">
-                client1<em class="text-muted">@example.com</em>
-              </td>  
-              <td class="d-none d-md-table-cell text-center">
-                <span class="badge bg-info">Business</span>
-              </td>                                        
-              <td class="d-none d-sm-table-cell text-center">
-                <div class="btn-group">
-
-                  <div class="dropdown">
-                    <button type="button" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-ellipsis-vertical"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" >
-                      <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#modal-account-details">Details</a>
-                      <a class="dropdown-item" href="javascript:void(0)"> Archive</a>
-                      <div role="separator" class="dropdown-divider"></div>
-                      <a class="dropdown-item" href="javascript:void(0)">Delete</a>
-                    </div>
-                  </div>
-                  <button type="button" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
-                    data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
-                    <i class="fa fa-pencil-alt"></i>
-                  </button>
-
-                </div>
-              </td>              
-            </tr>         
+                   
 
           </tbody>
         </table>
@@ -83,7 +46,7 @@
 <!-- END Main Container -->
 
 <%- include ('../modals/accounts/new_account') %>
-
+<%- include ('../modals/accounts/edit_account') %>
 <%- include ('../modals/accounts/account_details'); %>
 
 <%- include ('../partial/footer') %>
@@ -91,5 +54,6 @@
 <!-- <script src="/assets/js/datatables/account_ledger_tables_datatables.min.js"></script> -->
 
 <script src="/assets/js/datatables/account_details_tables_datatables.min.js"></script>
+<script src="/assets/js/functions/account.js"></script>
 
 <%- include ('../partial/ending') %>

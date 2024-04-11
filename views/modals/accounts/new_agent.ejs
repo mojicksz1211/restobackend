@@ -1,6 +1,6 @@
 <div
   class="modal fade"
-  id="modal-new-agency"
+  id="modal-new-agent"
   role="dialog"
   aria-labelledby="modal-default-popout"
   aria-hidden="true"
@@ -23,40 +23,14 @@
             </button>
           </div>
         </div>
+        <form id="add_new_agent">
         <div class="block-content">
           <div class="row mb-2">
             <div class="col-sm-12">
-              <input
-                type="text"
-                class="form-control"
-                name="txtAccountCode"
-                placeholder="Account Code"
-                disabled
-              />
-            </div>
-          </div>
-          <div class="row mb-2">
-            <div class="col-sm-12">
-              <select
-                class="js-select2 form-select"
-                id="val-select2"
-                name="val-select2"
-                style="width: 100%"
-                data-placeholder="Agency Code">
-                <option></option>
-                <!-- Required for data-placeholder attribute to work with Select2 plugin -->
-                <option value="html">HTML</option>
-                <option value="css">CSS</option>
-                <option value="javascript">JavaScript</option>
-                <option value="angular">Angular</option>
-                <option value="react">React</option>
-                <option value="vuejs">Vue.js</option>
-                <option value="ruby">Ruby</option>
-                <option value="php">PHP</option>
-                <option value="asp">ASP.NET</option>
-                <option value="python">Python</option>
-                <option value="mysql">MySQL</option>
-              </select>
+                <select class="select2 form-select" id="agency" name="txtAgencyLine" style="width: 100%;"
+                    data-placeholder="Agency Line">
+                    <option></option>
+                </select>
             </div>
           </div>
           
@@ -65,8 +39,8 @@
               <input
                 type="text"
                 class="form-control"
-                name="txtAgencyCode"
-                placeholder="Agency Code"
+                name="txtAgenctCode"
+                placeholder="Agenct Code"
               />
             </div>
           </div>
@@ -117,7 +91,7 @@
         </div>
         <div class="block-content block-content-full text-end bg-body">
           <button
-            type="button"
+            type="submit"
             class="btn btn-sm btn-primary"
             data-bs-dismiss="modal"
           >
@@ -131,6 +105,7 @@
             Close
           </button>
         </div>
+      </form>
       </div>
     </div>
   </div>
