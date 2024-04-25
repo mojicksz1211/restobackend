@@ -45,6 +45,8 @@ pageRouter.get("/account_ledger", function (req, res) {
   res.render("accounts/account_ledger");
 });
 
+
+//=============== JUNKET =============
 pageRouter.get("/capital", function (req, res) {
   res.render("junket/capital");
 });
@@ -57,7 +59,15 @@ pageRouter.get("/credit", function (req, res) {
   res.render("junket/credit");
 });
 
+pageRouter.get("/concierge", function (req, res) {
+  res.render("junket/concierge");
+});
 
+pageRouter.get("/main_cage", function (req, res) {
+  res.render("junket/main_cage");
+});
+
+//========== USER ACCOUNTS ================
 pageRouter.get("/user_roles", function (req, res) {
   res.render("user_accounts/user_roles");
 });
@@ -65,6 +75,13 @@ pageRouter.get("/user_roles", function (req, res) {
 pageRouter.get("/manage_users", function (req, res) {
   res.render("user_accounts/manage_users");
 });
+
+
+//============= POP UPS ====================
+pageRouter.get("/cage_category", function (req, res) {
+  res.render("popups/cage_category");
+});
+
 
 //Add User Role
 pageRouter.post('/add_user_role', (req, res) => {
@@ -417,5 +434,35 @@ pageRouter.put('/account/remove/:id', (req, res) => {
 });
 
 
+// ================================================= POP UPS ===================================================
+
+// ================== ADD CAGE CATEGORY ========================
+
+pageRouter.post('/add_cage_category', (req, res) => {
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO cage_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCategory, 1, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Cage Category', err);
+      res.status(500).send('Error inserting Cage Category');
+      return;
+    }
+    res.redirect('/cage_category');
+  });
+});
+
+// ================= GET CAGE CATEGORY ==========================
+pageRouter.get('/cage_category_data', (res, req) => {
+  connection.query('SELECT * FROM cage_category WHERE cage_category.ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
 
 module.exports = pageRouter;
