@@ -11,11 +11,11 @@ const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const connection=mysql.createConnection({
-  host:'localhost',
-  user:'root',
-  password:'',
-  database:'cagex'
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'cagex'
 });
 
 pageRouter.use(session({
@@ -63,6 +63,32 @@ pageRouter.get("/agent", checkSession, function (req, res) {
 
 pageRouter.get("/account_ledger", checkSession, function (req, res) {
   res.render("accounts/account_ledger", sessions(req));
+});
+
+//=============== JUNKET =============
+pageRouter.get("/capital", function (req, res) {
+  res.render("junket/capital");
+});
+
+pageRouter.get("/house_expense", function (req, res) {
+  res.render("junket/house_expense");
+});
+
+pageRouter.get("/credit", function (req, res) {
+  res.render("junket/credit");
+});
+
+pageRouter.get("/concierge", function (req, res) {
+  res.render("junket/concierge");
+});
+
+pageRouter.get("/main_cage", function (req, res) {
+  res.render("junket/main_cage");
+});
+
+//========== USER ACCOUNTS ================
+pageRouter.get("/user_roles", function (req, res) {
+  res.render("user_accounts/user_roles");
 });
 
 pageRouter.get("/user_roles", checkSession, function (req, res) {
@@ -123,9 +149,15 @@ pageRouter.get('/logout', (req, res) => {
 });
 
 
+//============= POP UPS ====================
+pageRouter.get("/cage_category", function (req, res) {
+  res.render("popups/cage_category");
+});
+
+
 //Add User Role
 pageRouter.post('/add_user_role', (req, res) => {
-  const {role}  = req.body;
+  const { role } = req.body;
   let date_now = new Date();
 
   const query = `INSERT INTO user_role (ROLE, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
@@ -135,7 +167,7 @@ pageRouter.post('/add_user_role', (req, res) => {
       res.status(500).send('Error inserting user');
       return;
     }
-    
+
     res.redirect('/user_roles');
   });
 });
@@ -155,7 +187,7 @@ pageRouter.get('/user_role_data', (req, res) => {
 // UPDATE USER ROLE
 pageRouter.put('/user_role/:id', (req, res) => {
   const id = parseInt(req.params.id);
-  const {role}  = req.body;
+  const { role } = req.body;
   let date_now = new Date();
 
   const query = `UPDATE user_role SET ROLE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
@@ -187,7 +219,6 @@ pageRouter.put('/user_role/remove/:id', (req, res) => {
   });
 });
 
-
 //Get Users
 pageRouter.get('/users', (req, res) => {
   connection.query('SELECT *, user_role.ROLE AS role, user_info.IDNo AS user_id FROM user_info JOIN user_role ON user_role.IDno = user_info.PERMISSIONS WHERE user_info.ACTIVE = 1', (error, results, fields) => {
@@ -203,13 +234,13 @@ pageRouter.get('/users', (req, res) => {
 
 //Add User
 pageRouter.post('/add_user', (req, res) => {
-  const {txtFirstName, txtLastName, txtUserName, txtPassword, txtPassword2, user_role, salt}  = req.body;
+  const { txtFirstName, txtLastName, txtUserName, txtPassword, txtPassword2, user_role, salt } = req.body;
   let date_now = new Date();
 
-  if(txtPassword != txtPassword2) {
-      res.status(500).json({ error: 'password' });
+  if (txtPassword != txtPassword2) {
+    res.status(500).json({ error: 'password' });
   } else {
-    const generated_pw = generateMD5(salt+txtPassword);
+    const generated_pw = generateMD5(salt + txtPassword);
     const query = `INSERT INTO user_info (FIRSTNAME, LASTNAME, USERNAME, PASSWORD, SALT, PERMISSIONS, LAST_LOGIN, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     connection.query(query, [txtFirstName,txtLastName,txtUserName, generated_pw, salt, user_role, date_now, req.session.user_id , date_now], (err, result) => {
       if (err) {
@@ -217,7 +248,7 @@ pageRouter.post('/add_user', (req, res) => {
         res.status(500).send('Error inserting user');
         return;
       }
-      
+
       res.redirect('/users');
     });
   }
@@ -226,7 +257,7 @@ pageRouter.post('/add_user', (req, res) => {
 // UPDATE USER
 pageRouter.put('/user/:id', (req, res) => {
   const id = parseInt(req.params.id);
-  const {txtFirstName, txtLastName, txtUserName, user_role}  = req.body;
+  const { txtFirstName, txtLastName, txtUserName, user_role } = req.body;
   let date_now = new Date();
 
   const query = `UPDATE user_info SET FIRSTNAME = ?, LASTNAME = ?, USERNAME = ?, PERMISSIONS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
@@ -260,7 +291,7 @@ pageRouter.put('/user/remove/:id', (req, res) => {
 
 // ADD AGENCY
 pageRouter.post('/add_agency', (req, res) => {
-  const {txtAgencyCode, txtAgency}  = req.body;
+  const { txtAgencyCode, txtAgency } = req.body;
   let date_now = new Date();
 
   const query = `INSERT INTO agency (CODE, AGENCY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?)`;
@@ -270,7 +301,7 @@ pageRouter.post('/add_agency', (req, res) => {
       res.status(500).send('Error inserting agency');
       return;
     }
-    
+
     res.redirect('/agency');
   });
 });
@@ -290,7 +321,7 @@ pageRouter.get('/agency_data', (req, res) => {
 // EDIT AGENCY
 pageRouter.put('/agency/:id', (req, res) => {
   const id = parseInt(req.params.id);
-  const {txtAgencyCode,  txtAgency}  = req.body;
+  const { txtAgencyCode, txtAgency } = req.body;
   let date_now = new Date();
 
   const query = `UPDATE agency SET CODE = ?, AGENCY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
@@ -323,7 +354,7 @@ pageRouter.put('/agency/remove/:id', (req, res) => {
 
 // ADD AGENT
 pageRouter.post('/add_agent', (req, res) => {
-  const {txtAgencyLine, txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact}  = req.body;
+  const { txtAgencyLine, txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact } = req.body;
   let date_now = new Date();
 
   const agency = txtAgencyLine.split('-');
@@ -334,7 +365,7 @@ pageRouter.post('/add_agent', (req, res) => {
       res.status(500).send('Error inserting agent');
       return;
     }
-    
+
     res.redirect('/agent');
   });
 });
@@ -355,7 +386,7 @@ pageRouter.get('/agent_data', (req, res) => {
 pageRouter.get('/agent_data/:id', (req, res) => {
   const id = parseInt(req.params.id);
 
-  connection.query('SELECT CONCAT_WS(" ", FIRSTNAME,  MIDDLENAME, LASTNAME) AS agent_name, agent.IDNo AS agent_id, agency.AGENCY AS agency, agency.IDNo AS agency_id FROM agent JOIN agency ON agent.AGENCY = agency.IDNo WHERE agent.IDNo = '+id+' AND agent.ACTIVE = 1', (error, results, fields) => {
+  connection.query('SELECT CONCAT_WS(" ", FIRSTNAME,  MIDDLENAME, LASTNAME) AS agent_name, agent.IDNo AS agent_id, agency.AGENCY AS agency, agency.IDNo AS agency_id FROM agent JOIN agency ON agent.AGENCY = agency.IDNo WHERE agent.IDNo = ' + id + ' AND agent.ACTIVE = 1', (error, results, fields) => {
     if (error) {
       console.error('Error fetching data:', error);
       res.status(500).send('Error fetching data');
@@ -368,11 +399,11 @@ pageRouter.get('/agent_data/:id', (req, res) => {
 // EDIT AGENT
 pageRouter.put('/agent/:id', (req, res) => {
   const id = parseInt(req.params.id);
-  const {txtAgencyLine, txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact}  = req.body;
+  const { txtAgencyLine, txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact } = req.body;
   let date_now = new Date();
 
   const agency = txtAgencyLine.split('-');
-  const account_code = agency[1]+'-'+txtAgenctCode;
+  const account_code = agency[1] + '-' + txtAgenctCode;
 
   const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, FIRSTNAME = ?, MIDDLENAME = ?, LASTNAME = ?, CONTACTNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
   connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName , txtLastname , txtContact, req.session.user_id, date_now, id], (err, result) => {
@@ -406,9 +437,9 @@ pageRouter.put('/agent/remove/:id', (req, res) => {
 
 // ADD ACCOUNT
 pageRouter.post('/add_account', (req, res) => {
-  const {agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo}  = req.body;
+  const { agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo } = req.body;
   let date_now = new Date();
- 
+
   const query = `INSERT INTO account (AGENT_ID, GUESTNo, FIRSTNAME, MIDDLENAME, LASTNAME, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
   connection.query(query, [agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo, req.session.user_id , date_now], (err, result) => {
     if (err) {
@@ -416,7 +447,7 @@ pageRouter.post('/add_account', (req, res) => {
       res.status(500).send('Error inserting agent');
       return;
     }
-    
+
     res.redirect('/account_ledger');
   });
 });
@@ -441,7 +472,7 @@ pageRouter.get('/account_data', (req, res) => {
 // EDIT ACCOUNT
 pageRouter.put('/account/:id', (req, res) => {
   const id = parseInt(req.params.id);
-  const {agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo}  = req.body;
+  const { agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo } = req.body;
   let date_now = new Date();
 
 
@@ -475,5 +506,35 @@ pageRouter.put('/account/remove/:id', (req, res) => {
 });
 
 
+// ================================================= POP UPS ===================================================
+
+// ================== ADD CAGE CATEGORY ========================
+
+pageRouter.post('/add_cage_category', (req, res) => {
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO cage_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCategory, 1, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Cage Category', err);
+      res.status(500).send('Error inserting Cage Category');
+      return;
+    }
+    res.redirect('/cage_category');
+  });
+});
+
+// ================= GET CAGE CATEGORY ==========================
+pageRouter.get('/cage_category_data', (res, req) => {
+  connection.query('SELECT * FROM cage_category WHERE cage_category.ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
 
 module.exports = pageRouter;
