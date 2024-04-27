@@ -86,7 +86,7 @@
                 <div class="bg-primary-dark rounded-top fw-semibold text-white text-center p-3">
                   <img class="img-avatar img-avatar48 img-avatar-thumb" src="assets/media/avatars/avatar10.jpg" alt="">
                   <div class="pt-2">
-                    <a class="text-white fw-semibold" href="be_pages_generic_profile.html">Henry Harrison</a>
+                    <a class="text-white fw-semibold" href=""><%= firstname %></a>
                   </div>
                 </div>
                 <div class="p-2">
@@ -94,9 +94,11 @@
                     <i class="fa fa-fw fa-cog me-1"></i> Settings
                   </a>
                   <div role="separator" class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="op_auth_signin.html">
+                  <form action="/logout">
+                  <button class="dropdown-item" type="submit">
                     <i class="fa fa-fw fa-arrow-alt-circle-left me-1"></i> Log Out
                   </a>
+                  </button>
                 </div>
               </div>
             </div>

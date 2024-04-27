@@ -2,6 +2,7 @@ const express = require('express');
 const pageRouter = express.Router();
 const path = require('path');
 const crypto = require('crypto');
+const session = require('express-session');
 
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
@@ -17,34 +18,52 @@ const connection = mysql.createConnection({
   database: 'cagex'
 });
 
+pageRouter.use(session({
+  secret: 'username',
+  resave: false,
+  saveUninitialized: true
+}));
+
+
 function generateMD5(input) {
   return crypto.createHash('md5').update(input).digest('hex');
 }
 
-pageRouter.get("/", function (req, res) {
-  res.render("login");
-});
+const checkSession = (req, res, next) => {
+  if (!req.session || !req.session.username) {
+    res.redirect('/login');
+  } else {
+    next();
+  }
+};
+
+function sessions(req) {
+  return  { username: req.session.username, firstname: req.session.firstname, lastname: req.session.lastname, user_id: req.session.user_id };
+}
 
 pageRouter.get("/login", function (req, res) {
   res.render("login");
 });
 
-pageRouter.get("/dashboard", function (req, res) {
-  res.render("dashboard");
+pageRouter.get("/", function (req, res) {
+  res.render("dashboard", sessions(req));
 });
 
-pageRouter.get("/agency", function (req, res) {
-  res.render("accounts/agency");
+pageRouter.get("/dashboard", checkSession, function (req, res) {
+  res.render("dashboard", sessions(req));
 });
 
-pageRouter.get("/agent", function (req, res) {
-  res.render("accounts/agent");
+pageRouter.get("/agency", checkSession, function (req, res) {
+  res.render("accounts/agency", sessions(req));
 });
 
-pageRouter.get("/account_ledger", function (req, res) {
-  res.render("accounts/account_ledger");
+pageRouter.get("/agent", checkSession, function (req, res) {
+  res.render("accounts/agent", sessions(req));
 });
 
+pageRouter.get("/account_ledger", checkSession, function (req, res) {
+  res.render("accounts/account_ledger", sessions(req));
+});
 
 //=============== JUNKET =============
 pageRouter.get("/capital", function (req, res) {
@@ -72,8 +91,61 @@ pageRouter.get("/user_roles", function (req, res) {
   res.render("user_accounts/user_roles");
 });
 
-pageRouter.get("/manage_users", function (req, res) {
-  res.render("user_accounts/manage_users");
+pageRouter.get("/user_roles", checkSession, function (req, res) {
+  res.render("user_accounts/user_roles", sessions(req));
+});
+
+pageRouter.get("/manage_users", checkSession, function (req, res) {
+  res.render("user_accounts/manage_users", sessions(req));
+});
+
+
+//LOGIN
+pageRouter.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const query = 'SELECT * FROM user_info WHERE USERNAME = ? AND ACTIVE = 1';
+
+  connection.query(query, [username], (error, results) => {
+    if (error) {
+      console.error('Error executing MySQL query: ' + error.stack);
+      res.send('Error during login');
+      return;
+    }
+
+    if (results) {
+      const user = results[0];
+      const salt = user.SALT;
+      const username1 = user.USERNAME;
+      const hashedPassword = generateMD5(salt+password);
+
+      const query1 = 'SELECT * FROM user_info WHERE USERNAME = ? AND PASSWORD = ? AND ACTIVE = 1';
+      connection.query(query1, [username1, hashedPassword], (errors, result) => {
+        if (errors) {
+          console.error('Error executing MySQL query: ' + errors.stack);
+          res.send('Error during login');
+          return;
+        }
+ 
+        if (result) {
+          req.session.username = username;
+          req.session.firstname = user.FIRSTNAME;
+          req.session.lastname = user.LASTNAME;
+          req.session.user_id = user.IDNo;
+          res.redirect('/dashboard');
+        } else {
+          res.redirect('/login');
+        }
+      });
+    } else {
+      res.redirect('/login');
+    }
+  });
+});
+
+//LOGOUT
+pageRouter.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
 });
 
 //============= POP UPS ====================
@@ -121,7 +193,7 @@ pageRouter.post('/add_user_role', (req, res) => {
   let date_now = new Date();
 
   const query = `INSERT INTO user_role (ROLE, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
-  connection.query(query, [role, 1, date_now], (err, result) => {
+  connection.query(query, [role, req.session.user_id, date_now], (err, result) => {
     if (err) {
       console.error('Error inserting user role:', err);
       res.status(500).send('Error inserting user');
@@ -151,7 +223,7 @@ pageRouter.put('/user_role/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE user_role SET ROLE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [role, 1, date_now, id], (err, result) => {
+  connection.query(query, [role, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating user role:', err);
       res.status(500).send('Error updating user role');
@@ -168,7 +240,7 @@ pageRouter.put('/user_role/remove/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE user_role SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [0, 1, date_now, id], (err, result) => {
+  connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating user role:', err);
       res.status(500).send('Error updating user role');
@@ -202,7 +274,7 @@ pageRouter.post('/add_user', (req, res) => {
   } else {
     const generated_pw = generateMD5(salt + txtPassword);
     const query = `INSERT INTO user_info (FIRSTNAME, LASTNAME, USERNAME, PASSWORD, SALT, PERMISSIONS, LAST_LOGIN, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    connection.query(query, [txtFirstName, txtLastName, txtUserName, generated_pw, salt, user_role, date_now, 1, date_now], (err, result) => {
+    connection.query(query, [txtFirstName,txtLastName,txtUserName, generated_pw, salt, user_role, date_now, req.session.user_id , date_now], (err, result) => {
       if (err) {
         console.error('Error inserting user:', err);
         res.status(500).send('Error inserting user');
@@ -221,7 +293,7 @@ pageRouter.put('/user/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE user_info SET FIRSTNAME = ?, LASTNAME = ?, USERNAME = ?, PERMISSIONS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [txtFirstName, txtLastName, txtUserName, user_role, 1, date_now, id], (err, result) => {
+  connection.query(query, [txtFirstName, txtLastName, txtUserName, user_role, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating user role:', err);
       res.status(500).send('Error updating user role');
@@ -238,7 +310,7 @@ pageRouter.put('/user/remove/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE user_info SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [0, 1, date_now, id], (err, result) => {
+  connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating user:', err);
       res.status(500).send('Error updating user');
@@ -255,7 +327,7 @@ pageRouter.post('/add_agency', (req, res) => {
   let date_now = new Date();
 
   const query = `INSERT INTO agency (CODE, AGENCY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?)`;
-  connection.query(query, [txtAgencyCode, txtAgency, 1, date_now], (err, result) => {
+  connection.query(query, [txtAgencyCode, txtAgency, req.session.user_id, date_now], (err, result) => {
     if (err) {
       console.error('Error inserting agency:', err);
       res.status(500).send('Error inserting agency');
@@ -285,7 +357,7 @@ pageRouter.put('/agency/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE agency SET CODE = ?, AGENCY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [txtAgencyCode, txtAgency, 1, date_now, id], (err, result) => {
+  connection.query(query, [txtAgencyCode, txtAgency, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating agency:', err);
       res.status(500).send('Error updating agency');
@@ -301,7 +373,7 @@ pageRouter.put('/agency/remove/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE agency SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [0, 1, date_now, id], (err, result) => {
+  connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating agency:', err);
       res.status(500).send('Error updating agency');
@@ -319,7 +391,7 @@ pageRouter.post('/add_agent', (req, res) => {
 
   const agency = txtAgencyLine.split('-');
   const query = `INSERT INTO agent (AGENCY, AGENT_CODE, FIRSTNAME, MIDDLENAME, LASTNAME, CONTACTNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-  connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact, 1, date_now], (err, result) => {
+  connection.query(query, [agency[0],txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact, req.session.user_id , date_now], (err, result) => {
     if (err) {
       console.error('Error inserting agent:', err);
       res.status(500).send('Error inserting agent');
@@ -366,7 +438,7 @@ pageRouter.put('/agent/:id', (req, res) => {
   const account_code = agency[1] + '-' + txtAgenctCode;
 
   const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, FIRSTNAME = ?, MIDDLENAME = ?, LASTNAME = ?, CONTACTNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact, 1, date_now, id], (err, result) => {
+  connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName , txtLastname , txtContact, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating agent:', err);
       res.status(500).send('Error updating agent');
@@ -401,7 +473,7 @@ pageRouter.post('/add_account', (req, res) => {
   let date_now = new Date();
 
   const query = `INSERT INTO account (AGENT_ID, GUESTNo, FIRSTNAME, MIDDLENAME, LASTNAME, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-  connection.query(query, [agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo, 1, date_now], (err, result) => {
+  connection.query(query, [agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo, req.session.user_id , date_now], (err, result) => {
     if (err) {
       console.error('Error inserting agent:', err);
       res.status(500).send('Error inserting agent');
@@ -437,7 +509,7 @@ pageRouter.put('/account/:id', (req, res) => {
 
 
   const query = `UPDATE account SET  AGENT_ID = ?, GUESTNo = ?, FIRSTNAME = ?, MIDDLENAME = ?, LASTNAME = ?, MEMBERSHIPNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo, 1, date_now, id], (err, result) => {
+  connection.query(query, [agent_id, txtGuestNo, txtFirstname, txtMiddlename , txtLastname , txtMembershipNo, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating account:', err);
       res.status(500).send('Error updating account');
@@ -454,7 +526,7 @@ pageRouter.put('/account/remove/:id', (req, res) => {
   let date_now = new Date();
 
   const query = `UPDATE account SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-  connection.query(query, [0, 1, date_now, id], (err, result) => {
+  connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
     if (err) {
       console.error('Error updating agency:', err);
       res.status(500).send('Error updating agency');
