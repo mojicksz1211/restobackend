@@ -76,12 +76,44 @@ pageRouter.get("/manage_users", function (req, res) {
   res.render("user_accounts/manage_users");
 });
 
-
 //============= POP UPS ====================
 pageRouter.get("/cage_category", function (req, res) {
   res.render("popups/cage_category");
 });
 
+pageRouter.get("/capital_category", function (req, res) {
+  res.render("popups/capital_category");
+});
+
+pageRouter.get("/concierge_category", function (req, res) {
+  res.render("popups/concierge_category");
+});
+
+pageRouter.get("/credit_status", function (req, res) {
+  res.render("popups/credit_status");
+});
+
+pageRouter.get("/expense_category", function (req, res) {
+  res.render("popups/expense_category");
+});
+
+pageRouter.get("/transaction_type", function (req, res) {
+  res.render("popups/transaction_type");
+});
+
+// ================= DENOMINATION =======================
+
+pageRouter.get("/cash", function (req, res) {
+  res.render("denomination/cash");
+});
+
+pageRouter.get("/cash_chips", function (req, res) {
+  res.render("denomination/cash_chips");
+});
+
+pageRouter.get("/non_negotiable_chips", function (req, res) {
+  res.render("denomination/non_negotiable_chips");
+});
 
 //Add User Role
 pageRouter.post('/add_user_role', (req, res) => {
@@ -438,31 +470,31 @@ pageRouter.put('/account/remove/:id', (req, res) => {
 
 // ================== ADD CAGE CATEGORY ========================
 
-pageRouter.post('/add_cage_category', (req, res) => {
-  const { txtCategory } = req.body;
-  let date_now = new Date();
+// pageRouter.post('/add_cage_category', (req, res) => {
+//   const { txtCategory } = req.body;
+//   let date_now = new Date();
 
-  const query = `INSERT INTO cage_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
-  connection.query(query, [txtCategory, 1, date_now], (err, result) => {
-    if (err) {
-      console.error('Error inserting Cage Category', err);
-      res.status(500).send('Error inserting Cage Category');
-      return;
-    }
-    res.redirect('/cage_category');
-  });
-});
+//   const query = `INSERT INTO cage_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+//   connection.query(query, [txtCategory, 1, date_now], (err, result) => {
+//     if (err) {
+//       console.error('Error inserting Cage Category', err);
+//       res.status(500).send('Error inserting Cage Category');
+//       return;
+//     }
+//     res.redirect('/cage_category');
+//   });
+// });
 
-// ================= GET CAGE CATEGORY ==========================
-pageRouter.get('/cage_category_data', (res, req) => {
-  connection.query('SELECT * FROM cage_category WHERE cage_category.ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
-    if (error) {
-      console.error('Error fetching data:', error);
-      res.status(500).send('Error fetching data');
-      return;
-    }
-    res.json(result);
-  });
-});
+// // ================= GET CAGE CATEGORY ==========================
+// pageRouter.get('/cage_category_data', (res, req) => {
+//   connection.query('SELECT * FROM cage_category WHERE cage_category.ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+//     if (error) {
+//       console.error('Error fetching data:', error);
+//       res.status(500).send('Error fetching data');
+//       return;
+//     }
+//     res.json(result);
+//   });
+// });
 
 module.exports = pageRouter;
