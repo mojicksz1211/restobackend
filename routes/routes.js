@@ -41,6 +41,11 @@ function sessions(req) {
   return  { username: req.session.username, firstname: req.session.firstname, lastname: req.session.lastname, user_id: req.session.user_id };
 }
 
+pageRouter.get("/", function (req, res) {
+  res.render("login");
+});
+
+
 pageRouter.get("/login", function (req, res) {
   res.render("login");
 });
@@ -67,28 +72,28 @@ pageRouter.get("/account_ledger", checkSession, function (req, res) {
 
 //=============== JUNKET =============
 pageRouter.get("/capital", function (req, res) {
-  res.render("junket/capital");
+  res.render("junket/capital", sessions(req));
 });
 
 pageRouter.get("/house_expense", function (req, res) {
-  res.render("junket/house_expense");
+  res.render("junket/house_expense", sessions(req));
 });
 
 pageRouter.get("/credit", function (req, res) {
-  res.render("junket/credit");
+  res.render("junket/credit", sessions(req));
 });
 
 pageRouter.get("/concierge", function (req, res) {
-  res.render("junket/concierge");
+  res.render("junket/concierge", sessions(req));
 });
 
 pageRouter.get("/main_cage", function (req, res) {
-  res.render("junket/main_cage");
+  res.render("junket/main_cage", sessions(req));
 });
 
 //========== USER ACCOUNTS ================
 pageRouter.get("/user_roles", function (req, res) {
-  res.render("user_accounts/user_roles");
+  res.render("user_accounts/user_roles", sessions(req));
 });
 
 pageRouter.get("/user_roles", checkSession, function (req, res) {
@@ -151,7 +156,7 @@ pageRouter.get('/logout', (req, res) => {
 
 //============= POP UPS ====================
 pageRouter.get("/cage_category", function (req, res) {
-  res.render("popups/cage_category");
+  res.render("popups/cage_category", sessions(req));
 });
 
 
