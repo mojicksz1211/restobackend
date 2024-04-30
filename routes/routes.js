@@ -159,23 +159,23 @@ pageRouter.get("/cage_category", function (req, res) {
 });
 
 pageRouter.get("/capital_category", function (req, res) {
-  res.render("popups/capital_category");
+  res.render("popups/capital_category", sessions(req));
 });
 
 pageRouter.get("/concierge_category", function (req, res) {
-  res.render("popups/concierge_category");
+  res.render("popups/concierge_category", sessions(req));
 });
 
 pageRouter.get("/credit_status", function (req, res) {
-  res.render("popups/credit_status");
+  res.render("popups/credit_status", sessions(req));
 });
 
 pageRouter.get("/expense_category", function (req, res) {
-  res.render("popups/expense_category");
+  res.render("popups/expense_category", sessions(req));
 });
 
 pageRouter.get("/transaction_type", function (req, res) {
-  res.render("popups/transaction_type");
+  res.render("popups/transaction_type", sessions(req));
 });
 
 // ================= DENOMINATION =======================
