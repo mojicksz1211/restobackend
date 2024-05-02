@@ -1,22 +1,27 @@
-<div class="modal fade" id="modal-new-cash" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
+<div class="modal fade" id="modal-edit-cash" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
     data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog modal-dialog-popout" role="document">
         <div class="modal-content">
             <div class="block block-rounded block-themed block-transparent mb-0">
                 <div class="block-header bg-primary-dark">
-                    <h3 class="block-title">New Denomination</h3>
+                    <h3 class="block-title">Edit Denomination</h3>
                     <div class="block-options">
                         <button type="button" class="btn-block-option" data-bs-dismiss="modal" aria-label="Close">
                             <i class="fa fa-fw fa-times"></i>
                         </button>
                     </div>
                 </div>
-                <form action="/add_cash" method="post">
+                <form id="edit_cash">
                     <div class="block-content">
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="text" class="form-control" name="txtDenomination"
+                                <input type="text" class="form-control" name="txtDenomination" id="txtDenomination"
                                     placeholder="Denomination" />
+                            </div>
+
+                            <div class="col-sm-12 mt-2">
+                                <input type="text" class="form-control" name="txtQTY" id="txtQTY"
+                                    placeholder="Quantity" />
                             </div>
                         </div>
 

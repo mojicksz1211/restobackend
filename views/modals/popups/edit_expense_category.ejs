@@ -1,22 +1,21 @@
-<div class="modal fade" id="modal-new-cash" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
-    data-keyboard="false" data-backdrop="static">
+<div class="modal fade" id="modal-edit-expense-category" role="dialog" aria-labelledby="modal-default-popout"
+    aria-hidden="true" data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog modal-dialog-popout" role="document">
         <div class="modal-content">
             <div class="block block-rounded block-themed block-transparent mb-0">
                 <div class="block-header bg-primary-dark">
-                    <h3 class="block-title">New Denomination</h3>
+                    <h3 class="block-title">Edit Category</h3>
                     <div class="block-options">
                         <button type="button" class="btn-block-option" data-bs-dismiss="modal" aria-label="Close">
                             <i class="fa fa-fw fa-times"></i>
                         </button>
                     </div>
                 </div>
-                <form action="/add_cash" method="post">
+                <form id="edit_expense_category">
                     <div class="block-content">
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="text" class="form-control" name="txtDenomination"
-                                    placeholder="Denomination" />
+                                <input type="text" class="form-control" name="txtCategory" placeholder="Category" id="txtCategory" />
                             </div>
                         </div>
 

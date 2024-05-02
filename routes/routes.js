@@ -181,15 +181,15 @@ pageRouter.get("/transaction_type", function (req, res) {
 // ================= DENOMINATION =======================
 
 pageRouter.get("/cash", function (req, res) {
-  res.render("denomination/cash");
+  res.render("denomination/cash", sessions(req));
 });
 
 pageRouter.get("/cash_chips", function (req, res) {
-  res.render("denomination/cash_chips");
+  res.render("denomination/cash_chips", sessions(req));
 });
 
 pageRouter.get("/non_negotiable_chips", function (req, res) {
-  res.render("denomination/non_negotiable_chips");
+  res.render("denomination/non_negotiable_chips", sessions(req));
 });
 
 //Add User Role
@@ -542,36 +542,597 @@ pageRouter.put('/account/remove/:id', (req, res) => {
   });
 });
 
+// ADD CAGE CATEGORY
+pageRouter.post('/add_cage_category', (req, res) => {
+  const { txtCategory } = req.body;
+  let date_now = new Date();
 
-// ================================================= POP UPS ===================================================
+  const query = `INSERT INTO cage_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Cage Category', err);
+      res.status(500).send('Error inserting Cage Category');
+      return;
+    }
+    res.redirect('/cage_category');
+  });
+});
 
-// ================== ADD CAGE CATEGORY ========================
+// GET CAGE CATEGORY
+pageRouter.get('/cage_category_data', (req, res) => {
+  connection.query('SELECT * FROM cage_category WHERE ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
 
-// pageRouter.post('/add_cage_category', (req, res) => {
-//   const { txtCategory } = req.body;
-//   let date_now = new Date();
+// EDIT CAGE CATEGORY
+pageRouter.put('/cage_category/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCategory } = req.body;
+  let date_now = new Date();
 
-//   const query = `INSERT INTO cage_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
-//   connection.query(query, [txtCategory, 1, date_now], (err, result) => {
-//     if (err) {
-//       console.error('Error inserting Cage Category', err);
-//       res.status(500).send('Error inserting Cage Category');
-//       return;
-//     }
-//     res.redirect('/cage_category');
-//   });
-// });
 
-// // ================= GET CAGE CATEGORY ==========================
-// pageRouter.get('/cage_category_data', (res, req) => {
-//   connection.query('SELECT * FROM cage_category WHERE cage_category.ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
-//     if (error) {
-//       console.error('Error fetching data:', error);
-//       res.status(500).send('Error fetching data');
-//       return;
-//     }
-//     res.json(result);
-//   });
-// });
+  const query = `UPDATE cage_category SET  CATEGORY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cage category:', err);
+      res.status(500).send('Error updating cage category');
+      return;
+    }
+
+    res.send('Cage category updated successfully');
+  });
+});
+
+
+// DELETE CAGE CATEGORY
+pageRouter.put('/cage_category/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE cage_category SET  ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cage category:', err);
+      res.status(500).send('Error updating cage category');
+      return;
+    }
+
+    res.send('Cage category updated successfully');
+  });
+});
+
+
+// ADD CAPITAL CATEGORY
+pageRouter.post('/add_capital_category', (req, res) => {
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO capital_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Capital Category', err);
+      res.status(500).send('Error inserting Capital Category');
+      return;
+    }
+    res.redirect('/capital_category');
+  });
+});
+
+// GET CAPITAL CATEGORY
+pageRouter.get('/capital_category_data', (req, res) => {
+  connection.query('SELECT * FROM capital_category WHERE ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT CAPITAL CATEGORY
+pageRouter.put('/capital_category/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE capital_category SET  CATEGORY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cage category:', err);
+      res.status(500).send('Error updating cage category');
+      return;
+    }
+
+    res.send('Capital category updated successfully');
+  });
+});
+
+
+// DELETE CAPITAL CATEGORY
+pageRouter.put('/capital_category/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE capital_category SET  ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating capital category:', err);
+      res.status(500).send('Error updating capital category');
+      return;
+    }
+
+    res.send('Capital category updated successfully');
+  });
+});
+
+
+// ADD Concierge CATEGORY
+pageRouter.post('/add_concierge_category', (req, res) => {
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO concierge_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Concierge Category', err);
+      res.status(500).send('Error inserting Concierge Category');
+      return;
+    }
+    res.redirect('/concierge_category');
+  });
+});
+
+// GET Concierge CATEGORY
+pageRouter.get('/concierge_category_data', (req, res) => {
+  connection.query('SELECT * FROM concierge_category WHERE ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT Concierge CATEGORY
+pageRouter.put('/concierge_category/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE concierge_category SET  CATEGORY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Concierge category:', err);
+      res.status(500).send('Error updating Concierge category');
+      return;
+    }
+
+    res.send('Concierge category updated successfully');
+  });
+});
+
+
+// DELETE Concierge CATEGORY
+pageRouter.put('/concierge_category/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE concierge_category SET  ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Concierge category:', err);
+      res.status(500).send('Error updating Concierge category');
+      return;
+    }
+
+    res.send('Concierge category updated successfully');
+  });
+});
+
+
+// ADD CREDIT STATUS
+pageRouter.post('/add_credit_status', (req, res) => {
+  const { txtCreditStatus } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO credit_status(STATUS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCreditStatus, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Credit Status', err);
+      res.status(500).send('Error inserting Credit Status');
+      return;
+    }
+    res.redirect('/credit_status');
+  });
+});
+
+// GET CREDIT STATUS
+pageRouter.get('/credit_status_data', (req, res) => {
+  connection.query('SELECT * FROM credit_status WHERE ACTIVE=1 ORDER BY STATUS ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT CREDIT STATUS
+pageRouter.put('/credit_status/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCreditStatus } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE credit_status SET  STATUS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtCreditStatus, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Credit Status:', err);
+      res.status(500).send('Error updating Credit Status');
+      return;
+    }
+
+    res.send('Credit Status updated successfully');
+  });
+});
+
+
+// DELETE CREDIT STATUS
+pageRouter.put('/credit_status/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE credit_status SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Credit Status:', err);
+      res.status(500).send('Error updating Credit Status');
+      return;
+    }
+
+    res.send('Credit Status updated successfully');
+  });
+});
+
+
+// ADD EXPENSE CATEGORY
+pageRouter.post('/add_expense_category', (req, res) => {
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO expense_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Expense Category', err);
+      res.status(500).send('Error inserting Expense Category');
+      return;
+    }
+    res.redirect('/expense_category');
+  });
+});
+
+// GET EXPENSE CATEGORY
+pageRouter.get('/expense_category_data', (req, res) => {
+  connection.query('SELECT * FROM expense_category WHERE ACTIVE=1 ORDER BY CATEGORY ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT EXPENSE CATEGORY
+pageRouter.put('/expense_category/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCategory } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE expense_category SET  CATEGORY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtCategory, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Expense category:', err);
+      res.status(500).send('Error updating Expense category');
+      return;
+    }
+
+    res.send('Expense category updated successfully');
+  });
+});
+
+
+// DELETE EXPENSE CATEGORY
+pageRouter.put('/expense_category/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE expense_category SET  ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Expense category:', err);
+      res.status(500).send('Error updating Expense category');
+      return;
+    }
+
+    res.send('Expense category updated successfully');
+  });
+});
+
+
+// ADD TRASACTION TYPE
+pageRouter.post('/add_transaction_type', (req, res) => {
+  const { txtTransactionType } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO transaction_type(TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtTransactionType, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting Transaction Type', err);
+      res.status(500).send('Error inserting Transaction Type');
+      return;
+    }
+    res.redirect('/transaction_type');
+  });
+});
+
+// GET TRASACTION TYPE
+pageRouter.get('/transaction_type_data', (req, res) => {
+  connection.query('SELECT * FROM transaction_type WHERE ACTIVE=1 ORDER BY TRANSACTION ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT TRASACTION TYPE
+pageRouter.put('/transaction_type/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtTransactionType } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE transaction_type SET  TRANSACTION = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtTransactionType, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Transaction Type:', err);
+      res.status(500).send('Error updating Transaction Type');
+      return;
+    }
+
+    res.send('Transaction Type updated successfully');
+  });
+});
+
+
+// DELETE TRASACTION TYPE
+pageRouter.put('/transaction_type/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE transaction_type SET  ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Transaction Type:', err);
+      res.status(500).send('Error updating Transaction Type');
+      return;
+    }
+
+    res.send('Transaction Type updated successfully');
+  });
+});
+
+
+// ADD CASH DENOMINATION
+pageRouter.post('/add_cash', (req, res) => {
+  const { txtDenomination } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO cash(DENOMINATION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtDenomination, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting cash', err);
+      res.status(500).send('Error inserting cash');
+      return;
+    }
+    res.redirect('/cash');
+  });
+});
+
+// GET CASH DENOMINATION
+pageRouter.get('/cash_data', (req, res) => {
+  connection.query('SELECT * FROM cash WHERE ACTIVE=1 ORDER BY DENOMINATION ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT CASH DENOMINATION
+pageRouter.put('/cash/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtDenomination, txtQTY } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE cash SET  DENOMINATION = ?, QTY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtDenomination, txtQTY, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cash:', err);
+      res.status(500).send('Error updating cash');
+      return;
+    }
+
+    res.send('cash updated successfully');
+  });
+});
+
+
+// DELETE CASH DENOMINATION
+pageRouter.put('/cash/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE cash SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cash:', err);
+      res.status(500).send('Error updating cash');
+      return;
+    }
+
+    res.send('cash updated successfully');
+  });
+});
+
+
+// ADD CASH CHIPS DENOMINATION
+pageRouter.post('/add_cash_chips', (req, res) => {
+  const { txtDenomination } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO cash_chips(DENOMINATION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtDenomination, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting cash', err);
+      res.status(500).send('Error inserting cash');
+      return;
+    }
+    res.redirect('/cash_chips');
+  });
+});
+
+// GET CASH CHIPS DENOMINATION
+pageRouter.get('/cash_chips_data', (req, res) => {
+  connection.query('SELECT * FROM cash_chips WHERE ACTIVE=1 ORDER BY DENOMINATION ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT CASH CHIPS DENOMINATION
+pageRouter.put('/cash_chips/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtDenomination, txtQTY } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE cash_chips SET  DENOMINATION = ?, QTY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtDenomination, txtQTY, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cash:', err);
+      res.status(500).send('Error updating cash');
+      return;
+    }
+
+    res.send('cash updated successfully');
+  });
+});
+
+
+// DELETE CASH CHIPS DENOMINATION
+pageRouter.put('/cash_chips/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE cash_chips SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating cash:', err);
+      res.status(500).send('Error updating cash');
+      return;
+    }
+
+    res.send('cash updated successfully');
+  });
+});
+
+
+// ADD NON NEGOTIABLE DENOMINATION
+pageRouter.post('/add_non_negotiable', (req, res) => {
+  const { txtDenomination } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO non_negotiable(DENOMINATION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
+  connection.query(query, [txtDenomination, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting cash', err);
+      res.status(500).send('Error inserting cash');
+      return;
+    }
+    res.redirect('/non_negotiable_chips');
+  });
+});
+
+// GET NON NEGOTIABLE DENOMINATION
+pageRouter.get('/non_negotiable_data', (req, res) => {
+  connection.query('SELECT * FROM non_negotiable WHERE ACTIVE=1 ORDER BY DENOMINATION ASC', (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT NON NEGOTIABLE DENOMINATION
+pageRouter.put('/non_negotiable/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtDenomination, txtQTY } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE non_negotiable SET  DENOMINATION = ?, QTY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtDenomination, txtQTY, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Non negotiable:', err);
+      res.status(500).send('Error updating Non negotiable');
+      return;
+    }
+
+    res.send('Non negotiable updated successfully');
+  });
+});
+
+
+// DELETE NON NEGOTIABLE DENOMINATION
+pageRouter.put('/non_negotiable/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE non_negotiable SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Non negotiable:', err);
+      res.status(500).send('Error updating Non negotiable');
+      return;
+    }
+
+    res.send('Non negotiable updated successfully');
+  });
+});
 
 module.exports = pageRouter;

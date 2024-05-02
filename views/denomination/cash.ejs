@@ -19,13 +19,11 @@
                 </div>
                 <div class="block-content block-content-full">
                     <!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-                    <table id="cage-category-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
+                    <table id="cash-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
                         <thead>
                             <tr>
                                 <th class="d-none d-sm-table-cell">DENOMINATION</th>
                                 <th class="d-none d-sm-table-cell">QUANTITY</th>
-                                <th class="d-none d-sm-table-cell">LAST UPDATE</th>
-                                <th class="d-none d-sm-table-cell">UPDATED BY</th>
                                 <th class="text-center" style="width: 150px;">STATUS</th>
                                 <th class="text-center" style="width: 100px;">ACTION</th>
                             </tr>
@@ -42,6 +40,7 @@
     <!-- END Main Container -->
 
     <%- include ('../modals/denomination/new_cash') %>
+    <%- include ('../modals/denomination/edit_cash') %>
 
         <%- include ('../partial/footer') %>
 
