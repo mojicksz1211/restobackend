@@ -19,7 +19,7 @@
                 </div>
                 <div class="block-content block-content-full">
                     <!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-                    <table id="agent-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
+                    <table id="expense-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
                         <thead>
                             <tr>
                                 <th class="d-none d-sm-table-cell" style="width: 150px;">DIVISION</th>
@@ -43,6 +43,7 @@
     <!-- END Main Container -->
 
     <%- include ('../modals/junket/new_house_expense') %>
+    <%- include ('../modals/junket/edit_house_expense') %>
 
         <%- include ('../partial/footer') %>
 
@@ -51,6 +52,7 @@
             <script src="/assets/js/functions/house_expense.js"></script>
             <script src="/assets/js/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
             <script src="/assets/js/plugins/flatpickr/flatpickr.min.js"></script>
+            <script src="/assets/js/plugins/jquery.maskedinput/jquery.maskedinput.min.js"></script>
             <script>Dashmix.helpersOnLoad(['js-flatpickr', 'jq-datepicker', 'jq-maxlength', 'jq-select2', 'jq-rangeslider', 'jq-masked-inputs', 'jq-pw-strength']);</script>
 
 

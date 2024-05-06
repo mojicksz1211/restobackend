@@ -1,21 +1,29 @@
-<div class="modal fade" id="modal-new-concierge" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
+<div class="modal fade" id="modal-edit-capital" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
     data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog modal-dialog-popout" role="document">
         <div class="modal-content">
             <div class="block block-rounded block-themed block-transparent mb-0">
                 <div class="block-header bg-primary-dark">
-                    <h3 class="block-title">Add Concierge</h3>
+                    <h3 class="block-title">Edit Capital</h3>
                     <div class="block-options">
                         <button type="button" class="btn-block-option" data-bs-dismiss="modal" aria-label="Close">
                             <i class="fa fa-fw fa-times"></i>
                         </button>
                     </div>
                 </div>
-                <form id="add_junket_concierge">
+                <form id="edit_junket_capital">
                     <div class="block-content">
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <select class="select2 form-select" id="txtCategory" name="txtCategory" style="width: 100%;"
+                                <select class="select2 form-select txtTrans" id="txtTrans" name="txtTrans" style="width: 100%;"
+                                    data-placeholder="Transaction">
+                                    <option>--- Transaction ---</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-12">
+                                <select class="select2 form-select txtCategory" id="txtCategory" name="txtCategory" style="width: 100%;"
                                     data-placeholder="Category">
                                     <option>--- Category ---</option>
                                 </select>
@@ -24,33 +32,29 @@
 
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="date" class="form-control" name="txtDateTime"
-                                    placeholder="Date and Time" />
+                                <input type="text" class="form-control" name="txtFullname" id="txtFullname" placeholder="Full Name" />
                             </div>
                         </div>
 
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="text" class="form-control" name="txtDescription"
+                                <input type="text" class="form-control" name="txtDescription" id="txtDescription"
                                     placeholder="Description" />
                             </div>
                         </div>
 
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <select class="select2 form-select" id="txtTransaction" name="txtTransaction"
-                                    style="width: 100%;" data-placeholder="Transaction">
-                                    <option>--- Transaction ---</option>
-                                </select>
+                                <input type="text" class="form-control" name="txtAmount" placeholder="Amount" id="txtAmount" />
                             </div>
                         </div>
 
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="text" class="form-control" name="txtAmount" placeholder="Amount" />
+                                <textarea class="form-control" name="Remarks" placeholder="Remarks" id="Remarks" cols="15"
+                                    rows="10"></textarea>
                             </div>
                         </div>
-
                     </div>
                     <div class="block-content block-content-full text-end bg-body">
                         <button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">

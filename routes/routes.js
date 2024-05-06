@@ -1135,4 +1135,365 @@ pageRouter.put('/non_negotiable/remove/:id', (req, res) => {
   });
 });
 
+
+
+// ADD JUNKET CAPITAL 
+pageRouter.post('/add_junket_capital', (req, res) => {
+  const { txtTrans, txtCategory, txtFullname, txtDescription, txtAmount, Remarks } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO junket_capital(TRANSACTION_ID, CATEGORY_ID, FULLNAME, DESCRIPTION, AMOUNT, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  connection.query(query, [txtTrans, txtCategory, txtFullname, txtDescription, txtAmount, Remarks, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting junket', err);
+      res.status(500).send('Error inserting junket');
+      return;
+    }
+    res.redirect('/capital');
+  });
+});
+
+// GET JUNKET CAPITAL 
+pageRouter.get('/junket_capital_data', (req, res) => {
+  const query = `SELECT *, junket_capital.IDNo AS capital_id, transaction_type.TRANSACTION AS transaction, transaction_type.IDNo AS transaction_id, capital_category.IDNo AS category_id, capital_category.CATEGORY AS category FROM junket_capital
+    JOIN transaction_type ON transaction_type.IDNo = junket_capital.TRANSACTION_ID
+    JOIN capital_category ON capital_category.IDNo = junket_capital.CATEGORY_ID
+    WHERE junket_capital.ACTIVE=1 ORDER BY junket_capital.IDNo DESC`;
+  connection.query(query, (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT JUNKET CAPITAL 
+pageRouter.put('/junket_capital/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtTrans, txtCategory, txtFullname, txtDescription, txtAmount, Remarks } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE junket_capital SET TRANSACTION_ID = ?, CATEGORY_ID = ?, FULLNAME = ?, DESCRIPTION = ?, AMOUNT = ?, REMARKS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [txtTrans, txtCategory, txtFullname, txtDescription, txtAmount, Remarks, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+// DELETE JUNKET CAPITAL 
+pageRouter.put('/junket_capital/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE junket_capital SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+// ADD JUNKET EXPENSE
+pageRouter.post('/add_junket_house_expense', (req, res) => {
+  const { txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO junket_house_expense(CATEGORY_ID, RECEIPT_NO, DATE_TIME, DESCRIPTION, AMOUNT, OIC, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  connection.query(query, [txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge , req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting junket', err);
+      res.status(500).send('Error inserting junket');
+      return;
+    }
+    res.redirect('/house_expense');
+  });
+});
+
+// GET JUNKET EXPENSE
+pageRouter.get('/junket_house_expense_data', (req, res) => {
+  const query = `SELECT *,junket_house_expense.IDNo AS expense_id, expense_category.IDNo AS expense_category_id, expense_category.CATEGORY as expense_category, agent.IDNo AS agent_id, CONCAT(agent.FIRSTNAME, ' ', agent.MIDDLENAME, ' ', agent.LASTNAME) AS agent_name
+  FROM junket_house_expense 
+  JOIN expense_category ON expense_category.IDNo = junket_house_expense.CATEGORY_ID
+  JOIN agent ON agent.IDNo = junket_house_expense.OIC
+  WHERE junket_house_expense.ACTIVE=1 ORDER BY junket_house_expense.IDNo DESC`;
+  connection.query(query, (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT JUNKET EXPENSE
+pageRouter.put('/junket_house_expense/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const {  txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE junket_house_expense SET CATEGORY_ID = ?, RECEIPT_NO = ?, DATE_TIME = ?, DESCRIPTION = ?, AMOUNT = ?, OIC = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [ txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+// DELETE JUNKET EXPENSE
+pageRouter.put('/junket_house_expense/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE junket_house_expense SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+
+// ADD JUNKET CREDIT
+pageRouter.post('/add_junket_credit', (req, res) => {
+  const { txtAccountCode, txtStatus, txtAmount, Remarks } = req.body;
+  let date_now = new Date();
+  const account = txtAccountCode.split('-');
+
+  const query = `INSERT INTO junket_credit(ACCOUNT_ID, AMOUNT, REMARKS, STATUS_ID, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+  connection.query(query, [account[0], txtAmount, Remarks, txtStatus, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting junket', err);
+      res.status(500).send('Error inserting junket');
+      return;
+    }
+    res.redirect('/house_expense');
+  });
+});
+
+// GET JUNKET CREDIT
+pageRouter.get('/junket_credit_data', (req, res) => {
+  const query = `SELECT *, junket_credit.IDNo AS credit_id, CONCAT(account.FIRSTNAME, ' ', account.MIDDLENAME, ' ', account.LASTNAME) AS account_name
+  FROM junket_credit 
+  JOIN account ON account.IDNo = junket_credit.ACCOUNT_ID
+  JOIN agent ON agent.IDNo = account.AGENT_ID
+  JOIN agency ON agency.IDNo = agent.AGENCY
+  JOIN credit_status ON credit_status.IDNo = junket_credit.STATUS_ID
+  WHERE junket_credit.ACTIVE=1 ORDER BY junket_credit.IDNo DESC`;
+  connection.query(query, (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT JUNKET CREDIT
+pageRouter.put('/junket_credit/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const {  txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE junket_credit SET CATEGORY_ID = ?, RECEIPT_NO = ?, DATE_TIME = ?, DESCRIPTION = ?, AMOUNT = ?, OIC = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [ txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+// DELETE JUNKET CREDIT
+pageRouter.put('/junket_credit/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE junket_credit SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+
+// ADD JUNKET CONCIERGE
+pageRouter.post('/add_junket_concierge', (req, res) => {
+  const { txtCategory, txtDateTime, txtDescription, txtTransaction, txtAmount } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO junket_concierge(CONCIERGE_ID, DATE_TIME, DESCRIPTION, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  connection.query(query, [txtCategory, txtDateTime, txtDescription, txtTransaction, txtAmount, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting junket', err);
+      res.status(500).send('Error inserting junket');
+      return;
+    }
+    res.redirect('/house_expense');
+  });
+});
+
+// GET JUNKET CONCIERGE
+pageRouter.get('/junket_concierge_data', (req, res) => {
+  const query = `SELECT *, junket_concierge.IDNo AS junket_concierge_id
+  FROM junket_concierge 
+  JOIN concierge_category ON concierge_category.IDNo = junket_concierge.CONCIERGE_ID
+  JOIN transaction_type ON transaction_type.IDNo = junket_concierge.TRANSACTION_ID
+  WHERE junket_concierge.ACTIVE=1 ORDER BY junket_concierge.IDNo DESC`;
+  connection.query(query, (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT JUNKET CONCIERGE
+pageRouter.put('/junket_concierge/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCategory, txtDateTime, txtDescription, txtTransaction, txtAmount } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE junket_concierge SET CONCIERGE_ID = ?, DATE_TIME = ?, DESCRIPTION = ?, TRANSACTION_ID = ?, AMOUNT = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [ txtCategory, txtDateTime, txtDescription, txtTransaction, txtAmount, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+// DELETE JUNKET CONCIERGE
+pageRouter.put('/junket_concierge/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE junket_concierge SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+
+// ADD JUNKET CAGE
+pageRouter.post('/add_junket_main_cage', (req, res) => {
+  const { txtCategory, txtDateTime, txtTransaction, txtAmount } = req.body;
+  let date_now = new Date();
+
+  const query = `INSERT INTO junket_main_cage(CAGE_ID, DATE_TIME, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+  connection.query(query, [txtCategory, txtDateTime, txtTransaction, txtAmount, req.session.user_id, date_now], (err, result) => {
+    if (err) {
+      console.error('Error inserting junket', err);
+      res.status(500).send('Error inserting junket');
+      return;
+    }
+    res.redirect('/house_expense');
+  });
+});
+
+// GET JUNKET CAGE
+pageRouter.get('/junket_main_cage_data', (req, res) => {
+  const query = `SELECT *, junket_main_cage.IDNo AS junket_cage_id
+  FROM junket_main_cage 
+  JOIN cage_category ON cage_category.IDNo = junket_main_cage.CAGE_ID
+  JOIN transaction_type ON transaction_type.IDNo = junket_main_cage.TRANSACTION_ID
+  WHERE junket_main_cage.ACTIVE=1 ORDER BY junket_main_cage.IDNo DESC`;
+  connection.query(query, (error, result, fields) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// EDIT JUNKET CAGE
+pageRouter.put('/junket_main_cage/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { txtCategory, txtDateTime, txtTransaction, txtAmount } = req.body;
+  let date_now = new Date();
+
+
+  const query = `UPDATE junket_main_cage SET CAGE_ID = ?, DATE_TIME = ?, TRANSACTION_ID = ?, AMOUNT = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [ txtCategory, txtDateTime, txtTransaction, txtAmount, req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
+
+// DELETE JUNKET CAGE
+pageRouter.put('/junket_main_cage/remove/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  let date_now = new Date();
+
+  const query = `UPDATE junket_main_cage SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+  connection.query(query, [0 , req.session.user_id, date_now, id], (err, result) => {
+    if (err) {
+      console.error('Error updating Junket:', err);
+      res.status(500).send('Error updating Junket');
+      return;
+    }
+
+    res.send('Junket updated successfully');
+  });
+});
+
 module.exports = pageRouter;
