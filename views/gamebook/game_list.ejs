@@ -19,10 +19,10 @@
 			</div>
 			<div class="block-content block-content-full">
 				<!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-				<table id="capital-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
+				<table id="game_list-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
 					<thead>
 						<tr>
-							<th class="d-none d-sm-table-cell" style="width: 150px;">GAME <Noframes></Noframes>
+							<th class="d-none d-sm-table-cell" style="width: 150px;">GAME 
 							</th>
 							<th class="d-none d-sm-table-cell">DATE &AMP; TIME</th>
 							<th class="d-none d-sm-table-cell">ACCOUNT CODE</th>
@@ -51,6 +51,7 @@
 
 <%- include ('../partial/footer') %>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="/assets/js/datatables/game_list_tables_datatables.min.js"></script>
 <script src="/assets/js/functions/game_list.js"></script>
 

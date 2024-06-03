@@ -26,6 +26,10 @@ pageRouter.use(session({
 	saveUninitialized: true
 }));
 
+app.set('view engine', 'ejs');
+
+app.use(express.static('public'));
+
 
 function generateMD5(input) {
 	return crypto.createHash('md5').update(input).digest('hex');
@@ -45,6 +49,16 @@ function sessions(req) {
 		firstname: req.session.firstname,
 		lastname: req.session.lastname,
 		user_id: req.session.user_id
+	};
+}
+
+function sessions_id(req, id) {
+	return {
+		username: req.session.username,
+		firstname: req.session.firstname,
+		lastname: req.session.lastname,
+		user_id: req.session.user_id,
+		page_id: id
 	};
 }
 
@@ -117,8 +131,9 @@ pageRouter.get("/game_list", checkSession, function (req, res) {
 	res.render("gamebook/game_list", sessions(req));
 });
 
-pageRouter.get("/game_record", checkSession, function (req, res) {
-	res.render("gamebook/game_record", sessions(req));
+pageRouter.get("/game_record/:id", checkSession, function (req, res) {
+	const pageId = parseInt(req.params.id);
+	res.render('gamebook/game_record', sessions_id(req, pageId) );
 });
 
 //LOGIN
@@ -1666,6 +1681,175 @@ pageRouter.put('/junket_main_cage/remove/:id', (req, res) => {
 		}
 
 		res.send('Junket updated successfully');
+	});
+});
+
+// ADD ACCOUNT DETAILS
+pageRouter.post('/add_account_details', (req, res) => {
+	const {
+		txtAccountId,
+		txtTrans,
+		account_date,
+		account_time, 
+		txtAmount
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, DATE, TIME, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountId,txtTrans, txtAmount, account_date, account_time, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		res.redirect('/account_ledger');
+	});
+});
+
+// GET ACCOUNT DETAILS
+pageRouter.get('/account_details_data/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	const query = `SELECT *, account_ledger.IDNo AS account_details_id FROM account_ledger 
+  JOIN transaction_type ON transaction_type.IDNo = account_ledger.TRANSACTION_ID
+  WHERE account_ledger.ACTIVE=1 AND account_ledger.ACCOUNT_ID= ? ORDER BY account_ledger.IDNo DESC`;
+	connection.query(query,[id], (error, result, fields) => {
+		if (error) {
+			console.error('Error fetching data:', error);
+			res.status(500).send('Error fetching data');
+			return;
+		}
+		res.json(result);
+	});
+});
+
+// DELETE ACCOUNT DETAILS
+pageRouter.put('/account_details/remove/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	let date_now = new Date();
+
+	const query = `UPDATE account_ledger SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
+		if (err) {
+			console.error('Error updating Details:', err);
+			res.status(500).send('Error updating Details');
+			return;
+		}
+
+		res.send('Details updated successfully');
+	});
+});
+
+// ADD GAME LIST
+pageRouter.post('/add_game_list', (req, res) => {
+	const {
+		txtAccountCode,
+		txtDate,
+		txtTime,
+		txtGameNo
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, GAME_DATE, GAME_TIME, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountCode,txtGameNo, txtDate, txtTime, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		res.redirect('/game_list');
+	});
+});
+
+// GET GAME LIST
+pageRouter.get('/game_list_data', (req, res) => {
+	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status  FROM game_list 
+	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
+	JOIN agent ON agent.IDNo = account.AGENT_ID
+	JOIN agency ON agency.IDNo = agent.AGENCY
+  	WHERE game_list.ACTIVE != 0 ORDER BY game_list.IDNo DESC`;
+	connection.query(query, (error, result, fields) => {
+		if (error) {
+			console.error('Error fetching data:', error);
+			res.status(500).send('Error fetching data');
+			return;
+		}
+		res.json(result);
+	});
+});
+
+// DELETE GAME LIST
+pageRouter.put('/game_list/remove/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	let date_now = new Date();
+
+	const query = `UPDATE game_list SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
+		if (err) {
+			console.error('Error updating GAME LIST:', err);
+			res.status(500).send('Error updating GAME LIST');
+			return;
+		}
+
+		res.send('GAME LIST updated successfully');
+	});
+});
+
+// ADD GAME RECORD
+pageRouter.post('/add_game_record', (req, res) => {
+	const {
+		game_id,
+		txtTradingDate,
+		txtDate,
+		txtTime,
+		txtCategory,
+		txtBI,
+		txtCO,
+		txtRolling,
+		txtRemarks
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, RECORD_DATE, RECORD_TIME, CAGE_TYPE, BUY_IN, CASH_OUT, ROLLING, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id,txtTradingDate,txtDate,txtTime,txtCategory,txtBI,txtCO,txtRolling,txtRemarks, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		res.redirect('/game_record/'+game_id);
+	});
+});
+
+// GET GAME RECORD
+pageRouter.get('/game_record_data/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	const query = `SELECT *, game_record.IDNo AS game_record_id FROM game_record 
+	JOIN cage_category ON game_record.CAGE_TYPE = cage_category.IDNo
+  	WHERE game_record.ACTIVE != 0 AND game_record.GAME_ID = ? ORDER BY game_record.IDNo DESC`;
+	connection.query(query, [id],(error, result, fields) => {
+		if (error) {
+			console.error('Error fetching data:', error);
+			res.status(500).send('Error fetching data');
+			return;
+		}
+		res.json(result);
+	});
+});
+
+// DELETE GAME RECORD
+pageRouter.put('/game_record/remove/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	let date_now = new Date();
+
+	const query = `UPDATE game_record SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
+		if (err) {
+			console.error('Error updating GAME LIST:', err);
+			res.status(500).send('Error updating GAME LIST');
+			return;
+		}
+
+		res.send('GAME LIST updated successfully');
 	});
 });
 
