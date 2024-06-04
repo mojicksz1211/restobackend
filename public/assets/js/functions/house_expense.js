@@ -21,6 +21,8 @@ $(document).ready(function() {
         method: 'GET',
         success: function(data) {
           dataTable.clear();
+
+          var total_expense = 0;
           data.forEach(function(row) {
             var status = '';
             if (row.ACTIVE.data[0] == 1) {
@@ -28,6 +30,8 @@ $(document).ready(function() {
             } else {
                 status = '<span class="badge bg-danger">INACTIVE</span>';
             }
+
+            total_expense = total_expense + row.AMOUNT;
 
             var btn = `<div class="btn-group">
             <button type="button" onclick="edit_expense(${row.expense_id}, '${row.expense_category_id}', '${row.RECEIPT_NO}', '${row.DATE_TIME}', '${row.DESCRIPTION}', '${row.AMOUNT}', '${row.OIC}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
@@ -42,6 +46,7 @@ $(document).ready(function() {
 
             dataTable.row.add([`${row.expense_category}`,`${row.RECEIPT_NO}`, `${row.DESCRIPTION}`, `${row.AMOUNT}`, `${row.agent_name}`,status,btn]).draw();
           });
+          $('.total_expense').text(`P${total_expense.toLocaleString()}`);
         },
         error: function(xhr, status, error) {
           console.error('Error fetching data:', error);

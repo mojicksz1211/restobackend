@@ -22,6 +22,14 @@ $(document).ready(function() {
         method: 'GET',
         success: function(data) {
           dataTable.clear();
+
+          var total_deposit_buy = 0;
+          var total_withdraw_buy = 0;
+          var total_deposit_cash = 0;
+          var total_withdraw_cash = 0;
+          var total_deposit_rolling = 0;
+          var total_withdraw_rolling = 0;
+
           data.forEach(function(row) {
             var status = '';
             if (row.ACTIVE == 1) {
@@ -29,6 +37,31 @@ $(document).ready(function() {
             } else {
                 status = '<span class="badge bg-danger">INACTIVE</span>';
             }
+
+            if(row.CAGE_ID == 1 && row.TRANSACTION_ID == 1)  {
+              total_deposit_buy = total_deposit_buy + row.AMOUNT;
+            }
+
+            if(row.CAGE_ID == 1 && row.TRANSACTION_ID == 2)  {
+              total_withdraw_buy = total_withdraw_buy + row.AMOUNT;
+            }
+
+            if(row.CAGE_ID == 2 && row.TRANSACTION_ID == 1)  {
+              total_deposit_cash = total_deposit_cash + row.AMOUNT;
+            }
+
+            if(row.CAGE_ID == 2 && row.TRANSACTION_ID == 2)  {
+              total_withdraw_cash = total_withdraw_cash + row.AMOUNT;
+            }
+
+            if(row.CAGE_ID == 3 && row.TRANSACTION_ID == 1)  {
+              total_deposit_rolling = total_deposit_rolling + row.AMOUNT;
+            }
+
+            if(row.CAGE_ID == 3 && row.TRANSACTION_ID == 2)  {
+              total_withdraw_rolling = total_withdraw_rolling + row.AMOUNT;
+            }
+
 
             var btn = `<div class="btn-group">
             <button type="button" onclick="edit_cage(${row.junket_cage_id}, '${row.CAGE_ID}', '${row.DATE_TIME}', '${row.TRANSACTION_ID}', '${row.AMOUNT}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
@@ -43,6 +76,17 @@ $(document).ready(function() {
 
             dataTable.row.add([`${row.CATEGORY}`, `${row.DATE_TIME}`, `${row.TRANSACTION}`, `${row.AMOUNT}`,status, btn]).draw();
           });
+
+          $('.total_deposit_buy').text(`P${total_deposit_buy.toLocaleString()}`);
+          $('.total_withdraw_buy').text(`P${total_withdraw_buy.toLocaleString()}`);
+          $('.total_balance_buy').text('P'+(total_deposit_buy - total_withdraw_buy).toLocaleString());
+          $('.total_deposit_cash').text(`P${total_deposit_cash.toLocaleString()}`);
+          $('.total_withdraw_cash').text(`P${total_withdraw_cash.toLocaleString()}`);
+          $('.total_balance_cash').text('P'+(total_deposit_cash - total_withdraw_cash).toLocaleString());
+          $('.total_deposit_rolling').text(`P${total_deposit_rolling.toLocaleString()}`);
+          $('.total_withdraw_rolling').text(`P${total_withdraw_rolling.toLocaleString()}`);
+          $('.total_balance_rolling').text('P'+(total_deposit_rolling - total_withdraw_rolling).toLocaleString());
+
         },
         error: function(xhr, status, error) {
           console.error('Error fetching data:', error);
@@ -107,7 +151,8 @@ $(document).ready(function() {
 
 function addMainCage() {
     $('#modal-new-main-cage').modal('show');
-
+    $('.txtDateTime').val();
+    $('.txtAmount').val();
     cage_category();
     get_transaction();
 }

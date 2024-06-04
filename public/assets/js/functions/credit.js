@@ -21,6 +21,8 @@ $(document).ready(function() {
         method: 'GET',
         success: function(data) {
           dataTable.clear();
+
+          var total_credit = 0;
           data.forEach(function(row) {
             // var status = '';
             // if (row.ACTIVE.data[0] == 1) {
@@ -28,6 +30,8 @@ $(document).ready(function() {
             // } else {
             //     status = '<span class="badge bg-danger">INACTIVE</span>';
             // }
+
+            total_credit = total_credit + row.AMOUNT;
 
             var btn = `<div class="btn-group">
             <button type="button" onclick="edit_credit(${row.credit_id}, '${row.ACCOUNT_ID}', '${row.AMOUNT}', '${row.REMARKS}', '${row.STATUS_ID}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
@@ -42,6 +46,7 @@ $(document).ready(function() {
 
             dataTable.row.add([`${row.CODE}-${row.AGENT_CODE}-${row.GUESTNo}`,`${row.AGENT_CODE}`, `${row.account_name}`, `${row.AMOUNT}`, `${row.STATUS}`,btn]).draw();
           });
+          $('.total_credit').text(`P${total_credit.toLocaleString()}`);
         },
         error: function(xhr, status, error) {
           console.error('Error fetching data:', error);

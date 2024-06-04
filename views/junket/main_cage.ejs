@@ -18,6 +18,38 @@
                     </nav>
                 </div>
                 <div class="block-content block-content-full">
+
+                    <table id="#dataTable" class="table table-bordered table-vcenter">
+                        <thead>
+                          <tr>
+                            <th class="text-center" style="width: 150px;"></th>
+                            <th class="text-center" style="width: 150px;">BUY IN</th>
+                            <th class="text-center" style="width: 150px;">CASH OUT</th>
+                            <th class="text-center" style="width: 150px;">ROLLING</th>    
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="fw-bold text-center">DEPOSIT</td>
+                            <td class="fw-bold text-center"><span class="total_deposit_buy"></span></td>
+                            <td class="fw-bold text-center"><span class="total_deposit_cash"></span></td>
+                            <td class="fw-bold text-center"><span class="total_deposit_rolling"></span></td>             
+                          </tr>  
+                          <tr>
+                            <td class="fw-bold text-center">WITHDRAW</td>
+                            <td class="fw-bold text-center"><span class="total_withdraw_buy"></span></td>
+                            <td class="fw-bold text-center"><span class="total_withdraw_cash"></span></td>
+                            <td class="fw-bold text-center"><span class="total_withdraw_rolling"></span></td>             
+                          </tr> 
+                          <tr>
+                            <td class="fw-bold text-center">BALANCE</td>
+                            <td class="fw-bold text-center"><span class="total_balance_buy"></span></td>
+                            <td class="fw-bold text-center"><span class="total_balance_cash"></span></td>
+                            <td class="fw-bold text-center"><span class="total_balance_rolling"></span></td>             
+                          </tr>       
+                        </tbody>
+                    </table>
+
                     <!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
                     <table id="cage-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
                         <thead>

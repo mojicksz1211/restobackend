@@ -21,7 +21,21 @@ $(document).ready(function() {
         method: 'GET',
         success: function(data) {
           dataTable.clear();
+
+          var total_in = 0;
+          var total_out = 0;
+
           data.forEach(function(row) {
+
+            if(row.TRANSACTION_ID == '1') {
+              total_in = total_in + row.AMOUNT;
+            }
+  
+            if(row.TRANSACTION_ID == '2') {
+              total_out = total_out + row.AMOUNT;
+            }
+
+
             var status = '';
             if (row.ACTIVE == 1) {
                 status = '<span class="badge bg-info">ACTIVE</span>';
@@ -42,6 +56,10 @@ $(document).ready(function() {
 
             dataTable.row.add([`${row.CATEGORY}`, `${row.DESCRIPTION}`, `${row.TRANSACTION}`, `${row.AMOUNT}`,status, btn]).draw();
           });
+
+          $('.total_deposit').text(`P${total_in.toLocaleString()}`);
+          $('.total_withdraw').text(`P${total_out.toLocaleString()}`);
+          $('.total_balance').text('P'+(total_in - total_out).toLocaleString());
         },
         error: function(xhr, status, error) {
           console.error('Error fetching data:', error);
@@ -106,7 +124,10 @@ $(document).ready(function() {
 
 function addConcierge() {
     $('#modal-new-concierge').modal('show');
-
+    $('.txtDateTime').val();
+    $('.txtDescription').val();
+    $('.txtAmount').val();
+  
     concierge_data();
     get_transaction();
 }
