@@ -52,15 +52,6 @@ function sessions(req) {
 	};
 }
 
-function sessions_id(req, id) {
-	return {
-		username: req.session.username,
-		firstname: req.session.firstname,
-		lastname: req.session.lastname,
-		user_id: req.session.user_id,
-		page_id: id
-	};
-}
 
 pageRouter.get("/", function (req, res) {
 	res.render("login");
@@ -133,7 +124,37 @@ pageRouter.get("/game_list", checkSession, function (req, res) {
 
 pageRouter.get("/game_record/:id", checkSession, function (req, res) {
 	const pageId = parseInt(req.params.id);
-	res.render('gamebook/game_record', sessions_id(req, pageId) );
+	const query = `SELECT *
+	FROM game_list  
+	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
+	JOIN agent ON agent.IDNo = account.AGENT_ID
+	JOIN agency ON agency.IDNo = agent.AGENCY
+	WHERE game_list.ACTIVE != 0 AND game_list.IDNo = ?`;
+
+	connection.query(query, [pageId], (error, results) => {
+		if (error) {
+			console.error('Error executing MySQL query: ' + error.stack);
+			res.send('Error during login');
+			return;
+		}
+		if (results) {
+			let reference_no = results[0].CODE +'-'+ results[0].AGENT_CODE +'-'+ results[0].GAME_NO;
+			if(results[0].GUESTNo) {
+				reference_no = results[0].CODE +'-'+ results[0].AGENT_CODE +'-'+ results[0].GUESTNo +'-'+ results[0].GAME_NO;
+			}
+			res.render('gamebook/game_record', 
+				{
+					username: req.session.username,
+					firstname: req.session.firstname,
+					lastname: req.session.lastname,
+					user_id: req.session.user_id,
+					page_id: pageId,
+					reference: reference_no
+				}
+			);
+		}
+	});
+	
 });
 
 //LOGIN
@@ -1762,7 +1783,7 @@ pageRouter.post('/add_game_list', (req, res) => {
 
 // GET GAME LIST
 pageRouter.get('/game_list_data', (req, res) => {
-	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status  FROM game_list 
+	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status FROM game_list 
 	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
 	JOIN agent ON agent.IDNo = account.AGENT_ID
 	JOIN agency ON agency.IDNo = agent.AGENCY
@@ -1776,6 +1797,21 @@ pageRouter.get('/game_list_data', (req, res) => {
 		res.json(result);
 	});
 });
+
+pageRouter.get('/game_list/:id/record', (req, res) => {
+	const id = parseInt(req.params.id);
+	const query = `SELECT SUM(BUY_IN) AS total_buy_in, SUM(CASH_OUT) AS total_cash_out, SUM(ROLLING) AS total_rolling FROM game_record 
+  	WHERE ACTIVE != 0 AND GAME_ID = ?`;
+	connection.query(query,[id], (error, result, fields) => {
+		if (error) {
+			console.error('Error fetching data:', error);
+			res.status(500).send('Error fetching data');
+			return;
+		}
+		res.json(result);
+	});
+});
+
 
 // DELETE GAME LIST
 pageRouter.put('/game_list/remove/:id', (req, res) => {
