@@ -95,6 +95,11 @@ pageRouter.get("/credit", function (req, res) {
 	res.render("junket/credit", sessions(req));
 });
 
+pageRouter.get("/commission", function (req, res) {
+	res.render("junket/commission", sessions(req));
+});
+
+
 pageRouter.get("/concierge", function (req, res) {
 	res.render("junket/concierge", sessions(req));
 });
@@ -1783,7 +1788,7 @@ pageRouter.post('/add_game_list', (req, res) => {
 
 // GET GAME LIST
 pageRouter.get('/game_list_data', (req, res) => {
-	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status FROM game_list 
+	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, CONCAT(account.FIRSTNAME, ' ', account.MIDDLENAME, ' ', account.LASTNAME) AS account_name FROM game_list 
 	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
 	JOIN agent ON agent.IDNo = account.AGENT_ID
 	JOIN agency ON agency.IDNo = agent.AGENCY
@@ -1820,6 +1825,31 @@ pageRouter.put('/game_list/remove/:id', (req, res) => {
 
 	const query = `UPDATE game_list SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
 	connection.query(query, [0, req.session.user_id, date_now, id], (err, result) => {
+		if (err) {
+			console.error('Error updating GAME LIST:', err);
+			res.status(500).send('Error updating GAME LIST');
+			return;
+		}
+
+		res.send('GAME LIST updated successfully');
+	});
+});
+
+// EDIT GAME LIST COMMISSION
+pageRouter.put('/game_list/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	const {
+		txtExpense,
+		txtActualAgent,
+		txtRemarks,
+		txtCashier,
+		txtManager
+	} = req.body;
+
+	let date_now = new Date();
+
+	const query = `UPDATE game_list SET EXPENSE = ?, ACTUAL_TO_AGENT = ?, REMARKS = ?, CASHIER = ?, MANAGER = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtExpense, txtActualAgent, txtRemarks, txtCashier, txtManager, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating GAME LIST:', err);
 			res.status(500).send('Error updating GAME LIST');

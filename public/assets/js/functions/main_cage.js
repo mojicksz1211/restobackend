@@ -62,9 +62,11 @@ $(document).ready(function() {
               total_withdraw_rolling = total_withdraw_rolling + row.AMOUNT;
             }
 
+            var dateFormat = moment(row.DATE_TIME).format('MMMM DD, YYYY');
+            var dateFormatEdit = moment(row.DATE_TIME).format('YYYY-MM-DD');
 
             var btn = `<div class="btn-group">
-            <button type="button" onclick="edit_cage(${row.junket_cage_id}, '${row.CAGE_ID}', '${row.DATE_TIME}', '${row.TRANSACTION_ID}', '${row.AMOUNT}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+            <button type="button" onclick="edit_cage(${row.junket_cage_id}, '${row.CAGE_ID}', '${dateFormatEdit}', '${row.TRANSACTION_ID}', '${row.AMOUNT}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
               <i class="fa fa-pencil-alt"></i>
             </button>
@@ -74,7 +76,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([`${row.CATEGORY}`, `${row.DATE_TIME}`, `${row.TRANSACTION}`, `${row.AMOUNT}`,status, btn]).draw();
+            dataTable.row.add([`${row.CATEGORY}`, dateFormat, `${row.TRANSACTION}`, `${row.AMOUNT}`,status, btn]).draw();
           });
 
           $('.total_deposit_buy').text(`P${total_deposit_buy.toLocaleString()}`);
