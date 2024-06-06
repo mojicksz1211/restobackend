@@ -43,12 +43,13 @@ const checkSession = (req, res, next) => {
 	}
 };
 
-function sessions(req) {
+function sessions(req, page) {
 	return {
 		username: req.session.username,
 		firstname: req.session.firstname,
 		lastname: req.session.lastname,
-		user_id: req.session.user_id
+		user_id: req.session.user_id,
+		currentPage: page
 	};
 }
 
@@ -63,68 +64,68 @@ pageRouter.get("/login", function (req, res) {
 });
 
 pageRouter.get("/", function (req, res) {
-	res.render("dashboard", sessions(req));
+	res.render("dashboard", sessions(req, 'dashboard'));
 });
 
 pageRouter.get("/dashboard", checkSession, function (req, res) {
-	res.render("dashboard", sessions(req));
+	res.render("dashboard", sessions(req, 'dashboard'));
 });
 
 pageRouter.get("/agency", checkSession, function (req, res) {
-	res.render("accounts/agency", sessions(req));
+	res.render("accounts/agency", sessions(req, 'agency'));
 });
 
 pageRouter.get("/agent", checkSession, function (req, res) {
-	res.render("accounts/agent", sessions(req));
+	res.render("accounts/agent", sessions(req, 'agent'));
 });
 
 pageRouter.get("/account_ledger", checkSession, function (req, res) {
-	res.render("accounts/account_ledger", sessions(req));
+	res.render("accounts/account_ledger", sessions(req, 'account_ledger'));
 });
 
 //=============== JUNKET =============
 pageRouter.get("/capital", function (req, res) {
-	res.render("junket/capital", sessions(req));
+	res.render("junket/capital", sessions(req, 'capital'));
 });
 
 pageRouter.get("/house_expense", function (req, res) {
-	res.render("junket/house_expense", sessions(req));
+	res.render("junket/house_expense", sessions(req, 'house_expense'));
 });
 
 pageRouter.get("/credit", function (req, res) {
-	res.render("junket/credit", sessions(req));
+	res.render("junket/credit", sessions(req, 'credit'));
 });
 
 pageRouter.get("/commission", function (req, res) {
-	res.render("junket/commission", sessions(req));
+	res.render("junket/commission", sessions(req, 'commission'));
 });
 
 
 pageRouter.get("/concierge", function (req, res) {
-	res.render("junket/concierge", sessions(req));
+	res.render("junket/concierge", sessions(req, 'concierge'));
 });
 
 pageRouter.get("/main_cage", function (req, res) {
-	res.render("junket/main_cage", sessions(req));
+	res.render("junket/main_cage", sessions(req, 'main_cage'));
 });
 
 //========== USER ACCOUNTS ================
 pageRouter.get("/user_roles", function (req, res) {
-	res.render("user_accounts/user_roles", sessions(req));
+	res.render("user_accounts/user_roles", sessions(req, 'user_roles'));
 });
 
-pageRouter.get("/user_roles", checkSession, function (req, res) {
-	res.render("user_accounts/user_roles", sessions(req));
-});
+// pageRouter.get("/user_roles", checkSession, function (req, res) {
+// 	res.render("user_accounts/user_roles", sessions(req));
+// });
 
 pageRouter.get("/manage_users", checkSession, function (req, res) {
-	res.render("user_accounts/manage_users", sessions(req));
+	res.render("user_accounts/manage_users", sessions(req, 'manage_users'));
 });
 
 // ======================= GAME LIST ==================
 
 pageRouter.get("/game_list", checkSession, function (req, res) {
-	res.render("gamebook/game_list", sessions(req));
+	res.render("gamebook/game_list", sessions(req, 'game_list'));
 });
 
 pageRouter.get("/game_record/:id", checkSession, function (req, res) {
@@ -154,7 +155,8 @@ pageRouter.get("/game_record/:id", checkSession, function (req, res) {
 					lastname: req.session.lastname,
 					user_id: req.session.user_id,
 					page_id: pageId,
-					reference: reference_no
+					reference: reference_no,
+					currentPage: 'game_record'
 				}
 			);
 		}
@@ -215,41 +217,41 @@ pageRouter.get('/logout', (req, res) => {
 
 //============= POP UPS ====================
 pageRouter.get("/cage_category", function (req, res) {
-	res.render("popups/cage_category", sessions(req));
+	res.render("popups/cage_category", sessions(req, 'cage_category'));
 });
 
 pageRouter.get("/capital_category", function (req, res) {
-	res.render("popups/capital_category", sessions(req));
+	res.render("popups/capital_category", sessions(req, 'capital_category'));
 });
 
 pageRouter.get("/concierge_category", function (req, res) {
-	res.render("popups/concierge_category", sessions(req));
+	res.render("popups/concierge_category", sessions(req, 'concierge_category'));
 });
 
 pageRouter.get("/credit_status", function (req, res) {
-	res.render("popups/credit_status", sessions(req));
+	res.render("popups/credit_status", sessions(req, 'credit_status'));
 });
 
 pageRouter.get("/expense_category", function (req, res) {
-	res.render("popups/expense_category", sessions(req));
+	res.render("popups/expense_category", sessions(req, 'expense_category'));
 });
 
 pageRouter.get("/transaction_type", function (req, res) {
-	res.render("popups/transaction_type", sessions(req));
+	res.render("popups/transaction_type", sessions(req, 'transaction_type'));
 });
 
 // ================= DENOMINATION =======================
 
 pageRouter.get("/cash", function (req, res) {
-	res.render("denomination/cash", sessions(req));
+	res.render("denomination/cash", sessions(req, 'cash'));
 });
 
 pageRouter.get("/cash_chips", function (req, res) {
-	res.render("denomination/cash_chips", sessions(req));
+	res.render("denomination/cash_chips", sessions(req, 'cash_chips'));
 });
 
 pageRouter.get("/non_negotiable_chips", function (req, res) {
-	res.render("denomination/non_negotiable_chips", sessions(req));
+	res.render("denomination/non_negotiable_chips", sessions(req, 'non_nego'));
 });
 
 //Add User Role
