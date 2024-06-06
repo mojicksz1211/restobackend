@@ -23,11 +23,6 @@ $(document).ready(function() {
         success: function(data) {
           dataTable.clear();
 
-          var sub_total_rolling = [];
-          var total_due = 0;
-          var total_expense = 0;
-          var total_actual = 0;
-
           data.forEach(function(row) {
 
             var ref = '';
@@ -48,6 +43,11 @@ $(document).ready(function() {
             </button>
           </div>`;
 
+            var sub_total_rolling = 0;
+            var total_due = 0;
+            var total_expense = 0;
+            var total_actual = 0;
+
             $.ajax({
               url: '/game_list/'+row.game_list_id+'/record',
               method: 'GET',
@@ -67,10 +67,48 @@ $(document).ready(function() {
                 var manager = row.MANAGER;
 
   
-                sub_total_rolling.push(sub_total_rolling + total_rolling);
+                sub_total_rolling = sub_total_rolling + total_rolling;
                 total_due = total_due + due_to_agent;
                 total_expense = total_expense + expense;
                 total_actual = total_actual + actual;
+
+                var rollingcurrentNumber = parseInt($('.total_rolling').text().replace(/,/g, ''));
+                if(rollingcurrentNumber) {
+                  var rollingnewNumber = rollingcurrentNumber + sub_total_rolling;
+                  var rollingformattedNumber = rollingnewNumber.toLocaleString();
+                } else {
+                  var rollingformattedNumber = sub_total_rolling.toLocaleString();
+                }
+
+                var duecurrentNumber = parseInt($('.total_due').text().replace(/,/g, ''));
+                if(duecurrentNumber) {
+                  var duenewNumber = duecurrentNumber + total_due;
+                  var dueformattedNumber = duenewNumber.toLocaleString();
+                } else {
+                  var dueformattedNumber = total_due.toLocaleString();
+                }
+
+                var expensecurrentNumber = parseInt($('.total_expense').text().replace(/,/g, ''));
+                if(expensecurrentNumber) {
+                  var expensenewNumber = expensecurrentNumber + total_expense;
+                  var expenseformattedNumber = expensenewNumber.toLocaleString();
+                } else {
+                  var expenseformattedNumber = total_expense.toLocaleString();
+                }
+
+                var actualcurrentNumber = parseInt($('.total_actual').text().replace(/,/g, ''));
+                if(actualcurrentNumber) {
+                  var actualnewNumber = actualcurrentNumber + total_actual;
+                  var actualformattedNumber = actualnewNumber.toLocaleString();
+                } else {
+                  var actualformattedNumber = total_actual.toLocaleString();
+                }
+
+                $('.total_rolling').text(rollingformattedNumber);
+                $('.total_due').text(dueformattedNumber);
+                $('.total_expense').text(expenseformattedNumber);
+                $('.total_actual').text(actualformattedNumber);
+
                 
                 dataTable.row.add([ref ,acct_code, `${row.account_name}`, parseFloat(total_rolling).toLocaleString(), parseFloat(due_to_agent).toLocaleString() ,expense ,parseFloat(net).toLocaleString()  ,actual ,remarks ,cashier ,manager ,btn]).draw();
               },
@@ -81,13 +119,10 @@ $(document).ready(function() {
 
           });
 
-          rolling = 0;
-          console.log(sub_total_rolling);
 
-          $('.total_rolling').text(rolling);
-          $('.total_due').text(total_due);
-          $('.total_expense').text(total_expense);
-          $('.total_actual').text(total_actual);
+
+
+          
         },
         error: function(xhr, status, error) {
           console.error('Error fetching data:', error);
