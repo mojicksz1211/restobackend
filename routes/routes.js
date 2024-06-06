@@ -1569,18 +1569,15 @@ pageRouter.get('/junket_credit_data', (req, res) => {
 pageRouter.put('/junket_credit/:id', (req, res) => {
 	const id = parseInt(req.params.id);
 	const {
-		txtCategory,
-		txtReceiptNo,
-		txtDateandTime,
-		txtDescription,
+		txtStatus,
 		txtAmount,
-		txtOfficerInCharge
+		Remarks,
 	} = req.body;
 	let date_now = new Date();
 
 
-	const query = `UPDATE junket_credit SET CATEGORY_ID = ?, RECEIPT_NO = ?, DATE_TIME = ?, DESCRIPTION = ?, AMOUNT = ?, OIC = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [txtCategory, txtReceiptNo, txtDateandTime, txtDescription, txtAmount, txtOfficerInCharge, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE junket_credit SET AMOUNT = ?, REMARKS = ?, STATUS_ID = ?,  EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtAmount, Remarks, txtStatus, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating Junket:', err);
 			res.status(500).send('Error updating Junket');

@@ -54,7 +54,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([`${row.CATEGORY}`, `${row.DESCRIPTION}`, `${row.TRANSACTION}`, `${row.AMOUNT}`,status, btn]).draw();
+            dataTable.row.add([`${moment(row.DATE_TIME).format('MMMM DD, YYYY')}`, `${row.CATEGORY}`, `${row.DESCRIPTION}`, `${row.TRANSACTION}`, `${row.AMOUNT}`,status, btn]).draw();
           });
 
           $('.total_deposit').text(`P${total_in.toLocaleString()}`);
@@ -134,7 +134,7 @@ function addConcierge() {
 
 function edit_concierge(id, concierge, transaction_id, date_time, description, amount ) {
   $('#modal-edit-concierge').modal('show');
-  $('.txtDateTime').val(date_time);
+  $('.txtDateTime').val(moment(date_time).format('YYYY-MM-DD'));
   $('.txtDescription').val(description);
   $('.txtAmount').val(amount);
 

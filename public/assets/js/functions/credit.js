@@ -34,7 +34,7 @@ $(document).ready(function() {
             total_credit = total_credit + row.AMOUNT;
 
             var btn = `<div class="btn-group">
-            <button type="button" onclick="edit_credit(${row.credit_id}, '${row.ACCOUNT_ID}', '${row.AMOUNT}', '${row.REMARKS}', '${row.STATUS_ID}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+            <button type="button" onclick="edit_credit(${row.credit_id}, '${row.AMOUNT}', '${row.REMARKS}', '${row.STATUS_ID}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
               <i class="fa fa-pencil-alt"></i>
             </button>
@@ -44,7 +44,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([`${row.CODE}-${row.AGENT_CODE}-${row.GUESTNo}`,`${row.AGENT_CODE}`, `${row.account_name}`, `${row.AMOUNT}`, `${row.STATUS}`,btn]).draw();
+            dataTable.row.add([`${row.CODE}-${row.AGENT_CODE}-${row.GUESTNo}`,`${row.AGENT_CODE}`, `${row.account_name}`, `${row.AMOUNT}`, `${row.STATUS}`, `${row.REMARKS}`,btn]).draw();
           });
           $('.total_credit').text(`P${total_credit.toLocaleString()}`);
         },
@@ -117,19 +117,16 @@ function addCredit() {
 
 
 
-function edit_credit(id, account_id, amount, remarks, status ) {
+function edit_credit(id, amount, remarks, status ) {
   $('#modal-edit-credit').modal('show');
-  $('#txtCategory').val(category_id);
-  $('#txtReceiptNo').val(receipt_no);
-  $('#txtDateandTime').val(datetimeval.toString('yyyy-mm-dd'));
-  $('#txtDescription').val(description);
-  $('#txtAmount').val(amount);
-  $('#txtOfficerInCharge').val(oic);
+  $('.txtAmount').val(amount);
+  $('.remarks').val(remarks);
 
   credit_id = id;
+  get_status_edit(status);
 
-  edit_expense_category(category_id);
-  edit_get_agent(oic);
+  console.log(status);
+
 }
 
 function archive_credit(id){
@@ -187,7 +184,6 @@ $('#txtAccountCode').on('change', function() {
     $('#account_name').val(account_id[2]);
     
 });
-
   
 
 function get_status() {
@@ -212,29 +208,29 @@ function get_status() {
             console.error('Error fetching options:', error);
         }
     });
-  }
+}
 
-function edit_expense_category(id) {
+function get_status_edit(id) {
   $.ajax({
-      url: '/expense_category_data',
+      url: '/credit_status_data',
       method: 'GET',
       success: function(response) {
-          var selectOptions = $('.txtCategory');
+          var selectOptions = $('.txtStatus');
           selectOptions.empty(); 
           selectOptions.append($('<option>', {
-              selected: false,
-              value: '',
-              text: '--SELECT EXPENSE CATEGORY--'
-          }));
+            selected: false,
+            value: '',
+            text: '--SELECT CREDIT STATUS--'
+        }));
           response.forEach(function(option) {
               var selected = false;
               if(option.IDNo == id) {
                 selected = true;
               }
               selectOptions.append($('<option>', {
-                selected: selected,
-                value: option.IDNo,
-                text: option.CATEGORY
+                  selected: selected,
+                  value: option.IDNo,
+                  text: option.STATUS 
               }));
           });
       },
@@ -243,38 +239,3 @@ function edit_expense_category(id) {
       }
   });
 }
-
-
-function edit_get_agent(id) {
-    $.ajax({
-        url: '/agent_data',
-        method: 'GET',
-        success: function(response) {
-            var selectOptions = $('.txtOfficerInCharge');
-            selectOptions.empty(); 
-            selectOptions.append($('<option>', {
-                selected: false,
-                value: '',
-                text: '--SELECT OFFICER-IN-CHARGE--'
-            }));
-            response.forEach(function(option) {
-                var selected = false;
-                if(option.agent_id == id) {
-                  selected = true;
-                }
-                selectOptions.append($('<option>', {
-                  selected: selected,
-                  value: option.agent_id,
-                  text: option.FIRSTNAME +' '+ option.MIDDLENAME +' '+ option.LASTNAME 
-                }));
-            });
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching options:', error);
-        }
-    });
-  }
-
-
-
-

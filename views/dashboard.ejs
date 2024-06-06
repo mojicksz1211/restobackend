@@ -45,25 +45,6 @@
         </div>
         <!-- END Bank Account #2 -->
 
-        <div class="col-lg-3">
-          <!-- Bank Account #2 -->
-          <a class="block block-rounded block-link-shadow" href="/house_expense">
-            <div class="block-content block-content-full ribbon ribbon-dark ribbon-modern ribbon-primary">
-              <div class="ribbon-box"><%- parseFloat(houseExpense[0].total_expense).toLocaleString() %></div>
-              <div class="row block-content">
-                <div class="col-lg-12 text-center">
-                  <p class="fs-sm fw-semibold mb-0">
-                    <span class="text-default">Total House Expense</span>
-                  </p>
-                  <p class="text-muted mb-0"><%- parseFloat(houseExpense[0].total_expense).toLocaleString() %></p>
-                </div>
-              </div>
-            </div>
-            <div class="block-content block-content-full block-content-sm text-center bg-body-light">
-              <span class="text-default">House Expense</span>
-            </div>
-          </a>
-        </div>
       </div>
       <!-- END Bank Accounts -->
 
@@ -240,6 +221,53 @@
             </div>
             <div class="block-content block-content-full block-content-sm text-center bg-body-light">
               <span class="text-default">Concierge Fund</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-3">
+          <a class="block block-rounded block-link-shadow" href="/capital">
+            <div class="block-content block-content-full ribbon ribbon-dark ribbon-modern ribbon-primary">
+              <div class="ribbon-box">0.00</div>
+              <div class="row block-content">
+                <div class="col-lg-6 text-center">
+                  <p class="fs-sm fw-semibold mb-0">
+                    <span class="text-default">Credit Issued</span>
+                  </p>
+                  <p class="text-muted mb-0">0.00</p>
+                </div>
+                <div class="col-lg-6 text-center">
+                  <p class="fs-sm fw-semibold mb-0">
+                    <span class="text-default">Credit Redeemed</span>
+                  </p>
+                  <p class="text-muted mb-0">0.00</p>
+                </div>
+              </div>
+            </div>
+            <div class="block-content block-content-full block-content-sm text-center bg-body-light">
+              <span class="text-default">Credit (Marker)</span>
+            </div>
+          </a>
+        </div>
+        
+        <div class="col-lg-3">
+          <!-- Bank Account #2 -->
+          <a class="block block-rounded block-link-shadow" href="/house_expense">
+            <div class="block-content block-content-full ribbon ribbon-dark ribbon-modern ribbon-primary">
+              <div class="ribbon-box"><%- parseFloat(houseExpense[0].total_expense).toLocaleString() %></div>
+              <div class="row block-content">
+                <div class="col-lg-12 text-center">
+                  <p class="fs-sm fw-semibold mb-0">
+                    <span class="text-default">Total House Expense</span>
+                  </p>
+                  <p class="text-muted mb-0"><%- parseFloat(houseExpense[0].total_expense).toLocaleString() %></p>
+                </div>
+              </div>
+            </div>
+            <div class="block-content block-content-full block-content-sm text-center bg-body-light">
+              <span class="text-default">House Expense</span>
             </div>
           </a>
         </div>

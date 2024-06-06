@@ -44,7 +44,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([`${row.expense_category}`,`${row.RECEIPT_NO}`, `${row.DESCRIPTION}`, `${row.AMOUNT}`, `${row.agent_name}`,status,btn]).draw();
+            dataTable.row.add([`${row.expense_category}`,`${row.RECEIPT_NO}`, `${row.DESCRIPTION}`, `${moment(row.DATE_TIME).format('MMMM DD, YYYY')}`, `${row.AMOUNT}`, `${row.agent_name}`,status,btn]).draw();
           });
           $('.total_expense').text(`P${total_expense.toLocaleString()}`);
         },
@@ -118,11 +118,10 @@ function addHouseExpense() {
 
 
 function edit_expense(id, category_id, receipt_no, datetimeval, description, amount, oic ) {
-    console.log(Date.parse(datetimeval).toString('M-d-yyyy'));
   $('#modal-edit-house-expense').modal('show');
   $('#txtCategory').val(category_id);
   $('#txtReceiptNo').val(receipt_no);
-  $('#txtDateandTime').val(datetimeval.toString('yyyy-mm-dd'));
+  $('#txtDateandTime').val(moment(datetimeval).format('YYYY-MM-DD'));
   $('#txtDescription').val(description);
   $('#txtAmount').val(amount);
   $('#txtOfficerInCharge').val(oic);
