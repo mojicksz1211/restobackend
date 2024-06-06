@@ -68,7 +68,70 @@ pageRouter.get("/", function (req, res) {
 });
 
 pageRouter.get("/dashboard", checkSession, function (req, res) {
-	res.render("dashboard", sessions(req, 'dashboard'));
+	let cashDeno = 'SELECT * FROM cash WHERE ACTIVE = 1 ORDER BY DENOMINATION ASC';
+	let cashChips = 'SELECT * FROM cash_chips WHERE ACTIVE = 1 ORDER BY DENOMINATION ASC';
+	let nonNego = 'SELECT * FROM non_negotiable WHERE ACTIVE = 1 ORDER BY DENOMINATION ASC';
+
+	let junketCapitalDeposit = 'SELECT SUM(AMOUNT) AS cash_in FROM junket_capital WHERE ACTIVE = 1 AND CATEGORY_ID = 1';
+	let junketCapitalWithdraw = 'SELECT SUM(AMOUNT) AS cash_out FROM junket_capital WHERE ACTIVE = 1 AND CATEGORY_ID = 2';
+
+	let accountDeposit = 'SELECT SUM(AMOUNT) AS account_deposit FROM account_ledger WHERE ACTIVE = 1 AND TRANSACTION_ID = 1';
+	let accountWithdraw = 'SELECT SUM(AMOUNT) AS account_withdraw FROM account_ledger WHERE ACTIVE = 1 AND TRANSACTION_ID = 2';
+
+	let houseExpense = 'SELECT SUM(AMOUNT) AS total_expense FROM junket_house_expense WHERE ACTIVE = 1';
+
+	let conciergeIn = 'SELECT SUM(AMOUNT) AS concierge_in FROM junket_concierge WHERE ACTIVE = 1 AND TRANSACTION_ID = 1';
+	let conciergeOut = 'SELECT SUM(AMOUNT) AS concierge_out FROM junket_concierge WHERE ACTIVE = 1 AND TRANSACTION_ID = 2';
+
+	connection.query(cashDeno, (err, results1) => {
+        if (err) throw err;
+        connection.query(cashChips, (err, results2) => {
+            if (err) throw err;
+            connection.query(nonNego, (err, results3) => {
+                if (err) throw err;
+				connection.query(junketCapitalDeposit, (err, results4) => {
+					if (err) throw err;
+					connection.query(junketCapitalWithdraw, (err, results5) => {
+						if (err) throw err;
+						connection.query(accountDeposit, (err, results6) => {
+							if (err) throw err;
+							connection.query(accountWithdraw, (err, results7) => {
+								if (err) throw err;
+								connection.query(houseExpense, (err, results8) => {
+									if (err) throw err;
+									connection.query(conciergeIn, (err, results9) => {
+										if (err) throw err;
+										connection.query(conciergeOut, (err, results10) => {
+											if (err) throw err;
+												res.render('dashboard', {
+													username: req.session.username,
+													firstname: req.session.firstname,
+													lastname: req.session.lastname,
+													user_id: req.session.user_id,
+													currentPage: 'dashboard',
+
+													cashDeno: results1,
+													cashChips: results2,
+													nonNego: results3,
+													junketCapitalDeposit: results4,
+													junketCapitalWithdraw: results5,
+													accountDeposit: results6,
+													accountWithdraw: results7,
+													houseExpense: results8,
+													conciergeIn: results9,
+													conciergeOut: results10,
+												});
+										});
+									});
+								});
+							});
+						});
+					});
+				});
+			});
+        });
+    });
+	// res.render("dashboard", sessions(req, 'dashboard'));
 });
 
 pageRouter.get("/agency", checkSession, function (req, res) {
@@ -114,9 +177,9 @@ pageRouter.get("/user_roles", function (req, res) {
 	res.render("user_accounts/user_roles", sessions(req, 'user_roles'));
 });
 
-// pageRouter.get("/user_roles", checkSession, function (req, res) {
-// 	res.render("user_accounts/user_roles", sessions(req));
-// });
+pageRouter.get("/user_roles", checkSession, function (req, res) {
+	res.render("user_accounts/user_roles", sessions(req, 'user_roles'));
+});
 
 pageRouter.get("/manage_users", checkSession, function (req, res) {
 	res.render("user_accounts/manage_users", sessions(req, 'manage_users'));
