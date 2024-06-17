@@ -41,7 +41,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([`${row.agency_code}-${row.AGENT_CODE}`,`${row.agency_name} (${row.agency_code})`, row.AGENT_CODE, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo,status,btn]).draw();
+            dataTable.row.add([`${row.agency_name}`, row.AGENT_CODE, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo,status,btn]).draw();
           });
         },
         error: function(xhr, status, error) {

@@ -31,7 +31,7 @@ $(document).ready(function() {
             }
 
             var btn = `<div class="btn-group">
-            <button type="button" onclick="edit_agency(${row.IDNo}, '${row.CODE}', '${row.AGENCY}')" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+            <button type="button" onclick="edit_agency(${row.IDNo}, '${row.AGENCY}')" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
               <i class="fa fa-pencil-alt"></i>
             </button>
@@ -41,7 +41,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([row.CODE,row.AGENCY,status,btn]).draw();
+            dataTable.row.add([row.AGENCY,status,btn]).draw();
           });
         },
         error: function(xhr, status, error) {
@@ -73,9 +73,8 @@ $(document).ready(function() {
 
 });
 
-function edit_agency(id, code, agency) {
+function edit_agency(id, agency) {
   $('#modal-edit-agency').modal('show');
-  $('#code').val(code);
   $('#agency').val(agency);
   agency_id = id;
 }

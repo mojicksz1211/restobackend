@@ -35,9 +35,25 @@ $(document).ready(function() {
 		
 
 			var trading = moment(row.TRADING_DATE).format('MMMM DD, YYYY');
-			var record_date = moment(row.RECORD_DATE).format('MMMM DD, YYYY');
+			// var record_date = moment(row.RECORD_DATE).format('MMMM DD, YYYY');
 
-			dataTable.row.add([trading,record_date, `${row.RECORD_TIME}`,row.CATEGORY, row.BUY_IN ,row.CASH_OUT ,row.ROLLING ,row.REMARKS ,btn]).draw();
+			var buy_in = 0;
+			var cash_out = 0;
+			var rolling = 0;
+
+			if(row.CAGE_TYPE == 1) {
+				buy_in = row.AMOUNT;
+			}
+
+			if(row.CAGE_TYPE == 2) {
+				cash_out = row.AMOUNT;
+			}
+
+			if(row.CAGE_TYPE == 3) {
+				rolling = row.AMOUNT;
+			}
+
+			dataTable.row.add([trading, buy_in, cash_out , rolling ,row.REMARKS ,btn]).draw();
 		});
 		},
 		error: function(xhr, status, error) {
@@ -107,7 +123,7 @@ function archive_game_record(id){
 
 function addGameRecord() {
 	$('#modal-new-game-record').modal('show');
-
+	$('.txtAmount').val('');
 	get_cage_category();
 }
 

@@ -28,13 +28,13 @@ $(document).ready(function() {
             var ref = '';
             var acct_code = '';
 
-            if(row.GUESTNo) {
-              ref =`${row.CODE}-${row.AGENT_CODE}-${row.GUESTNo}-${row.GAME_NO}`;
-              acct_code =`${row.CODE}-${row.AGENT_CODE}-${row.GUESTNo}`;
-            } else {
-              ref = `${row.CODE}-${row.AGENT_CODE}-${row.GAME_NO}`;
-              acct_code = `${row.CODE}-${row.AGENT_CODE}`;
-            }
+            // if(row.GUESTNo) {
+              ref =`${row.GAME_NO}`;
+              // acct_code =`${row.CODE}-${row.AGENT_CODE}-${row.GUESTNo}`;
+            // } else {
+            //   ref = `${row.CODE}-${row.AGENT_CODE}-${row.GAME_NO}`;
+            //   acct_code = `${row.CODE}-${row.AGENT_CODE}`;
+            // }
 
             var btn = `<div class="btn-group">
             <button type="button" onclick="EditCommission(${row.game_list_id}, '${ref}','${row.EXPENSE}','${row.ACTUAL_TO_AGENT}','${row.REMARKS}','${row.CASHIER}','${row.MANAGER}')" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
@@ -52,11 +52,15 @@ $(document).ready(function() {
               url: '/game_list/'+row.game_list_id+'/record',
               method: 'GET',
               success: function(response) {
-                var total_rolling = response[0].total_rolling;
 
-                if(total_rolling == null) {
-                  total_rolling = 0;
-                }
+                var total_rolling = 0;
+
+                response.forEach(function(res) {
+  
+                  if(res.CAGE_TYPE == 3) {
+                     total_rolling = res.AMOUNT;
+                  }
+                });
 
                 var due_to_agent = total_rolling * 0.015;
                 var net = due_to_agent - row.EXPENSE;
@@ -110,7 +114,7 @@ $(document).ready(function() {
                 $('.total_actual').text(actualformattedNumber);
 
                 
-                dataTable.row.add([ref ,acct_code, `${row.account_name}`, parseFloat(total_rolling).toLocaleString(), parseFloat(due_to_agent).toLocaleString() ,expense ,parseFloat(net).toLocaleString()  ,actual ,remarks ,cashier ,manager ,btn]).draw();
+                dataTable.row.add([ref ,row.account_no, `${row.agent_name}`, parseFloat(total_rolling).toLocaleString(), parseFloat(due_to_agent).toLocaleString() ,expense ,parseFloat(net).toLocaleString()  ,actual ,remarks ,cashier ,manager ,btn]).draw();
               },
               error: function(xhr, status, error) {
                 console.error('Error fetching options:', error);
@@ -118,10 +122,6 @@ $(document).ready(function() {
             });
 
           });
-
-
-
-
           
         },
         error: function(xhr, status, error) {

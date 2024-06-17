@@ -1,5 +1,6 @@
 var account_id;
 var record_id;
+var game_id;
 
 $(document).ready(function() {
     if ($.fn.DataTable.isDataTable('#game_list-tbl')) {
@@ -27,15 +28,21 @@ $(document).ready(function() {
 
             var status = '';
             if (row.game_status == 2) {
-                status = '<span class="badge bg-info">ON GOING</span>';
+                status = '<span class="badge bg-info">ON GAME</span>';
+            } else if (row.game_status == 3) {
+              status = '<span class="badge bg-primary" style="font-size: 15px;">FINISH</span>';
             } else {
-                status = '<span class="badge bg-danger">INACTIVE</span>';
+                status = '<span class="badge bg-success" style="font-size: 15px;">SETTLED</span>';
             }
 
             var btn = `<div class="btn-group">
             <button type="button" onclick="viewRecord(${row.game_list_id})" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Details">
               GAME RECORD
+            </button>
+            <button type="button" onclick="changeStatus(${row.game_list_id})" class="btn btn-sm btn-alt-warning js-bs-tooltip-enabled"
+              data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Status">
+              CHANGE STATUS
             </button>
             <button type="button" onclick="archive_game_list(${row.game_list_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive">
@@ -60,25 +67,29 @@ $(document).ready(function() {
               url: '/game_list/'+row.game_list_id+'/record',
               method: 'GET',
               success: function(response) {
-                var total_buy_in = response[0].total_buy_in;
-                var total_cash_out = response[0].total_cash_out;
-                var total_rolling = response[0].total_rolling;
-                var gross = total_buy_in + total_cash_out;
-                var net = (gross * .6) - (total_rolling * .015);
+                var total_buy_in = 0;
+                var total_cash_out = 0;
+                var total_rolling = 0;
 
-                if(total_buy_in == null) {
-                  total_buy_in = 0;
-                }
-
-                if(total_cash_out == null) {
-                  total_cash_out = 0;
-                }
-
-                if(total_rolling == null) {
-                  total_rolling = 0;
-                }
+                response.forEach(function(res) {
+                  if(res.CAGE_TYPE == 1) {
+                     total_buy_in = res.AMOUNT;
+                  }
   
-                dataTable.row.add([ref,`${dateFormat} ${row.GAME_TIME}` ,acct_code, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString() ,parseFloat(net).toLocaleString(),status,btn]).draw();
+                  if(res.CAGE_TYPE == 2) {
+                     total_cash_out = res.AMOUNT;
+                  }
+  
+                  if(res.CAGE_TYPE == 3) {
+                     total_rolling = res.AMOUNT;
+                  }
+                });
+
+                var gross = total_buy_in - total_cash_out;
+                var net = (gross * .6) - (total_rolling * .015);
+              
+  
+                dataTable.row.add([`${row.GAME_NO}`,row.game_list_id, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString() ,parseFloat(net).toLocaleString(),status,btn]).draw();
               },
               error: function(xhr, status, error) {
                 console.error('Error fetching options:', error);
@@ -139,8 +150,27 @@ $(document).ready(function() {
             // }
           }
        });
+    });
+
+
+       $('#edit_status').submit(function(event) {
+        event.preventDefault(); 
+
+        var formData = $(this).serialize();
+        $.ajax({
+            url: '/game_list/change_status/' + game_id,
+            type: 'PUT',
+            data: formData,
+            success: function(response) {
+                reloadData();
+                $('#modal-change_status').modal('hide');
+            },
+            error: function(error) {
+                console.error('Error updating agent:', error);
+            }
+        });
+      });
       // }
-  });
 
 });
 
@@ -148,6 +178,13 @@ function addGameList(id) {
 	$('#modal-new-game-list').modal('show');
 	
 	get_account();
+}
+
+
+function changeStatus(id) {
+	$('#modal-change_status').modal('show');
+
+  game_id = id;
 }
 
 function get_account() {
@@ -162,14 +199,10 @@ function get_account() {
 			  text: '--SELECT ACCOUNT--'
 		  }));
 			response.forEach(function(option) {
-				if(option.GUESTNo) {
-					textOption = option.agency_code+'-'+option.agent_code+'-'+option.GUESTNo;
-				} else {
-					textOption = option.agency_code+'-'+option.agent_code;
-				}
+			
 				selectOptions.append($('<option>', {
 					value: option.account_id,
-					text: textOption
+					text: option.agent_name+' ('+ option.agent_code+')'
 				}));
 			});
 		},

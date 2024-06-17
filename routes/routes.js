@@ -207,10 +207,6 @@ pageRouter.get("/game_record/:id", checkSession, function (req, res) {
 			return;
 		}
 		if (results) {
-			let reference_no = results[0].CODE +'-'+ results[0].AGENT_CODE +'-'+ results[0].GAME_NO;
-			if(results[0].GUESTNo) {
-				reference_no = results[0].CODE +'-'+ results[0].AGENT_CODE +'-'+ results[0].GUESTNo +'-'+ results[0].GAME_NO;
-			}
 			res.render('gamebook/game_record', 
 				{
 					username: req.session.username,
@@ -218,7 +214,7 @@ pageRouter.get("/game_record/:id", checkSession, function (req, res) {
 					lastname: req.session.lastname,
 					user_id: req.session.user_id,
 					page_id: pageId,
-					reference: reference_no,
+					reference: results[0].GAME_NO,
 					currentPage: 'game_record'
 				}
 			);
@@ -473,13 +469,12 @@ pageRouter.put('/user/remove/:id', (req, res) => {
 // ADD AGENCY
 pageRouter.post('/add_agency', (req, res) => {
 	const {
-		txtAgencyCode,
 		txtAgency
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO agency (CODE, AGENCY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?)`;
-	connection.query(query, [txtAgencyCode, txtAgency, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO agency (AGENCY, ENCODED_BY, ENCODED_DT) VALUES ( ?, ?, ?)`;
+	connection.query(query, [txtAgency, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting agency:', err);
 			res.status(500).send('Error inserting agency');
@@ -506,13 +501,12 @@ pageRouter.get('/agency_data', (req, res) => {
 pageRouter.put('/agency/:id', (req, res) => {
 	const id = parseInt(req.params.id);
 	const {
-		txtAgencyCode,
 		txtAgency
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `UPDATE agency SET CODE = ?, AGENCY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [txtAgencyCode, txtAgency, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE agency SET AGENCY = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtAgency, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating agency:', err);
 			res.status(500).send('Error updating agency');
@@ -551,6 +545,7 @@ pageRouter.post('/add_agent', (req, res) => {
 	} = req.body;
 	let date_now = new Date();
 
+
 	const agency = txtAgencyLine.split('-');
 	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, FIRSTNAME, MIDDLENAME, LASTNAME, CONTACTNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 	connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact, req.session.user_id, date_now], (err, result) => {
@@ -560,13 +555,23 @@ pageRouter.post('/add_agent', (req, res) => {
 			return;
 		}
 
-		res.redirect('/agent');
+		const agent_id = result.insertId;
+
+		const account = `INSERT INTO account (AGENT_ID, GUESTNo, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
+
+		connection.query(account,[agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
+            if (err) throw err;
+
+			res.redirect('/agent');
+		});
+
+		
 	});
 });
 
 //GET AGENT
 pageRouter.get('/agent_data', (req, res) => {
-	connection.query('SELECT *, agency.CODE AS agency_code, agency.AGENCY AS agency_name, agency.IDNo AS agency_id, agent.AGENT_CODE AS agent_code, agent.IDNo AS agent_id, agent.ACTIVE as active FROM agent JOIN agency ON agent.AGENCY = agency.IDNo WHERE agent.ACTIVE = 1', (error, results, fields) => {
+	connection.query('SELECT *, agency.AGENCY AS agency_name, agency.IDNo AS agency_id, agent.AGENT_CODE AS agent_code, agent.IDNo AS agent_id, agent.ACTIVE as active FROM agent JOIN agency ON agent.AGENCY = agency.IDNo WHERE agent.ACTIVE = 1', (error, results, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
 			res.status(500).send('Error fetching data');
@@ -662,7 +667,7 @@ pageRouter.post('/add_account', (req, res) => {
 
 //GET ACCOUNT
 pageRouter.get('/account_data', (req, res) => {
-	const query = `SELECT *, account.FIRSTNAME AS account_firstname, account.MIDDLENAME AS account_middlename, account.LASTNAME AS account_lastname, agency.AGENCY AS agency_name, agency.CODE AS agency_code, account.IDNo AS account_id, agent.AGENT_CODE AS agent_code, account.ACTIVE as active,  CONCAT_WS(" ", agent.FIRSTNAME,  agent.MIDDLENAME, agent.LASTNAME) AS agent_name
+	const query = `SELECT *, agency.AGENCY AS agency_name, account.IDNo AS account_id, agent.AGENT_CODE AS agent_code, account.ACTIVE as active,  CONCAT_WS(" ", agent.FIRSTNAME,  agent.MIDDLENAME, agent.LASTNAME) AS agent_name
   FROM account 
   JOIN agent ON agent.IDNo = account.AGENT_ID
   JOIN agency ON agency.IDNo = agent.AGENCY
@@ -681,18 +686,14 @@ pageRouter.get('/account_data', (req, res) => {
 pageRouter.put('/account/:id', (req, res) => {
 	const id = parseInt(req.params.id);
 	const {
-		agent_id,
 		txtGuestNo,
-		txtFirstname,
-		txtMiddlename,
-		txtLastname,
 		txtMembershipNo
 	} = req.body;
 	let date_now = new Date();
 
 
-	const query = `UPDATE account SET  AGENT_ID = ?, GUESTNo = ?, FIRSTNAME = ?, MIDDLENAME = ?, LASTNAME = ?, MEMBERSHIPNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [agent_id, txtGuestNo, txtFirstname, txtMiddlename, txtLastname, txtMembershipNo, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE account SET  GUESTNo = ?, MEMBERSHIPNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtGuestNo, txtMembershipNo, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating account:', err);
 			res.status(500).send('Error updating account');
@@ -1777,20 +1778,41 @@ pageRouter.post('/add_account_details', (req, res) => {
 	const {
 		txtAccountId,
 		txtTrans,
-		account_date,
-		account_time, 
 		txtAmount
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, DATE, TIME, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountId,txtTrans, txtAmount, account_date, account_time, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountId,txtTrans, txtAmount, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
 			return;
 		}
 		res.redirect('/account_ledger');
+	});
+});
+
+// ADD ACCOUNT DETAILS TRANSFER
+pageRouter.post('/add_account_details/transfer', (req, res) => {
+	const {
+		txtAccountId,
+		txtAccount,
+		txtAmount
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, TRANSFER, TRANSFER_AGENT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountId,2, txtAmount, 1, txtAccount,req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		const query1 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, TRANSFER, TRANSFER_AGENT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+		connection.query(query1, [txtAccount, 1, txtAmount, 1, txtAccountId,req.session.user_id, date_now], (err, result) => {
+			res.redirect('/account_ledger');
+		});
 	});
 });
 
@@ -1831,26 +1853,30 @@ pageRouter.put('/account_details/remove/:id', (req, res) => {
 pageRouter.post('/add_game_list', (req, res) => {
 	const {
 		txtAccountCode,
-		txtDate,
-		txtTime,
-		txtGameNo
+		txtChips,
+		txtGameNo,
+		txtAmount
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, GAME_DATE, GAME_TIME, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountCode,txtGameNo, txtDate, txtTime, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, WORKING_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountCode,txtGameNo, txtChips, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
 			return;
 		}
-		res.redirect('/game_list');
+
+		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+		connection.query(query2, [result.insertId, date_now, 1, txtAmount, req.session.user_id, date_now], (err, result2) => {
+			res.redirect('/game_list');
+		});
 	});
 });
 
 // GET GAME LIST
 pageRouter.get('/game_list_data', (req, res) => {
-	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, CONCAT(account.FIRSTNAME, ' ', account.MIDDLENAME, ' ', account.LASTNAME) AS account_name FROM game_list 
+	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, account.IDNo AS account_no, CONCAT_WS(" ", FIRSTNAME,  MIDDLENAME, LASTNAME) AS agent_name FROM game_list 
 	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
 	JOIN agent ON agent.IDNo = account.AGENT_ID
 	JOIN agency ON agency.IDNo = agent.AGENCY
@@ -1867,7 +1893,7 @@ pageRouter.get('/game_list_data', (req, res) => {
 
 pageRouter.get('/game_list/:id/record', (req, res) => {
 	const id = parseInt(req.params.id);
-	const query = `SELECT SUM(BUY_IN) AS total_buy_in, SUM(CASH_OUT) AS total_cash_out, SUM(ROLLING) AS total_rolling FROM game_record 
+	const query = `SELECT AMOUNT, CAGE_TYPE FROM game_record 
   	WHERE ACTIVE != 0 AND GAME_ID = ?`;
 	connection.query(query,[id], (error, result, fields) => {
 		if (error) {
@@ -1894,6 +1920,25 @@ pageRouter.put('/game_list/remove/:id', (req, res) => {
 		}
 
 		res.send('GAME LIST updated successfully');
+	});
+});
+
+// STATUS GAME LIST
+pageRouter.put('/game_list/change_status/:id', (req, res) => {
+	const id = parseInt(req.params.id);
+	let date_now = new Date();
+
+	const {txtStatus} = req.body;
+
+	const query = `UPDATE game_list SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtStatus, req.session.user_id, date_now, id], (err, result) => {
+		if (err) {
+			console.error('Error updating GAME LIST:', err);
+			res.status(500).send('Error updating GAME LIST');
+			return;
+		}
+
+		res.send('GAME LIST STATUS updated successfully');
 	});
 });
 
@@ -1927,18 +1972,14 @@ pageRouter.post('/add_game_record', (req, res) => {
 	const {
 		game_id,
 		txtTradingDate,
-		txtDate,
-		txtTime,
 		txtCategory,
-		txtBI,
-		txtCO,
-		txtRolling,
+		txtAmount,
 		txtRemarks
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, RECORD_DATE, RECORD_TIME, CAGE_TYPE, BUY_IN, CASH_OUT, ROLLING, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id,txtTradingDate,txtDate,txtTime,txtCategory,txtBI,txtCO,txtRolling,txtRemarks, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?,?, ?)`;
+	connection.query(query, [game_id,txtTradingDate,txtCategory,txtAmount,txtRemarks, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');

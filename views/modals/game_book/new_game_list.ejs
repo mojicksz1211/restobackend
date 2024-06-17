@@ -31,15 +31,28 @@
 
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="date" class="form-control" name="txtDate" placeholder="Date " />
+                                <input type="number" class="form-control" name="txtAmount" placeholder="Amount" />
                             </div>
                         </div>
 
                         <div class="row mb-2">
                             <div class="col-sm-12">
-                                <input type="time" class="form-control" name="txtTime" placeholder="Time" />
+                                <input type="number" class="form-control" name="txtChips" placeholder="Working Chips" />
                             </div>
                         </div>
+
+                        <div class="row mb-2">
+                            <div class="col-sm-12">
+                                <select class="select2 form-select" name="txtCommision" style="width: 100%;"
+                                    data-placeholder="Transaction">
+                                    <option selected disabled>--- Commission Type ---</option>
+                                    <option value="1">Rolling Game (1.5%)</option>
+                                    <option value="2">Shared Game</option>
+                                    <option value="3">Loosing Game</option>
+                                </select>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="block-content block-content-full text-end bg-body">
                         <button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">

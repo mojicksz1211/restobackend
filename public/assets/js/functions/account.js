@@ -32,11 +32,11 @@ $(document).ready(function() {
 
             var btn = `<div class="btn-group">
             <button type="button"  class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
-            onclick="account_details(${row.account_id}, '${row.account_firstname} ${row.account_middlename} ${row.account_lastname}')"
+            onclick="account_details(${row.account_id}, '${row.agent_name}')"
               data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Details">
               Details
             </button>
-            <button type="button" onclick="edit_account(${row.account_id}, ${row.AGENT_ID}, '${row.agent_name}', '${row.agency_name}', ${row.GUESTNo},'${row.account_firstname}','${row.account_middlename}','${row.account_lastname}', '${row.MEMBERSHIPNo}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+            <button type="button" onclick="edit_account(${row.account_id}, ${row.AGENT_ID}, '${row.agent_name}', '${row.agency_name}', '${row.GUESTNo}', '${row.MEMBERSHIPNo}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
               <i class="fa fa-pencil-alt"></i>
             </button>
@@ -46,7 +46,7 @@ $(document).ready(function() {
             </button>
           </div>`;
 
-            dataTable.row.add([`${row.agency_code}-${row.agent_code}-${row.GUESTNo}`,`${row.agency_name} (${row.agency_code})`, row.agent_code, `${row.account_firstname} ${row.account_middlename} ${row.account_lastname} `, row.MEMBERSHIPNo,status,btn]).draw();
+            dataTable.row.add([`${row.account_id}`,`${row.agency_name}`, row.agent_code, `${row.agent_name}`,`${row.GUESTNo}`, row.MEMBERSHIPNo, status,btn]).draw();
           });
         },
         error: function(xhr, status, error) {
@@ -133,6 +133,26 @@ $(document).ready(function() {
         }
      });
   });
+
+  $('#add_transfer_account').submit(function(event) {
+    event.preventDefault(); 
+
+    var formData = $(this).serialize();
+
+      $.ajax({
+        url: '/add_account_details/transfer',
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            $('#modal-transfer_account').modal('hide');
+              reloadDataDetails();
+        },
+        error: function(xhr, status, error) {
+          var errorMessage = xhr.responseJSON.error;
+            console.error('Error updating user role:', error);
+        }
+     });
+  });
 });
 
 function addAccount() {
@@ -142,14 +162,11 @@ function addAccount() {
 
 
 
-function edit_account(id, agent_id, agent_name, agency_name, guest_no, firstname,middlename,lastname,membership_no ) {
+function edit_account(id, agent_id, agent_name, agency_name, guest_no, membership_no ) {
   $('#modal-edit-account').modal('show');
   $('#edit_agent_name').val(agent_name);
   $('#edit_agency_name').val(agency_name);
   $('#guest_no').val(guest_no);
-  $('#firstname').val(firstname);
-  $('#middlename').val(middlename);
-  $('#lastname').val(lastname);
   $('#membership_no').val(membership_no);
 
   edit_get_agent(agent_id);
@@ -318,7 +335,6 @@ function account_details(account_id_data, account_name) {
             withdraw_amount = withdraw_amount + row.AMOUNT;
           }
 
-          console.log(deposit_amount);
 
           var btn = `<div class="btn-group">
           <button type="button" onclick="archive_account_details(${row.account_details_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
@@ -327,9 +343,20 @@ function account_details(account_id_data, account_name) {
           </button>
         </div>`;
 
-        var dateFormat = moment(row.DATE).format('MMMM DD, YYYY');
+        // var dateFormat = moment(row.DATE).format('MMMM DD, YYYY');
+
+        var trans = '';
+
+        if(row.TRANSACTION == 'DEPOSIT' && row.TRANSFER == 1) {
+          trans = 'DEPOSIT (Transferred)';
+        } else if(row.TRANSACTION == 'WITHDRAW' && row.TRANSFER == 1) {
+          trans = 'WITHDRAW (Transferred)';
+        } else {
+          trans = row.TRANSACTION;
+        }
   
-        dataTableDetails.row.add([`${row.TRANSACTION}`,`P${row.AMOUNT.toLocaleString()}`, dateFormat,  `${row.TIME} `, btn]).draw();
+  
+        dataTableDetails.row.add([trans,`P${row.AMOUNT.toLocaleString()}`, btn]).draw();
         });
 
 
@@ -350,6 +377,7 @@ function account_details(account_id_data, account_name) {
 function add_account_details() {
   $('#modal-account-details').modal('hide');
   $('#modal-add-account-details').modal('show');
+  $('.txtAmount').val('');
 
   var account_id_val = $('#account_id').val();
 
@@ -358,6 +386,44 @@ function add_account_details() {
   $('#account_id_add').val(account_id_val);
 
   transaction_type();
+}
+
+
+function transfer_account() {
+  $('#modal-account-details').modal('hide');
+  $('#modal-transfer_account').modal('show');
+  $('.txtAmount').val('');
+
+  var account_id_val = $('#account_id').val();
+  account_id = account_id_val;
+  $('#account_id_add_trans').val(account_id_val);
+
+  get_account();
+}
+
+
+function transaction_type() {
+  $.ajax({
+      url: '/transaction_type_data',
+      method: 'GET',
+      success: function(response) {
+          var selectOptions = $('#txtTrans');
+          selectOptions.empty(); 
+          selectOptions.append($('<option>', {
+            value: '',
+            text: '--SELECT TRANSACTION TYPE--'
+        }));
+          response.forEach(function(option) {
+              selectOptions.append($('<option>', {
+                  value: option.IDNo,
+                  text: option.TRANSACTION
+              }));
+          });
+      },
+      error: function(xhr, status, error) {
+          console.error('Error fetching options:', error);
+      }
+  });
 }
 
 function transaction_type() {
@@ -383,6 +449,32 @@ function transaction_type() {
       }
   });
 }
+
+function get_account() {
+	$.ajax({
+		url: '/account_data',
+		method: 'GET',
+		success: function(response) {
+			var selectOptions = $('#txtAccount');
+			selectOptions.empty(); 
+			selectOptions.append($('<option>', {
+			  value: '',
+			  text: '--SELECT ACCOUNT--'
+		  }));
+			response.forEach(function(option) {
+			
+				selectOptions.append($('<option>', {
+					value: option.account_id,
+					text: option.agent_name+' ('+ option.agent_code+')'
+				}));
+			});
+		},
+		error: function(xhr, status, error) {
+			console.error('Error fetching options:', error);
+		}
+	});
+  }
+  
 
 function archive_account_details(id){
   Swal.fire({
