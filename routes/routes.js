@@ -1983,7 +1983,7 @@ pageRouter.post('/add_game_record', (req, res) => {
 	let date_now = new Date();
 
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?,?, ?)`;
-	connection.query(query, [game_id,txtTradingDate,txtCategory,txtAmount,txtRemarks, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [game_id,date_now,txtCategory,txtAmount,txtRemarks, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
