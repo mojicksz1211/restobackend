@@ -1869,7 +1869,11 @@ pageRouter.post('/add_game_list', (req, res) => {
 
 		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
 		connection.query(query2, [result.insertId, date_now, 1, txtAmount, req.session.user_id, date_now], (err, result2) => {
-			res.redirect('/game_list');
+
+			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+			connection.query(query3, [result.insertId, date_now, 3, txtAmount, req.session.user_id, date_now], (err, result3) => {
+				res.redirect('/game_list');
+			});
 		});
 	});
 });
