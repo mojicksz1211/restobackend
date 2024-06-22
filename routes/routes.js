@@ -84,11 +84,11 @@ pageRouter.get("/dashboard", checkSession, function (req, res) {
 	let conciergeOut = 'SELECT SUM(AMOUNT) AS concierge_out FROM junket_concierge WHERE ACTIVE = 1 AND TRANSACTION_ID = 2';
 
 	connection.query(cashDeno, (err, results1) => {
-        if (err) throw err;
-        connection.query(cashChips, (err, results2) => {
-            if (err) throw err;
-            connection.query(nonNego, (err, results3) => {
-                if (err) throw err;
+		if (err) throw err;
+		connection.query(cashChips, (err, results2) => {
+			if (err) throw err;
+			connection.query(nonNego, (err, results3) => {
+				if (err) throw err;
 				connection.query(junketCapitalDeposit, (err, results4) => {
 					if (err) throw err;
 					connection.query(junketCapitalWithdraw, (err, results5) => {
@@ -103,24 +103,24 @@ pageRouter.get("/dashboard", checkSession, function (req, res) {
 										if (err) throw err;
 										connection.query(conciergeOut, (err, results10) => {
 											if (err) throw err;
-												res.render('dashboard', {
-													username: req.session.username,
-													firstname: req.session.firstname,
-													lastname: req.session.lastname,
-													user_id: req.session.user_id,
-													currentPage: 'dashboard',
+											res.render('dashboard', {
+												username: req.session.username,
+												firstname: req.session.firstname,
+												lastname: req.session.lastname,
+												user_id: req.session.user_id,
+												currentPage: 'dashboard',
 
-													cashDeno: results1,
-													cashChips: results2,
-													nonNego: results3,
-													junketCapitalDeposit: results4,
-													junketCapitalWithdraw: results5,
-													accountDeposit: results6,
-													accountWithdraw: results7,
-													houseExpense: results8,
-													conciergeIn: results9,
-													conciergeOut: results10,
-												});
+												cashDeno: results1,
+												cashChips: results2,
+												nonNego: results3,
+												junketCapitalDeposit: results4,
+												junketCapitalWithdraw: results5,
+												accountDeposit: results6,
+												accountWithdraw: results7,
+												houseExpense: results8,
+												conciergeIn: results9,
+												conciergeOut: results10,
+											});
 										});
 									});
 								});
@@ -129,8 +129,8 @@ pageRouter.get("/dashboard", checkSession, function (req, res) {
 					});
 				});
 			});
-        });
-    });
+		});
+	});
 	// res.render("dashboard", sessions(req, 'dashboard'));
 });
 
@@ -191,6 +191,10 @@ pageRouter.get("/game_list", checkSession, function (req, res) {
 	res.render("gamebook/game_list", sessions(req, 'game_list'));
 });
 
+pageRouter.get("/game_list2", checkSession, function (req, res) {
+	res.render("gamebook/game_list2", sessions(req, 'game_list'));
+});
+
 pageRouter.get("/game_record/:id", checkSession, function (req, res) {
 	const pageId = parseInt(req.params.id);
 	const query = `SELECT *
@@ -207,20 +211,18 @@ pageRouter.get("/game_record/:id", checkSession, function (req, res) {
 			return;
 		}
 		if (results) {
-			res.render('gamebook/game_record', 
-				{
-					username: req.session.username,
-					firstname: req.session.firstname,
-					lastname: req.session.lastname,
-					user_id: req.session.user_id,
-					page_id: pageId,
-					reference: results[0].GAME_NO,
-					currentPage: 'game_record'
-				}
-			);
+			res.render('gamebook/game_record', {
+				username: req.session.username,
+				firstname: req.session.firstname,
+				lastname: req.session.lastname,
+				user_id: req.session.user_id,
+				page_id: pageId,
+				reference: results[0].GAME_NO,
+				currentPage: 'game_record'
+			});
 		}
 	});
-	
+
 });
 
 //LOGIN
@@ -559,13 +561,13 @@ pageRouter.post('/add_agent', (req, res) => {
 
 		const account = `INSERT INTO account (AGENT_ID, GUESTNo, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
 
-		connection.query(account,[agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
-            if (err) throw err;
+		connection.query(account, [agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
+			if (err) throw err;
 
 			res.redirect('/agent');
 		});
 
-		
+
 	});
 });
 
@@ -1783,7 +1785,7 @@ pageRouter.post('/add_account_details', (req, res) => {
 	let date_now = new Date();
 
 	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountId,txtTrans, txtAmount, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [txtAccountId, txtTrans, txtAmount, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -1803,14 +1805,14 @@ pageRouter.post('/add_account_details/transfer', (req, res) => {
 	let date_now = new Date();
 
 	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, TRANSFER, TRANSFER_AGENT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountId,2, txtAmount, 1, txtAccount,req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [txtAccountId, 2, txtAmount, 1, txtAccount, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
 			return;
 		}
 		const query1 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, TRANSFER, TRANSFER_AGENT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query1, [txtAccount, 1, txtAmount, 1, txtAccountId,req.session.user_id, date_now], (err, result) => {
+		connection.query(query1, [txtAccount, 1, txtAmount, 1, txtAccountId, req.session.user_id, date_now], (err, result) => {
 			res.redirect('/account_ledger');
 		});
 	});
@@ -1822,7 +1824,7 @@ pageRouter.get('/account_details_data/:id', (req, res) => {
 	const query = `SELECT *, account_ledger.IDNo AS account_details_id FROM account_ledger 
   JOIN transaction_type ON transaction_type.IDNo = account_ledger.TRANSACTION_ID
   WHERE account_ledger.ACTIVE=1 AND account_ledger.ACCOUNT_ID= ? ORDER BY account_ledger.IDNo DESC`;
-	connection.query(query,[id], (error, result, fields) => {
+	connection.query(query, [id], (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
 			res.status(500).send('Error fetching data');
@@ -1860,7 +1862,7 @@ pageRouter.post('/add_game_list', (req, res) => {
 	let date_now = new Date();
 
 	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, WORKING_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountCode,txtGameNo, txtChips, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [txtAccountCode, txtGameNo, txtChips, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -1899,7 +1901,7 @@ pageRouter.get('/game_list/:id/record', (req, res) => {
 	const id = parseInt(req.params.id);
 	const query = `SELECT AMOUNT, CAGE_TYPE FROM game_record 
   	WHERE ACTIVE != 0 AND GAME_ID = ?`;
-	connection.query(query,[id], (error, result, fields) => {
+	connection.query(query, [id], (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
 			res.status(500).send('Error fetching data');
@@ -1932,7 +1934,9 @@ pageRouter.put('/game_list/change_status/:id', (req, res) => {
 	const id = parseInt(req.params.id);
 	let date_now = new Date();
 
-	const {txtStatus} = req.body;
+	const {
+		txtStatus
+	} = req.body;
 
 	const query = `UPDATE game_list SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
 	connection.query(query, [txtStatus, req.session.user_id, date_now, id], (err, result) => {
@@ -1983,13 +1987,13 @@ pageRouter.post('/add_game_record', (req, res) => {
 	let date_now = new Date();
 
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?,?, ?)`;
-	connection.query(query, [game_id,date_now,txtCategory,txtAmount,txtRemarks, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [game_id, date_now, txtCategory, txtAmount, txtRemarks, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
 			return;
 		}
-		res.redirect('/game_record/'+game_id);
+		res.redirect('/game_record/' + game_id);
 	});
 });
 
@@ -1999,7 +2003,7 @@ pageRouter.get('/game_record_data/:id', (req, res) => {
 	const query = `SELECT *, game_record.IDNo AS game_record_id FROM game_record 
 	JOIN cage_category ON game_record.CAGE_TYPE = cage_category.IDNo
   	WHERE game_record.ACTIVE != 0 AND game_record.GAME_ID = ? ORDER BY game_record.IDNo DESC`;
-	connection.query(query, [id],(error, result, fields) => {
+	connection.query(query, [id], (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
 			res.status(500).send('Error fetching data');
