@@ -12,3 +12,7 @@
 .select2-selection__arrow {
 	height: 34px !important;
 }
+
+#game_list-tbl1_wrapper .row.dt-row .col-sm-12 {
+	overflow: auto;
+}

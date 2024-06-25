@@ -1857,12 +1857,14 @@ pageRouter.post('/add_game_list', (req, res) => {
 		txtAccountCode,
 		txtChips,
 		txtGameNo,
-		txtAmount
+		txtAmount,
+		txtCommisionType,
+		txtCommisionRate
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, WORKING_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountCode, txtGameNo, txtChips, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, WORKING_CHIPS, COMMISSION_TYPE, COMMISSION_PERCENTAGE, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountCode, txtGameNo, txtChips, txtCommisionType, txtCommisionRate, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -1900,7 +1902,7 @@ pageRouter.get('/game_list_data', (req, res) => {
 pageRouter.get('/game_list/:id/record', (req, res) => {
 	const id = parseInt(req.params.id);
 	const query = `SELECT AMOUNT, CAGE_TYPE FROM game_record 
-  	WHERE ACTIVE != 0 AND GAME_ID = ?`;
+  	WHERE ACTIVE != 0 AND GAME_ID = ? ORDER BY IDNo ASC`;
 	connection.query(query, [id], (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
@@ -1938,8 +1940,8 @@ pageRouter.put('/game_list/change_status/:id', (req, res) => {
 		txtStatus
 	} = req.body;
 
-	const query = `UPDATE game_list SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [txtStatus, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE game_list SET ACTIVE = ?, GAME_ENDED = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtStatus,date_now, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating GAME LIST:', err);
 			res.status(500).send('Error updating GAME LIST');
@@ -1997,12 +1999,69 @@ pageRouter.post('/add_game_record', (req, res) => {
 	});
 });
 
+// ADD GAME RECORD BUYIN
+pageRouter.post('/game_list/add/buyin', (req, res) => {
+	const {
+		game_id,
+		txtAmount,
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 1, txtAmount, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		res.redirect('/game_list');
+	});
+});
+
+// ADD GAME RECORD CASH OUT
+pageRouter.post('/game_list/add/cashout', (req, res) => {
+	const {
+		game_id,
+		txtAmount,
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 2, txtAmount, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		res.redirect('/game_list');
+	});
+});
+
+// ADD GAME RECORD CASH OUT
+pageRouter.post('/game_list/add/rolling', (req, res) => {
+	const {
+		game_id,
+		txtAmount,
+	} = req.body;
+	let date_now = new Date();
+
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 3, txtAmount, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting details', err);
+			res.status(500).send('Error inserting details');
+			return;
+		}
+		res.redirect('/game_list');
+	});
+});
+
 // GET GAME RECORD
 pageRouter.get('/game_record_data/:id', (req, res) => {
 	const id = parseInt(req.params.id);
 	const query = `SELECT *, game_record.IDNo AS game_record_id FROM game_record 
 	JOIN cage_category ON game_record.CAGE_TYPE = cage_category.IDNo
-  	WHERE game_record.ACTIVE != 0 AND game_record.GAME_ID = ? ORDER BY game_record.IDNo DESC`;
+  	WHERE game_record.ACTIVE != 0 AND game_record.GAME_ID = ? ORDER BY game_record.IDNo ASC`;
 	connection.query(query, [id], (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
