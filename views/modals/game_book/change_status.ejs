@@ -1,42 +1,42 @@
 <div class="modal fade" id="modal-change_status" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
-    data-keyboard="false" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-popout" role="document">
-        <div class="modal-content">
-            <div class="block block-rounded block-themed block-transparent mb-0">
-                <div class="block-header bg-primary-dark">
-                    <h3 class="block-title">Change Status</h3>
-                    <div class="block-options">
-                        <button type="button" class="btn-block-option" data-bs-dismiss="modal" aria-label="Close">
-                            <i class="fa fa-fw fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                <form id="edit_status">
-                    <div class="block-content">
+	data-keyboard="false" data-bs-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="block block-rounded block-themed block-transparent mb-0">
+				<div class="block-header bg-primary-dark">
+					<h3 class="block-title">Change Status</h3>
+					<div class="block-options">
+						<button type="button" class="btn-block-option" data-bs-dismiss="modal" aria-label="Close">
+							<i class="fa fa-fw fa-times"></i>
+						</button>
+					</div>
+				</div>
+				<form id="edit_status">
+					<div class="block-content">
 
-                        <div class="row mb-2">
-                            <div class="col-sm-12">
-                                <select class="select2 form-select" name="txtStatus" style="width: 100%;"
-                                    data-placeholder="Transaction">
-                                    <option selected disabled>--- STATUS ---</option>
-                                    <option value="2">ON GAME</option>
-                                    <!-- <option value="3">FINISH</option> -->
-                                    <option value="1">END GAME</option>
-                                </select>
-                            </div>
-                        </div>
+						<div class="row mb-2">
+							<div class="col-sm-12">
+								<select class="js-select2 form-select" name="txtStatus" style="width: 100%;"
+									data-placeholder="Choose a status...">
+									<option></option>
+									<option value="2">ON GAME</option>
+									<!-- <option value="3">FINISH</option> -->
+									<option value="1">END GAME</option>
+								</select>
+							</div>
+						</div>
 
-                    </div>
-                    <div class="block-content block-content-full text-end bg-body">
-                        <button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">
-                            Save
-                        </button>
-                        <button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">
-                            Close
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+					</div>
+					<div class="block-content block-content-full text-end bg-body">
+						<button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">
+							Save
+						</button>
+						<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">
+							Close
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 </div>

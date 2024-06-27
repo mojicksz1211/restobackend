@@ -28,7 +28,7 @@ $(document).ready(function () {
 					var status = '';
 					if (row.game_status == 2) {
 						status = `<button type="button" onclick="changeStatus(${row.game_list_id})" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
-						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Status">ON GAME</button>`;
+						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Status"  style="font-size:8px !important;">ON GAME</button>`;
 					} else {
 						status = moment(row.GAME_ENDED).format('MMMM DD, YYYY HH:mm:ss');
 					}
@@ -49,7 +49,7 @@ $(document).ready(function () {
 					</div>`;
 
 					var btn_his = `<button type="button" onclick="showHistory(${row.game_list_id})" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
-						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Details">
+						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Details"  style="font-size:8px !important;">
 						History
 						</button>`;
 
@@ -78,11 +78,11 @@ $(document).ready(function () {
 
 							response.forEach(function (res) {
 
-								if (res.CAGE_TYPE == 1 && initial_buy_in != 0 ) {
+								if (res.CAGE_TYPE == 1 && initial_buy_in != 0) {
 									total_buy_in = total_buy_in + res.AMOUNT;
 								}
 
-								if(initial_buy_in == 0 && res.CAGE_TYPE == 1) {
+								if (initial_buy_in == 0 && res.CAGE_TYPE == 1) {
 									initial_buy_in = res.AMOUNT;
 								}
 
@@ -102,13 +102,13 @@ $(document).ready(function () {
 							var net = parseFloat(((total_amount - total_cash_out) * .6) - (total_rolling * (row.COMMISSION_PERCENTAGE / 100))).toLocaleString();
 
 							var winloss = parseFloat(total_amount - total_cash_out).toLocaleString();
-							
-							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin('+row.game_list_id+')">'+parseFloat(total_buy_in).toLocaleString()+'</button>';
-							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling('+row.game_list_id+')">'+parseFloat(total_rolling).toLocaleString()+'</button>';
-							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout('+row.game_list_id+')">'+parseFloat(total_cash_out).toLocaleString()+'</button>';
+
+							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in).toLocaleString() + '</button>';
+							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling).toLocaleString() + '</button>';
+							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out).toLocaleString() + '</button>';
 
 							// dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString(), parseFloat(net).toLocaleString(), status, btn]).draw();
-							dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, initial_buy_in.toLocaleString(), buyin_td ,total_amount.toLocaleString(), rolling_td, cashout_td, `${row.COMMISSION_PERCENTAGE}%`,net,winloss,status,btn_his]).draw();
+							dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, initial_buy_in.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td, cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
 						},
 						error: function (xhr, status, error) {
 							console.error('Error fetching options:', error);
@@ -314,59 +314,57 @@ function showHistory(record_id) {
 	}
 
 	var dataTable = $('#game_record-tbl').DataTable({
-		columnDefs: [
-			{
-			createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+		columnDefs: [{
+			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
 				$(cell).addClass('text-center');
 			}
-			}
-		]
+		}]
 	});
 
 	function reloadDataRecord() {
-	$.ajax({
-		url: '/game_record_data/' + record_id, // Endpoint to fetch data
-		method: 'GET',
-		success: function(data) {
-		dataTable.clear();
-		data.forEach(function(row) {
+		$.ajax({
+			url: '/game_record_data/' + record_id, // Endpoint to fetch data
+			method: 'GET',
+			success: function (data) {
+				dataTable.clear();
+				data.forEach(function (row) {
 
 
-			var btn = `<div class="btn-group">
+					var btn = `<div class="btn-group">
 			<button type="button" onclick="archive_game_record(${row.game_record_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
 			data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive">
 			<i class="fa fa-trash-alt"></i>
 			</button>
 		</div>`;
 
-		
 
-			var trading = moment(row.ENCODED_DT).format('MMMM DD, YYYY HH:mm:ss');
-			// var record_date = moment(row.RECORD_DATE).format('MMMM DD, YYYY');
 
-			var buy_in = 0;
-			var cash_out = 0;
-			var rolling = 0;
+					var trading = moment(row.ENCODED_DT).format('MMMM DD, YYYY HH:mm:ss');
+					// var record_date = moment(row.RECORD_DATE).format('MMMM DD, YYYY');
 
-			if(row.CAGE_TYPE == 1) {
-				buy_in = row.AMOUNT;
+					var buy_in = 0;
+					var cash_out = 0;
+					var rolling = 0;
+
+					if (row.CAGE_TYPE == 1) {
+						buy_in = row.AMOUNT;
+					}
+
+					if (row.CAGE_TYPE == 2) {
+						cash_out = row.AMOUNT;
+					}
+
+					if (row.CAGE_TYPE == 3) {
+						rolling = row.AMOUNT;
+					}
+
+					dataTable.row.add([trading, buy_in, cash_out, rolling, btn]).draw();
+				});
+			},
+			error: function (xhr, status, error) {
+				console.error('Error fetching data:', error);
 			}
-
-			if(row.CAGE_TYPE == 2) {
-				cash_out = row.AMOUNT;
-			}
-
-			if(row.CAGE_TYPE == 3) {
-				rolling = row.AMOUNT;
-			}
-
-			dataTable.row.add([trading, buy_in, cash_out , rolling ,btn]).draw();
 		});
-		},
-		error: function(xhr, status, error) {
-		console.error('Error fetching data:', error);
-		}
-	});
 	}
 
 	reloadDataRecord()
@@ -429,28 +427,28 @@ function archive_game_list(id) {
 	})
 }
 
-function archive_game_record(id){
+function archive_game_record(id) {
 	Swal.fire({
-	  title: 'Are you sure you want to delete this?',
-	  icon: 'warning',
-	  showCancelButton: true,
-	  confirmButtonColor: '#3085d6',
-	  cancelButtonColor: '#d33',
-	  confirmButtonText: 'Yes'
-  }).then((result) => {
-	  if (result.isConfirmed) {
-		$.ajax({
-		  url: '/game_record/remove/' + id,
-		  type: 'PUT',
-		  success: function(response) {
-			window.location.reload();
-		  },
-		  error: function(error) {
-			  console.error('Error deleting game list:', error);
-		  }
-	  });
-	  }
-  })
+		title: 'Are you sure you want to delete this?',
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		confirmButtonText: 'Yes'
+	}).then((result) => {
+		if (result.isConfirmed) {
+			$.ajax({
+				url: '/game_record/remove/' + id,
+				type: 'PUT',
+				success: function (response) {
+					window.location.reload();
+				},
+				error: function (error) {
+					console.error('Error deleting game list:', error);
+				}
+			});
+		}
+	})
 }
 
 

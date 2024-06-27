@@ -4,6 +4,8 @@
 	<%- include ('../partials/title_meta'); -%>
 
 	<%- include ('../partials/header_css'); -%>
+
+	<link rel="stylesheet" href="assets/js/plugins/select2/css/select2.min.css">
 </head>
 
 <body>
@@ -33,7 +35,8 @@
 					</div>
 					<div class="block-content block-content-full">
 						<!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-						<table id="account-tbl" class="table table-bordered table-vcenter js-dataTable-responsive">
+						<table id="account-tbl" class="table table-bordered table-vcenter js-dataTable-responsive"
+							style="font-size: 11px !important;">
 							<thead>
 								<tr>
 									<th class="d-none d-sm-table-cell">ACCOUNT #</th>
@@ -42,14 +45,10 @@
 									<th class="d-none d-sm-table-cell">NAME</th>
 									<th class="d-none d-sm-table-cell">GUESTNo</th>
 									<th class="d-none d-sm-table-cell">MEMBERSHIP No</th>
-									<th class="text-center" style="width: 150px;">STATUS</th>
-									<th class="text-center" style="width: 100px;">ACTION</th>
+									<th class="text-center" style="width: 100px;">STATUS</th>
+									<th class="text-center" style="width: 110px;">ACTION</th>
 								</tr>
 							</thead>
-							<tbody>
-
-
-							</tbody>
 						</table>
 					</div>
 				</div>
@@ -72,11 +71,17 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 		<script src="/assets/js/datatables/account_details_tables_datatables.min.js"></script>
 		<script src="/assets/js/functions/account.js"></script>
+		<script src="assets/js/plugins/select2/js/select2.full.min.js"></script>
 
 		<script>
 			$('.js-select2').select2({
 				placeholder: 'Select an option',
-				dropdownParent: '#modal-new-item-master-data'
+				dropdownParent: '#modal-transfer_account'
+			});
+
+			$('.js-select2').select2({
+				placeholder: 'Select an option',
+				dropdownParent: '#modal-add-account-details'
 			});
 		</script>
 
