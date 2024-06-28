@@ -291,17 +291,31 @@ function addGameList(id) {
 
 function addBuyin(id) {
 	$('#modal-add-buyin').modal('show');
+	
+	$('.txtAmount').val('');
+	$('.txtNN').val('');
+	$('.txtCC').val('');
 
 	$('.game_list_id').val(id);
 }
 
 function addRolling(id) {
 	$('#modal-add-rolling').modal('show');
+	
+	$('.txtAmount').val('');
+	$('.txtNN').val('');
+	$('.txtCC').val('');
+
 	$('.game_list_id').val(id);
 }
 
 function addCashout(id) {
 	$('#modal-add-cashout').modal('show');
+	
+	$('.txtAmount').val('');
+	$('.txtNN').val('');
+	$('.txtCC').val('');
+	
 	$('.game_list_id').val(id);
 }
 
