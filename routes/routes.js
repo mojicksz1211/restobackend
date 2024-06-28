@@ -1858,6 +1858,8 @@ pageRouter.post('/add_game_list', (req, res) => {
 		txtChips,
 		txtGameNo,
 		txtAmount,
+		txtNN,
+		txtCC,
 		txtCommisionType,
 		txtCommisionRate
 	} = req.body;
@@ -1874,8 +1876,8 @@ pageRouter.post('/add_game_list', (req, res) => {
 		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
 		connection.query(query2, [result.insertId, date_now, 1, txtAmount, req.session.user_id, date_now], (err, result2) => {
 
-			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-			connection.query(query3, [result.insertId, date_now, 3, txtAmount, req.session.user_id, date_now], (err, result3) => {
+			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+			connection.query(query3, [result.insertId, date_now, 3, txtAmount,txtNN, txtCC, req.session.user_id, date_now], (err, result3) => {
 				res.redirect('/game_list');
 			});
 		});
@@ -2004,11 +2006,13 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 	const {
 		game_id,
 		txtAmount,
+		txtNN,
+		txtCC
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 1, txtAmount, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 1, txtAmount, txtNN, txtCC, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2023,11 +2027,13 @@ pageRouter.post('/game_list/add/cashout', (req, res) => {
 	const {
 		game_id,
 		txtAmount,
+		txtNN,
+		txtCC
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 2, txtAmount, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 2, txtAmount, txtNN, txtCC, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2042,11 +2048,13 @@ pageRouter.post('/game_list/add/rolling', (req, res) => {
 	const {
 		game_id,
 		txtAmount,
+		txtNN,
+		txtCC
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 3, txtAmount, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 3, txtAmount, txtNN, txtCC, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');

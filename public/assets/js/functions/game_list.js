@@ -99,7 +99,7 @@ $(document).ready(function () {
 
 							var total_amount = total_buy_in + initial_buy_in;
 
-							var net = parseFloat(((total_amount - total_cash_out) * .6) - (total_rolling * (row.COMMISSION_PERCENTAGE / 100))).toLocaleString();
+							var net = total_rolling * (row.COMMISSION_PERCENTAGE / 100).toLocaleString();
 
 							var winloss = parseFloat(total_amount - total_cash_out).toLocaleString();
 
@@ -358,7 +358,7 @@ function showHistory(record_id) {
 						rolling = row.AMOUNT;
 					}
 
-					dataTable.row.add([trading, buy_in, cash_out, rolling, btn]).draw();
+					dataTable.row.add([trading, buy_in, cash_out, rolling, row.NN_CHIPS, row.CC_CHIPS, btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {
