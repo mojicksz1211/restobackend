@@ -29,22 +29,42 @@ $(document).ready(function () {
 					}
 
 					var btn = `<div class="btn-group">
-            <button type="button"  class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"  style="font-size:10px !important;"
-            onclick="account_details(${row.account_id}, '${row.agent_name}')"
-              data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Details">
-              Details
-            </button>
-            <button type="button" onclick="edit_account(${row.account_id}, ${row.AGENT_ID}, '${row.agent_name}', '${row.agency_name}', '${row.GUESTNo}', '${row.MEMBERSHIPNo}' )" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
-              data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit"  style="font-size:10px !important;">
-              <i class="fa fa-pencil-alt"></i>
-            </button>
-            <button type="button" onclick="archive_account(${row.account_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
-              data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive"  style="font-size:10px !important;">
-              <i class="fa fa-trash-alt"></i>
-            </button>
-          </div>`;
+						<button type="button"  class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"  style="font-size:10px !important;"
+						onclick="account_details(${row.account_id}, '${row.agent_name}')"
+						data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Details">
+						Details
+						</button>
+						<button type="button" onclick="archive_account(${row.account_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
+						data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive"  style="font-size:10px !important;">
+						<i class="fa fa-trash-alt"></i>
+						</button>
+					</div>`;
+					
+					$.ajax({
+						url: '/account_details_data/' + row.account_id, // Endpoint to fetch data
+						method: 'GET',
+						success: function (data_amount) {
+							var deposit_amount = 0;
+							var withdraw_amount = 0;
 
-					dataTable.row.add([`${row.account_id}`, `${row.agency_name}`, row.agent_code, `${row.agent_name}`, `${row.GUESTNo}`, row.MEMBERSHIPNo, status, btn]).draw();
+							data_amount.forEach(function (row1) {
+								if (row1.TRANSACTION == 'DEPOSIT') {
+									deposit_amount = deposit_amount + row1.AMOUNT;
+								}
+			
+								if (row1.TRANSACTION == 'WITHDRAW') {
+									withdraw_amount = withdraw_amount + row1.AMOUNT;
+								}
+							});
+
+							var total = deposit_amount - withdraw_amount;
+
+							dataTable.row.add([`${row.agency_name}`, row.agent_code, `${row.agent_name}`, `P${total.toLocaleString()}`,status, btn]).draw();
+						}
+					});
+			
+
+					
 				});
 			},
 			error: function (xhr, status, error) {
@@ -492,4 +512,26 @@ function archive_account_details(id) {
 			});
 		}
 	})
+}
+
+
+$(document).ready(function(){
+	$("input[data-type='number']").keyup(function(event){
+		// skip for arrow keys
+		if(event.which >= 37 && event.which <= 40){
+			event.preventDefault();
+		}
+		var $this = $(this);
+		var num = $this.val().replace(/,/gi, "");
+		var num2 = num.split(/(?=(?:\d{3})+$)/).join(",");
+		$this.val(num2);
+	});
+})
+
+function onlyNumberKey(evt) {
+ 
+	let ASCIICode = (evt.which) ? evt.which : evt.keyCode
+	if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
+		return false;
+	return true;
 }

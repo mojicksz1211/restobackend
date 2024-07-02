@@ -1784,8 +1784,10 @@ pageRouter.post('/add_account_details', (req, res) => {
 	} = req.body;
 	let date_now = new Date();
 
+	let txtAmountNum = txtAmount.split(',').join('');
+
 	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountId, txtTrans, txtAmount, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [txtAccountId, txtTrans, txtAmountNum, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -1804,15 +1806,17 @@ pageRouter.post('/add_account_details/transfer', (req, res) => {
 	} = req.body;
 	let date_now = new Date();
 
+	let txtAmountNum = txtAmount.split(',').join('');
+
 	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, TRANSFER, TRANSFER_AGENT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountId, 2, txtAmount, 1, txtAccount, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [txtAccountId, 2, txtAmountNum, 1, txtAccount, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
 			return;
 		}
 		const query1 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, TRANSFER, TRANSFER_AGENT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query1, [txtAccount, 1, txtAmount, 1, txtAccountId, req.session.user_id, date_now], (err, result) => {
+		connection.query(query1, [txtAccount, 1, txtAmountNum, 1, txtAccountId, req.session.user_id, date_now], (err, result) => {
 			res.redirect('/account_ledger');
 		});
 	});
@@ -1860,10 +1864,14 @@ pageRouter.post('/add_game_list', (req, res) => {
 		txtAmount,
 		txtNN,
 		txtCC,
+		txtTransType,
 		txtCommisionType,
 		txtCommisionRate
 	} = req.body;
 	let date_now = new Date();
+
+	let txtNNamount = txtNN.split(',').join("");
+	let txtCCamount = txtCC.split(',').join("");
 
 	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, WORKING_CHIPS, COMMISSION_TYPE, COMMISSION_PERCENTAGE, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 	connection.query(query, [txtAccountCode, txtGameNo, txtChips, txtCommisionType, txtCommisionRate, req.session.user_id, date_now], (err, result) => {
@@ -1873,11 +1881,11 @@ pageRouter.post('/add_game_list', (req, res) => {
 			return;
 		}
 
-		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT,ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-		connection.query(query2, [result.insertId, date_now, 1, txtAmount, req.session.user_id, date_now], (err, result2) => {
+		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+		connection.query(query2, [result.insertId, date_now, 1, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
 
-			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-			connection.query(query3, [result.insertId, date_now, 3, txtAmount,txtNN, txtCC, req.session.user_id, date_now], (err, result3) => {
+			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+			connection.query(query3, [result.insertId, date_now, 3, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result3) => {
 				res.redirect('/game_list');
 			});
 		});
@@ -1886,7 +1894,7 @@ pageRouter.post('/add_game_list', (req, res) => {
 
 // GET GAME LIST
 pageRouter.get('/game_list_data', (req, res) => {
-	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, account.IDNo AS account_no, CONCAT_WS(" ", FIRSTNAME,  MIDDLENAME, LASTNAME) AS agent_name FROM game_list 
+	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, account.IDNo AS account_no, agent.AGENT_CODE AS agent_code, CONCAT_WS(" ", FIRSTNAME,  MIDDLENAME, LASTNAME) AS agent_name FROM game_list 
 	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
 	JOIN agent ON agent.IDNo = account.AGENT_ID
 	JOIN agency ON agency.IDNo = agent.AGENCY
@@ -1903,7 +1911,7 @@ pageRouter.get('/game_list_data', (req, res) => {
 
 pageRouter.get('/game_list/:id/record', (req, res) => {
 	const id = parseInt(req.params.id);
-	const query = `SELECT AMOUNT, CAGE_TYPE FROM game_record 
+	const query = `SELECT AMOUNT,NN_CHIPS,CC_CHIPS, CAGE_TYPE FROM game_record 
   	WHERE ACTIVE != 0 AND GAME_ID = ? ORDER BY IDNo ASC`;
 	connection.query(query, [id], (error, result, fields) => {
 		if (error) {
@@ -2005,14 +2013,18 @@ pageRouter.post('/add_game_record', (req, res) => {
 pageRouter.post('/game_list/add/buyin', (req, res) => {
 	const {
 		game_id,
-		txtAmount,
+		// txtAmount,
+		txtTransType,
 		txtNN,
 		txtCC
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 1, txtAmount, txtNN, txtCC, req.session.user_id, date_now], (err, result) => {
+	let txtNNamount = txtNN.split(',').join("");
+	let txtCCamount = txtCC.split(',').join("");
+
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 1, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2026,14 +2038,18 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 pageRouter.post('/game_list/add/cashout', (req, res) => {
 	const {
 		game_id,
-		txtAmount,
+		// txtAmount,
+		txtTransType,
 		txtNN,
 		txtCC
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 2, txtAmount, txtNN, txtCC, req.session.user_id, date_now], (err, result) => {
+	let txtNNamount = txtNN.split(',').join("");
+	let txtCCamount = txtCC.split(',').join("");
+
+	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS,TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [game_id, date_now, 2, 0, txtNNamount, txtCCamount,txtTransType, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2043,7 +2059,7 @@ pageRouter.post('/game_list/add/cashout', (req, res) => {
 	});
 });
 
-// ADD GAME RECORD CASH OUT
+// ADD GAME RECORD ROLLING
 pageRouter.post('/game_list/add/rolling', (req, res) => {
 	const {
 		game_id,
@@ -2053,8 +2069,12 @@ pageRouter.post('/game_list/add/rolling', (req, res) => {
 	} = req.body;
 	let date_now = new Date();
 
+	let txtAmountNum = txtAmount.split(',').join("");
+	let txtNNamount = txtNN.split(',').join("");
+	let txtCCamount = txtCC.split(',').join("");
+
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 3, txtAmount, txtNN, txtCC, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [game_id, date_now, 3, txtAmountNum, txtNNamount, txtCCamount, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2067,7 +2087,7 @@ pageRouter.post('/game_list/add/rolling', (req, res) => {
 // GET GAME RECORD
 pageRouter.get('/game_record_data/:id', (req, res) => {
 	const id = parseInt(req.params.id);
-	const query = `SELECT *, game_record.IDNo AS game_record_id FROM game_record 
+	const query = `SELECT *, game_record.IDNo AS game_record_id, game_record.ENCODED_DT AS record_date FROM game_record 
 	JOIN cage_category ON game_record.CAGE_TYPE = cage_category.IDNo
   	WHERE game_record.ACTIVE != 0 AND game_record.GAME_ID = ? ORDER BY game_record.IDNo ASC`;
 	connection.query(query, [id], (error, result, fields) => {

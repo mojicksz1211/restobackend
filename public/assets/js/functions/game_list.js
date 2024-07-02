@@ -75,40 +75,64 @@ $(document).ready(function () {
 							var total_rolling = 0;
 							var initial_buy_in = 0;
 
+							var total_nn_init = 0;
+							var total_cc_init = 0;
+							var total_nn = 0;
+							var total_cc = 0;
+							var total_cash_out_nn = 0;
+							var total_cash_out_cc = 0;
+							var total_rolling_nn = 0;
+							var total_rolling_cc = 0;
+
 
 							response.forEach(function (res) {
 
-								if (res.CAGE_TYPE == 1 && initial_buy_in != 0) {
+								if (res.CAGE_TYPE == 1 && (total_nn_init != 0 && total_cc_init != 0)) {
 									total_buy_in = total_buy_in + res.AMOUNT;
+									total_nn = total_nn + res.NN_CHIPS;
+									total_cc = total_cc + res.CC_CHIPS;
 								}
 
-								if (initial_buy_in == 0 && res.CAGE_TYPE == 1) {
+								if ((total_nn_init == 0 && total_cc_init == 0) && res.CAGE_TYPE == 1) {
 									initial_buy_in = res.AMOUNT;
+									total_nn_init = total_nn_init + res.NN_CHIPS;
+									total_cc_init = total_cc_init + res.CC_CHIPS;
 								}
 
 								if (res.CAGE_TYPE == 2) {
 									total_cash_out = total_cash_out + res.AMOUNT;
+									total_cash_out_nn = total_cash_out_nn + res.NN_CHIPS;
+									total_cash_out_cc = total_cash_out_cc + res.CC_CHIPS;
 								}
 
 								if (res.CAGE_TYPE == 3) {
 									total_rolling = total_rolling + res.AMOUNT;
+									total_rolling_nn = total_rolling_nn + res.NN_CHIPS;
+									total_rolling_cc = total_rolling_cc + res.CC_CHIPS;
 								}
+
+
 							});
+
+							var total_initial = total_nn_init + total_cc_init;
+							var total_buy_in_chips = total_nn + total_cc;
+							var total_cash_out_chips = total_cash_out_nn + total_cash_out_cc;
+							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling;
 
 							var gross = total_buy_in - total_cash_out;
 
-							var total_amount = total_buy_in + initial_buy_in;
+							var total_amount = total_buy_in_chips + total_initial;
 
-							var net = total_rolling * (row.COMMISSION_PERCENTAGE / 100).toLocaleString();
+							var net = (total_rolling_chips * (row.COMMISSION_PERCENTAGE / 100)).toLocaleString();
 
-							var winloss = parseFloat(total_amount - total_cash_out).toLocaleString();
+							var winloss = parseFloat(total_amount - total_cash_out_chips).toLocaleString();
 
-							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in).toLocaleString() + '</button>';
-							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling).toLocaleString() + '</button>';
-							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out).toLocaleString() + '</button>';
+							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
+							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_chips).toLocaleString() + '</button>';
+							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
 
 							// dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString(), parseFloat(net).toLocaleString(), status, btn]).draw();
-							dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, initial_buy_in.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td, cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
+							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td, cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
 						},
 						error: function (xhr, status, error) {
 							console.error('Error fetching options:', error);
@@ -353,7 +377,7 @@ function showHistory(record_id) {
 
 
 
-					var trading = moment(row.ENCODED_DT).format('MMMM DD, YYYY HH:mm:ss');
+					var trading = moment(row.record_date).format('MMMM DD, YYYY HH:mm:ss');
 					// var record_date = moment(row.RECORD_DATE).format('MMMM DD, YYYY');
 
 					var buy_in = 0;
@@ -361,18 +385,18 @@ function showHistory(record_id) {
 					var rolling = 0;
 
 					if (row.CAGE_TYPE == 1) {
-						buy_in = row.AMOUNT;
+						buy_in = row.CC_CHIPS + row.NN_CHIPS;
 					}
 
 					if (row.CAGE_TYPE == 2) {
-						cash_out = row.AMOUNT;
+						cash_out = row.CC_CHIPS + row.NN_CHIPS;
 					}
 
 					if (row.CAGE_TYPE == 3) {
-						rolling = row.AMOUNT;
+						rolling = row.AMOUNT + row.CC_CHIPS + row.NN_CHIPS;
 					}
 
-					dataTable.row.add([trading, buy_in, cash_out, rolling, row.NN_CHIPS, row.CC_CHIPS, btn]).draw();
+					dataTable.row.add([trading, buy_in.toLocaleString(), cash_out.toLocaleString(), rolling.toLocaleString(), row.NN_CHIPS.toLocaleString(), row.CC_CHIPS.toLocaleString(), btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {
@@ -469,4 +493,25 @@ function archive_game_record(id) {
 function viewRecord(id) {
 	record_id = id;
 	window.location.href = '/game_record/' + id;
+}
+
+$(document).ready(function(){
+	$("input[data-type='number']").keyup(function(event){
+		// skip for arrow keys
+		if(event.which >= 37 && event.which <= 40){
+			event.preventDefault();
+		}
+		var $this = $(this);
+		var num = $this.val().replace(/,/gi, "");
+		var num2 = num.split(/(?=(?:\d{3})+$)/).join(",");
+		$this.val(num2);
+	});
+})
+
+function onlyNumberKey(evt) {
+ 
+	let ASCIICode = (evt.which) ? evt.which : evt.keyCode
+	if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
+		return false;
+	return true;
 }
