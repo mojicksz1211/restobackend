@@ -87,7 +87,7 @@ $(document).ready(function () {
 
 							response.forEach(function (res) {
 
-								if (res.CAGE_TYPE == 1 && (total_nn_init != 0 && total_cc_init != 0)) {
+								if (res.CAGE_TYPE == 1 && (total_nn_init != 0 || total_cc_init != 0)) {
 									total_buy_in = total_buy_in + res.AMOUNT;
 									total_nn = total_nn + res.NN_CHIPS;
 									total_cc = total_cc + res.CC_CHIPS;

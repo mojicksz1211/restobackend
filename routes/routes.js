@@ -1825,7 +1825,7 @@ pageRouter.post('/add_account_details/transfer', (req, res) => {
 // GET ACCOUNT DETAILS
 pageRouter.get('/account_details_data/:id', (req, res) => {
 	const id = parseInt(req.params.id);
-	const query = `SELECT *, account_ledger.IDNo AS account_details_id FROM account_ledger 
+	const query = `SELECT *, account_ledger.IDNo AS account_details_id, account_ledger.ENCODED_DT AS encoded_date FROM account_ledger 
   JOIN transaction_type ON transaction_type.IDNo = account_ledger.TRANSACTION_ID
   WHERE account_ledger.ACTIVE=1 AND account_ledger.ACCOUNT_ID= ? ORDER BY account_ledger.IDNo DESC`;
 	connection.query(query, [id], (error, result, fields) => {

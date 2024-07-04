@@ -371,8 +371,9 @@ function account_details(account_id_data, account_name) {
 						trans = row.TRANSACTION;
 					}
 
+					var dateFormat = moment(row.encoded_date).format('MMMM DD, YYYY HH:mm:ss');
 
-					dataTableDetails.row.add([trans, `P${row.AMOUNT.toLocaleString()}`, btn]).draw();
+					dataTableDetails.row.add([dateFormat,trans, `P${row.AMOUNT.toLocaleString()}`, btn]).draw();
 				});
 
 
