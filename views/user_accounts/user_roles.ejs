@@ -1,51 +1,67 @@
-<%- include ('../partial/header'); %>
+<%- include ('../partials/header_html'); -%>
 
-<!-- Main Container -->
-<main id="main-container">
-  <!-- Page Content -->
-  <div class="content">
-    <!-- Dynamic Table Responsive -->
-    <div class="block block-rounded">
-      <div class="block-header block-header-default">
-        <h3 class="block-title">
-          <small>User Accounts / User Role</small>
-        </h3>
-        <nav class="flex-shrink-0 my-2 my-sm-0 ms-sm-3" aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-new-agency">
-              <i class="fa fa-plus" aria-hidden="true"></i> New Role
-            </button>
-          </ol>
-        </nav>        
-      </div>
-      <div class="block-content block-content-full">
-        <!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
-        <table id="userRoleTable" class="table table-bordered table-vcenter js-dataTable-responsive">
-          <thead>
-            <tr>
-              <th class="d-none d-sm-table-cell" >Role</th>
-              <th class="text-center" style="width: 150px;">STATUS</th>
-              <th class="text-center" style="width: 100px;">ACTION</th>       
-            </tr>
-          </thead>
-          <tbody>
-           
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <!-- Dynamic Table Responsive -->
-  </div>
-  <!-- END Page Content -->
-</main>
-<!-- END Main Container -->
+<head>
+	<%- include ('../partials/title_meta'); -%>
 
-<%- include ('../modals/user_accounts/new_user_role'); %>
-<%- include ('../modals/user_accounts/edit_user_role'); %>
+	<%- include ('../partials/header_css'); -%>
 
-<%- include ('../partial/footer'); %>
+	<link rel="stylesheet" href="assets/js/plugins/select2/css/select2.min.css">
+</head>
 
-<script src="/assets/js/datatables/user_roles_tables_datatable.min.js"></script>
-<script src="/assets/js/functions/user_roles.js"></script>
+<body>
+	<div id="page-container"
+		class="sidebar-o sidebar-scroll page-header-dark enable-page-overlay side-scroll page-header-fixed">
 
-<%- include ('../partial/ending'); %>
+		<%- include ('../partials/sidebar'); -%>
+		<%- include ('../partials/topbar'); -%>
+
+		<!-- Main Container -->
+		<main id="main-container">
+			<!-- Page Content -->
+			<div class="content">
+				<!-- Dynamic Table Responsive -->
+				<div class="block block-rounded">
+					<div class="block-header block-header-default">
+						<h3 class="block-title">
+							<small>User Accounts / User Role</small>
+						</h3>
+						<nav class="flex-shrink-0 my-2 my-sm-0 ms-sm-3" aria-label="breadcrumb">
+							<ol class="breadcrumb">
+								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-new-agency">
+									<i class="fa fa-plus" aria-hidden="true"></i> New Role
+								</button>
+							</ol>
+						</nav>
+					</div>
+					<div class="block-content block-content-full">
+						<!-- DataTables init on table by adding .js-dataTable-responsive class, functionality is initialized in js/pages/be_tables_datatables.min.js which was auto compiled from _js/pages/be_tables_datatables.js -->
+						<table id="userRoleTable" class="table table-bordered table-vcenter js-dataTable-responsive">
+							<thead>
+								<tr>
+									<th class="d-none d-sm-table-cell">Role</th>
+									<th class="text-center" style="width: 150px;">STATUS</th>
+									<th class="text-center" style="width: 100px;">ACTION</th>
+								</tr>
+							</thead>
+							<tbody>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<!-- Dynamic Table Responsive -->
+			</div>
+			<!-- END Page Content -->
+		</main>
+		<!-- END Main Container -->
+
+		<%- include ('../modals/user_accounts/new_user_role'); %>
+		<%- include ('../modals/user_accounts/edit_user_role'); %>
+
+		<%- include ('../partials/footer'); -%>
+
+		<script src="/assets/js/datatables/user_roles_tables_datatable.min.js"></script>
+		<script src="/assets/js/functions/user_roles.js"></script>
+
+
+		<%- include ('../partials/footer_html'); -%>
