@@ -29,17 +29,16 @@ $(document).ready(function () {
 					}
 
 					var btn = `<div class="btn-group">
-            <button  style="font-size:10px !important;" type="button" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.FIRSTNAME}', '${row.MIDDLENAME}', '${row.LASTNAME}', '${row.CONTACTNo}')" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
-              data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
-              <i class="fa fa-pencil-alt"></i>
-            </button>
             <button  style="font-size:10px !important;" type="button" onclick="archive_agent(${row.agent_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
               data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive">
               <i class="fa fa-trash-alt"></i>
             </button>
           </div>`;
 
-					dataTable.row.add([`${row.agency_name}`, row.AGENT_CODE, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo, status, btn]).draw();
+			var agency_name = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.FIRSTNAME}', '${row.MIDDLENAME}', '${row.LASTNAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
+			var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.FIRSTNAME}', '${row.MIDDLENAME}', '${row.LASTNAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
+
+					dataTable.row.add([agency_name, acct_no, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo, status, btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {
@@ -152,8 +151,13 @@ function get_agency() {
 			var selectOptions = $('#agency');
 			selectOptions.empty();
 			response.forEach(function (option) {
+				var selected = false;
+				if (option.IDNo == 1) {
+					selected = true;
+				}
 				selectOptions.append($('<option></option>'));
 				selectOptions.append($('<option>', {
+					selected: selected,
 					value: option.IDNo + '-' + option.CODE,
 					text: option.AGENCY
 				}));
