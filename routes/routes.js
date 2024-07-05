@@ -1875,17 +1875,18 @@ pageRouter.post('/add_game_list', (req, res) => {
 
 	const query = `INSERT INTO  game_list(ACCOUNT_ID, GAME_NO, WORKING_CHIPS, COMMISSION_TYPE, COMMISSION_PERCENTAGE, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 	connection.query(query, [txtAccountCode, txtGameNo, txtChips, txtCommisionType, txtCommisionRate, req.session.user_id, date_now], (err, result) => {
-		if (err) {
-			console.error('Error inserting details', err);
-			res.status(500).send('Error inserting details');
-			return;
-		}
 
 		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 		connection.query(query2, [result.insertId, date_now, 1, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
 
 			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 			connection.query(query3, [result.insertId, date_now, 3, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result3) => {
+
+				if (err) {
+					console.error('Error inserting details', err);
+					res.status(500).send('Error inserting details');
+					return;
+				}
 				res.redirect('/game_list');
 			});
 		});
@@ -2025,12 +2026,16 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 	connection.query(query, [game_id, date_now, 1, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result) => {
-		if (err) {
-			console.error('Error inserting details', err);
-			res.status(500).send('Error inserting details');
-			return;
-		}
-		res.redirect('/game_list');
+
+		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+		connection.query(query2, [game_id, date_now, 3, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
+			if (err) {
+				console.error('Error inserting details', err);
+				res.status(500).send('Error inserting details');
+				return;
+			}
+			res.redirect('/game_list');
+		});
 	});
 });
 

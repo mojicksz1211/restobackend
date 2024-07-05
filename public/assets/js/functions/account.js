@@ -28,7 +28,7 @@ $(document).ready(function () {
 						status = '<span class="badge bg-danger style="font-size:10px !important;">INACTIVE</span>';
 					}
 
-					var btn = `<div class="btn-group">
+					var btn = `
 						<button type="button"  class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"  style="font-size:10px !important;"
 						onclick="account_details(${row.account_id}, '${row.agent_name}')"
 						data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Details">
@@ -38,7 +38,7 @@ $(document).ready(function () {
 						data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive"  style="font-size:10px !important;">
 						<i class="fa fa-trash-alt"></i>
 						</button>
-					</div>`;
+					`;
 					
 					$.ajax({
 						url: '/account_details_data/' + row.account_id, // Endpoint to fetch data
@@ -373,7 +373,7 @@ function account_details(account_id_data, account_name) {
 
 					var dateFormat = moment(row.encoded_date).format('MMMM DD, YYYY HH:mm:ss');
 
-					dataTableDetails.row.add([dateFormat,trans, `P${row.AMOUNT.toLocaleString()}`, btn]).draw();
+					dataTableDetails.row.add([dateFormat,trans, `P${row.AMOUNT.toLocaleString()}`]).draw();
 				});
 
 

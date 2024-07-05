@@ -12,7 +12,18 @@ $(document).ready(function () {
 			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
 				$(cell).addClass('text-center');
 			}
-		}]
+		}],
+		createdRow: function(row, data, index) {
+			  $('td:eq(6)', row).css('background-color', 'red');
+
+			  if(parseInt(data[9].split(',').join('')) < 0) {
+				$('td:eq(9)', row).css(
+					{
+						'background-color' : 'red',
+						'color' : '#fff',
+					});
+			  }
+		},
 	});
 
 	function reloadData() {
@@ -129,7 +140,7 @@ $(document).ready(function () {
 
 							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
 							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_chips).toLocaleString() + '</button>';
-							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
+							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;color:#fff;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
 
 							// dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString(), parseFloat(net).toLocaleString(), status, btn]).draw();
 							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td, cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
@@ -319,6 +330,7 @@ function addBuyin(id) {
 	$('.txtAmount').val('');
 	$('.txtNN').val('');
 	$('.txtCC').val('');
+	$('.form-check-input').prop('checked', false);
 
 	$('.game_list_id').val(id);
 }
@@ -339,6 +351,8 @@ function addCashout(id) {
 	$('.txtAmount').val('');
 	$('.txtNN').val('');
 	$('.txtCC').val('');
+
+	$('.form-check-input').prop('checked', false);
 	
 	$('.game_list_id').val(id);
 }
