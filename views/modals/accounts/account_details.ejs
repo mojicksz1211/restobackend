@@ -32,11 +32,86 @@
 							</table>
 						</div>
 					</div>
-
+					<hr style="border: 1px solid">
 					<div class="row mb-2">
 						<div class="col-sm-12">
-							<button class="btn btn-primary mb-4" onclick="add_account_details()">Add Transaction</button>
+							<form id="add_new_account_details">
+								<input type="hidden" id="account_id_add" name="txtAccountId">
+									<div class="row mb-3">
+										<!-- <select class="js-select2 form-select" id="txtTrans" name="txtTrans" style="width: 100%;"
+											data-placeholder="Choose Transaction...">
+											<option></option>
+										</select> -->
+										<div class="row mb-2">
+											<div class="col-sm-3">
+												<div class="form-check form-block">
+													<input class="form-check-input" type="radio" value="1" id="cash_trans" name="txtTrans">
+													<label class="form-check-label" for="cash_trans">
+														<span class="d-flex align-items-center">
+															Cash
+														</span>
+													</label>
+												</div>
+											</div>
+											<div class="col-sm-3">
+												<div class="form-check form-block">
+													<input class="form-check-input" type="radio" value="2" id="deposit_trans" name="txtTrans">
+													<label class="form-check-label" for="deposit_trans">
+														<span class="d-flex align-items-center">
+															Deposit
+														</span>
+													</label>
+												</div>
+											</div>
+											<div class="col-sm-3">
+												<div class="form-check form-block">
+													<input class="form-check-input" type="radio" value="3" id="issue_trans" name="txtTrans">
+													<label class="form-check-label" for="issue_trans">
+														<span class="d-flex align-items-center">
+															Marker Issue
+														</span>
+													</label>
+												</div>
+											</div>
+											<div class="col-sm-3">
+												<div class="form-check form-block">
+													<input class="form-check-input" type="radio" value="4" id="m_deposit_trans" name="txtTrans">
+													<label class="form-check-label" for="m_deposit_trans">
+														<span class="d-flex align-items-center">
+															Marker Deposit
+														</span>
+													</label>
+												</div>
+											</div>
+										</div>
+									</div>
+			
+									<div class="row mb-2">
+										<div class="col-sm-6">
+											<input type="text" onkeypress="return onlyNumberKey(event)" data-type="number" class="form-control txtAmount" name="txtAmount" placeholder="Amount">
+										</div>
+										<div class="col-sm-6">
+											<textarea name="txtRemarks" class="form-control remarks" placeholder="Remarks"></textarea>
+										</div>
+									</div>
+			
+									<div class="row mb-2">
+										<div class="col-sm-9">
+
+										</div>
+										<div class="col-sm-3 " style="text-align: right;">
+											<button type="submit" class="btn btn-sm btn-primary">ADD</button>
+										</div>
+									</div>
+							</form>
+						</div>
+					</div>
+					<hr style="border: 1px solid">
+					<div class="row mb-2">
+						<div class="col-sm-12">
+							<!-- <button class="btn btn-primary mb-4" onclick="add_account_details()">Add Transaction</button> -->
 							<button class="btn btn-info  mb-4" onclick="transfer_account()">Transfer Account</button>
+							<!-- <button class="btn btn-success mb-4" onclick="export_data()">Export</button> -->
 							<input type="hidden" id="account_id">
 							<table id="accountDetails" class="table table-bordered table-vcenter js-dataTable-responsive">
 								<thead>

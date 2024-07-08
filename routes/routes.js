@@ -3,6 +3,9 @@ const pageRouter = express.Router();
 const path = require('path');
 const crypto = require('crypto');
 const session = require('express-session');
+const ExcelJS = require('exceljs');
+
+const mysql2 = require('mysql2/promise');
 
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
@@ -541,6 +544,7 @@ pageRouter.post('/add_agent', (req, res) => {
 		txtAgencyLine,
 		txtAgenctCode,
 		txtName,
+		txtRemarks,
 		// txtFirstname,
 		// txtMiddleName,
 		// txtLastname,
@@ -550,8 +554,8 @@ pageRouter.post('/add_agent', (req, res) => {
 
 
 	const agency = txtAgencyLine.split('-');
-	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [agency[0], txtAgenctCode, txtName, txtContact, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [agency[0], txtAgenctCode, txtName, txtContact,txtRemarks, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting agent:', err);
 			res.status(500).send('Error inserting agent');
@@ -605,6 +609,7 @@ pageRouter.put('/agent/:id', (req, res) => {
 		txtAgencyLine,
 		txtAgenctCode,
 		txtName,
+		txtRemarks,
 		// txtFirstname,
 		// txtMiddleName,
 		// txtLastname,
@@ -615,8 +620,8 @@ pageRouter.put('/agent/:id', (req, res) => {
 	const agency = txtAgencyLine.split('-');
 	const account_code = agency[1] + '-' + txtAgenctCode;
 
-	const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, NAME = ?, CONTACTNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [agency[0], txtAgenctCode, txtName,txtContact, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, NAME = ?, CONTACTNo = ?, REMARKS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [agency[0], txtAgenctCode, txtName,txtContact,txtRemarks, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating agent:', err);
 			res.status(500).send('Error updating agent');
@@ -2124,5 +2129,76 @@ pageRouter.put('/game_record/remove/:id', (req, res) => {
 		res.send('GAME LIST updated successfully');
 	});
 });
+
+//EXPORT ACCOUNT DETAILS
+
+const dbConfig = {
+	host: 'localhost',
+	user: 'root',
+	password: '',
+	database: 'cagex'
+};
+
+pageRouter.get('/export', async (req, res) => {
+	const accountId = req.query.id; // Assuming `id` is passed as a query parameter
+	let connection;
+	
+	try {
+	  // Create a connection to the database
+	  connection = await mysql2.createConnection(dbConfig);
+  
+	  // Perform the query
+	  const [rows] = await connection.query(`
+		SELECT 
+		  account_ledger.ENCODED_DT, 
+		  transaction_type.TRANSACTION, 
+		  account_ledger.AMOUNT, 
+		  account_ledger.REMARKS  
+		FROM account_ledger 
+		JOIN transaction_type ON transaction_type.IDNo = account_ledger.TRANSACTION_ID
+		WHERE account_ledger.ACTIVE=1 AND account_ledger.ACCOUNT_ID= ? 
+		ORDER BY account_ledger.IDNo DESC`, [accountId]);
+  
+	  // Create a new workbook and worksheet
+	  const workbook = new ExcelJS.Workbook();
+	  const worksheet = workbook.addWorksheet('Data');
+  
+	  // Define the columns
+	  worksheet.columns = [
+		{ header: 'Encoded Date', key: 'ENCODED_DT', width: 20 },
+		{ header: 'Transaction', key: 'TRANSACTION', width: 30 },
+		{ header: 'Amount', key: 'AMOUNT', width: 15 },
+		{ header: 'Remarks', key: 'REMARKS', width: 30 },
+	  ];
+  
+	  // Add rows from the database query
+	  rows.forEach(row => {
+		worksheet.addRow(row);
+	  });
+  
+	  // Write the workbook to a buffer
+	  const buffer = await workbook.xlsx.writeBuffer();
+  
+	  // Set the response headers
+	  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+	  res.setHeader('Content-Disposition', 'attachment; filename=test.xlsx');
+  
+	  // Send the buffer as a response
+	  res.send(buffer);
+	} catch (error) {
+	  console.error('Error exporting data:', error);
+	  res.status(500).send('Error exporting data');
+	} finally {
+	  // Close the database connection if it was established
+	  if (connection) {
+		try {
+		  await connection.end();
+		} catch (err) {
+		  console.error('Error closing the connection:', err);
+		}
+	  }
+	}
+  });
+
 
 module.exports = pageRouter;

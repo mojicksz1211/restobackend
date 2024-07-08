@@ -38,7 +38,7 @@ $(document).ready(function () {
 			var agency_name = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
 			var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
 
-					dataTable.row.add([agency_name, acct_no, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo, status, btn]).draw();
+					dataTable.row.add([agency_name, acct_no, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo,row.REMARKS, status, btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {

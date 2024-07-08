@@ -129,26 +129,6 @@ $(document).ready(function () {
 $(document).ready(function () {
 
 
-	$('#add_new_account_details').submit(function (event) {
-		event.preventDefault();
-
-		var formData = $(this).serialize();
-
-		$.ajax({
-			url: '/add_account_details',
-			type: 'POST',
-			data: formData,
-			success: function (response) {
-				$('#modal-add-account-details').modal('hide');
-				reloadDataDetails();
-			},
-			error: function (xhr, status, error) {
-				var errorMessage = xhr.responseJSON.error;
-				console.error('Error updating user role:', error);
-			}
-		});
-	});
-
 	$('#add_transfer_account').submit(function (event) {
 		event.preventDefault();
 
@@ -314,6 +294,12 @@ function account_details(account_id_data, account_name) {
 	$('#account_name').text(account_name);
 	$('#account_id').val(account_id_data);
 
+	$('.txtAmount').val('');
+	$('.remarks').val('');
+	$('input[name="txtTrans"]').prop('checked', false);
+	
+	$('#account_id_add').val(account_id_data);
+
 	account_id = account_id_data;
 
 	if ($.fn.DataTable.isDataTable('#accountDetails')) {
@@ -339,6 +325,8 @@ function account_details(account_id_data, account_name) {
 				dataTableDetails.clear().draw();
 				var deposit_amount = 0;
 				var withdraw_amount = 0;
+				var marker_issue_amount = 0;
+				var marker_deposit_amount = 0;
 				data.forEach(function (row) {
 					if (row.TRANSACTION == 'DEPOSIT') {
 						deposit_amount = deposit_amount + row.AMOUNT;
@@ -347,6 +335,15 @@ function account_details(account_id_data, account_name) {
 					if (row.TRANSACTION == 'WITHDRAW') {
 						withdraw_amount = withdraw_amount + row.AMOUNT;
 					}
+
+					if (row.TRANSACTION == 'MARKER ISSUE') {
+						marker_issue_amount = marker_issue_amount + row.AMOUNT;
+					}
+
+					if (row.TRANSACTION == 'MARKER REDEEM') {
+						marker_deposit_amount = marker_deposit_amount + row.AMOUNT;
+					}
+
 
 
 					var btn = `<div class="btn-group">
@@ -385,6 +382,34 @@ function account_details(account_id_data, account_name) {
 		});
 
 	}
+
+	
+
+	$('#add_new_account_details').submit(function (event) {
+		event.preventDefault();
+
+	
+
+		var formData = $(this).serialize();
+
+		$.ajax({
+			url: '/add_account_details',
+			type: 'POST',
+			data: formData,
+			success: function (response) {
+				$('#modal-account-details').modal('show');
+				reloadDataDetails();
+
+				$('.txtAmount').val('');
+				$('.remarks').val('');
+				$('input[name="txtTrans"]').prop('checked', false);
+			},
+			error: function (xhr, status, error) {
+				var errorMessage = xhr.responseJSON.error;
+				console.error('Error updating user role:', error);
+			}
+		});
+	});
 }
 
 
@@ -413,6 +438,22 @@ function transfer_account() {
 	$('#account_id_add_trans').val(account_id_val);
 
 	get_account();
+}
+
+function export_data() {
+	var account_id_val = $('#account_id').val();
+
+	$.ajax({
+		url: '/export?id='+account_id_val,
+		type: 'GET',
+		success: function (response) {
+			;
+		},
+		error: function (xhr, status, error) {
+			var errorMessage = xhr.responseJSON.error;
+			console.error('Error updating user role:', error);
+		}
+	});
 }
 
 
