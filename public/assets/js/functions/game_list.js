@@ -14,10 +14,10 @@ $(document).ready(function () {
 			}
 		}],
 		createdRow: function(row, data, index) {
-			  $('td:eq(6)', row).css('background-color', 'red');
+			  $('td:eq(7)', row).css('background-color', 'red');
 
-			  if(parseInt(data[9].split(',').join('')) < 0) {
-				$('td:eq(9)', row).css(
+			  if(parseInt(data[10].split(',').join('')) < 0) {
+				$('td:eq(10)', row).css(
 					{
 						'background-color' : 'red',
 						'color' : '#fff',
@@ -41,7 +41,7 @@ $(document).ready(function () {
 						status = `<button type="button" onclick="changeStatus(${row.game_list_id})" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
 						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Status"  style="font-size:8px !important;">ON GAME</button>`;
 					} else {
-						status = moment(row.GAME_ENDED).format('MMMM DD, YYYY HH:mm:ss');
+						status = `<a href="#" onclick="changeStatus(${row.game_list_id})">${moment(row.GAME_ENDED).format('MMMM DD, YYYY HH:mm:ss')}</a>`;
 					}
 
 					var btn = `<div class="btn-group">
@@ -95,6 +95,10 @@ $(document).ready(function () {
 							var total_rolling_nn = 0;
 							var total_rolling_cc = 0;
 
+							var total_rolling_real = 0;
+							var total_rolling_nn_real = 0;
+							var total_rolling_cc_real = 0;
+
 
 							response.forEach(function (res) {
 
@@ -122,13 +126,20 @@ $(document).ready(function () {
 									total_rolling_cc = total_rolling_cc + res.CC_CHIPS;
 								}
 
+								if (res.CAGE_TYPE == 4) {
+									total_rolling_real = total_rolling_real + res.AMOUNT;
+									total_rolling_nn_real = total_rolling_nn_real + res.NN_CHIPS;
+									total_rolling_cc_real = total_rolling_cc_real + res.CC_CHIPS;
+								}
 
 							});
 
 							var total_initial = total_nn_init + total_cc_init;
 							var total_buy_in_chips = total_nn + total_cc;
 							var total_cash_out_chips = total_cash_out_nn + total_cash_out_cc;
-							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling;
+							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling + total_rolling_real + total_rolling_nn_real + total_rolling_cc_real;
+
+							var total_rolling_real_chips = total_rolling_real + total_rolling_nn_real + total_rolling_cc_real;
 
 							var gross = total_buy_in - total_cash_out;
 
@@ -139,11 +150,11 @@ $(document).ready(function () {
 							var winloss = parseFloat(total_amount - total_cash_out_chips).toLocaleString();
 
 							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
-							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_chips).toLocaleString() + '</button>';
+							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_real_chips).toLocaleString() + '</button>';
 							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;color:#fff;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
 
 							// dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString(), parseFloat(net).toLocaleString(), status, btn]).draw();
-							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td, cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
+							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td,parseFloat(total_rolling_chips).toLocaleString(), cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
 						},
 						error: function (xhr, status, error) {
 							console.error('Error fetching options:', error);
@@ -397,6 +408,7 @@ function showHistory(record_id) {
 					var buy_in = 0;
 					var cash_out = 0;
 					var rolling = 0;
+					var real_rolling = 0;
 
 					if (row.CAGE_TYPE == 1) {
 						buy_in = row.CC_CHIPS + row.NN_CHIPS;
@@ -410,7 +422,11 @@ function showHistory(record_id) {
 						rolling = row.AMOUNT + row.CC_CHIPS + row.NN_CHIPS;
 					}
 
-					dataTable.row.add([trading, buy_in.toLocaleString(), cash_out.toLocaleString(), rolling.toLocaleString(), row.NN_CHIPS.toLocaleString(), row.CC_CHIPS.toLocaleString(), btn]).draw();
+					if (row.CAGE_TYPE == 4) {
+						real_rolling = row.AMOUNT + row.CC_CHIPS + row.NN_CHIPS;
+					}
+
+					dataTable.row.add([trading, buy_in.toLocaleString(), cash_out.toLocaleString(), real_rolling.toLocaleString(), rolling.toLocaleString(), row.NN_CHIPS.toLocaleString(), row.CC_CHIPS.toLocaleString(), btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {

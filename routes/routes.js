@@ -540,17 +540,18 @@ pageRouter.post('/add_agent', (req, res) => {
 	const {
 		txtAgencyLine,
 		txtAgenctCode,
-		txtFirstname,
-		txtMiddleName,
-		txtLastname,
+		txtName,
+		// txtFirstname,
+		// txtMiddleName,
+		// txtLastname,
 		txtContact
 	} = req.body;
 	let date_now = new Date();
 
 
 	const agency = txtAgencyLine.split('-');
-	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, FIRSTNAME, MIDDLENAME, LASTNAME, CONTACTNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [agency[0], txtAgenctCode, txtName, txtContact, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting agent:', err);
 			res.status(500).send('Error inserting agent');
@@ -603,9 +604,10 @@ pageRouter.put('/agent/:id', (req, res) => {
 	const {
 		txtAgencyLine,
 		txtAgenctCode,
-		txtFirstname,
-		txtMiddleName,
-		txtLastname,
+		txtName,
+		// txtFirstname,
+		// txtMiddleName,
+		// txtLastname,
 		txtContact
 	} = req.body;
 	let date_now = new Date();
@@ -613,8 +615,8 @@ pageRouter.put('/agent/:id', (req, res) => {
 	const agency = txtAgencyLine.split('-');
 	const account_code = agency[1] + '-' + txtAgenctCode;
 
-	const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, FIRSTNAME = ?, MIDDLENAME = ?, LASTNAME = ?, CONTACTNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [agency[0], txtAgenctCode, txtFirstname, txtMiddleName, txtLastname, txtContact, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, NAME = ?, CONTACTNo = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [agency[0], txtAgenctCode, txtName,txtContact, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating agent:', err);
 			res.status(500).send('Error updating agent');
@@ -669,7 +671,7 @@ pageRouter.post('/add_account', (req, res) => {
 
 //GET ACCOUNT
 pageRouter.get('/account_data', (req, res) => {
-	const query = `SELECT *, agency.AGENCY AS agency_name, account.IDNo AS account_id, agent.AGENT_CODE AS agent_code, account.ACTIVE as active,  CONCAT_WS(" ", agent.FIRSTNAME,  agent.MIDDLENAME, agent.LASTNAME) AS agent_name
+	const query = `SELECT *, agency.AGENCY AS agency_name, account.IDNo AS account_id, agent.AGENT_CODE AS agent_code, account.ACTIVE as active,  agent.NAME AS agent_name
   FROM account 
   JOIN agent ON agent.IDNo = account.AGENT_ID
   JOIN agency ON agency.IDNo = agent.AGENCY
@@ -1466,7 +1468,7 @@ pageRouter.post('/add_junket_house_expense', (req, res) => {
 
 // GET JUNKET EXPENSE
 pageRouter.get('/junket_house_expense_data', (req, res) => {
-	const query = `SELECT *,junket_house_expense.IDNo AS expense_id, expense_category.IDNo AS expense_category_id, expense_category.CATEGORY as expense_category, agent.IDNo AS agent_id, CONCAT(agent.FIRSTNAME, ' ', agent.MIDDLENAME, ' ', agent.LASTNAME) AS agent_name
+	const query = `SELECT *,junket_house_expense.IDNo AS expense_id, expense_category.IDNo AS expense_category_id, expense_category.CATEGORY as expense_category, agent.IDNo AS agent_id, agent.NAME AS agent_name
   FROM junket_house_expense 
   JOIN expense_category ON expense_category.IDNo = junket_house_expense.CATEGORY_ID
   JOIN agent ON agent.IDNo = junket_house_expense.OIC
@@ -1780,14 +1782,15 @@ pageRouter.post('/add_account_details', (req, res) => {
 	const {
 		txtAccountId,
 		txtTrans,
-		txtAmount
+		txtAmount,
+		txtRemarks
 	} = req.body;
 	let date_now = new Date();
 
 	let txtAmountNum = txtAmount.split(',').join('');
 
-	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-	connection.query(query, [txtAccountId, txtTrans, txtAmountNum, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAccountId, txtTrans, txtAmountNum, txtRemarks, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2079,7 +2082,7 @@ pageRouter.post('/game_list/add/rolling', (req, res) => {
 	let txtCCamount = txtCC.split(',').join("");
 
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 3, txtAmountNum, txtNNamount, txtCCamount, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [game_id, date_now, 4, txtAmountNum, txtNNamount, txtCCamount, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');

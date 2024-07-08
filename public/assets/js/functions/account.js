@@ -29,11 +29,6 @@ $(document).ready(function () {
 					}
 
 					var btn = `
-						<button type="button"  class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"  style="font-size:10px !important;"
-						onclick="account_details(${row.account_id}, '${row.agent_name}')"
-						data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Details">
-						Details
-						</button>
 						<button type="button" onclick="archive_account(${row.account_id})" class="btn btn-sm btn-alt-danger js-bs-tooltip-enabled"
 						data-bs-toggle="tooltip" aria-label="Archive" data-bs-original-title="Archive"  style="font-size:10px !important;">
 						<i class="fa fa-trash-alt"></i>
@@ -59,7 +54,9 @@ $(document).ready(function () {
 
 							var total = deposit_amount - withdraw_amount;
 
-							dataTable.row.add([`${row.agency_name}`, row.agent_code, `${row.agent_name}`, `P${total.toLocaleString()}`,status, btn]).draw();
+							var account_no = `<a href="#" onclick="account_details(${row.account_id}, '${row.agent_name}')">${row.agent_code}</a>`;
+
+							dataTable.row.add([`${row.agency_name}`,account_no, `${row.agent_name}`, `P${total.toLocaleString()}`,status, btn]).draw();
 						}
 					});
 			
@@ -373,7 +370,7 @@ function account_details(account_id_data, account_name) {
 
 					var dateFormat = moment(row.encoded_date).format('MMMM DD, YYYY HH:mm:ss');
 
-					dataTableDetails.row.add([dateFormat,trans, `P${row.AMOUNT.toLocaleString()}`]).draw();
+					dataTableDetails.row.add([dateFormat,trans, `P${row.AMOUNT.toLocaleString()}`, row.REMARKS]).draw();
 				});
 
 
@@ -487,6 +484,11 @@ function get_account() {
 		error: function (xhr, status, error) {
 			console.error('Error fetching options:', error);
 		}
+	});
+
+	$('.js-select2').select2({
+		placeholder: 'Select an option',
+		dropdownParent: '#modal-transfer_account'
 	});
 }
 

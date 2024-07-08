@@ -35,8 +35,8 @@ $(document).ready(function () {
             </button>
           </div>`;
 
-			var agency_name = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.FIRSTNAME}', '${row.MIDDLENAME}', '${row.LASTNAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
-			var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.FIRSTNAME}', '${row.MIDDLENAME}', '${row.LASTNAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
+			var agency_name = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
+			var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
 
 					dataTable.row.add([agency_name, acct_no, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo, status, btn]).draw();
 				});
@@ -107,12 +107,10 @@ function addAgent() {
 }
 
 
-function edit_agent(id, agency_id, agent_code, firstname, middlename, lastname, contact) {
+function edit_agent(id, agency_id, agent_code, name, contact) {
 	$('#modal-edit-agent').modal('show');
 	$('#agent_code').val(agent_code);
-	$('#firstname').val(firstname);
-	$('#middlename').val(middlename);
-	$('#lastname').val(lastname);
+	$('#name').val(name);
 	$('#contact').val(contact);
 
 	edit_get_agency(agency_id)
