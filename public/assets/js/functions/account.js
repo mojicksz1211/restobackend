@@ -443,17 +443,18 @@ function transfer_account() {
 function export_data() {
 	var account_id_val = $('#account_id').val();
 
-	$.ajax({
-		url: '/export?id='+account_id_val,
-		type: 'GET',
-		success: function (response) {
-			;
-		},
-		error: function (xhr, status, error) {
-			var errorMessage = xhr.responseJSON.error;
-			console.error('Error updating user role:', error);
-		}
-	});
+	window.location.href = '/export?id='+account_id_val;
+	// $.ajax({
+	// 	url: '/export?id='+account_id_val,
+	// 	type: 'GET',
+	// 	success: function (response) {
+	// 		;
+	// 	},
+	// 	error: function (xhr, status, error) {
+	// 		var errorMessage = xhr.responseJSON.error;
+	// 		console.error('Error updating user role:', error);
+	// 	}
+	// });
 }
 
 

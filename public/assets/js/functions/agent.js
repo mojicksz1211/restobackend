@@ -38,7 +38,7 @@ $(document).ready(function () {
 			var agency_name = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
 			var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
 
-					dataTable.row.add([agency_name, acct_no, `${row.FIRSTNAME} ${row.MIDDLENAME} ${row.LASTNAME}`, row.CONTACTNo,row.REMARKS, status, btn]).draw();
+					dataTable.row.add([agency_name, acct_no, row.NAME, row.CONTACTNo,row.REMARKS, status, btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {
@@ -58,8 +58,8 @@ $(document).ready(function () {
 			url: '/add_agent',
 			type: 'POST',
 			data: formData,
-			// processData: false, 
-			// contentType: false,
+			processData: false, 
+			contentType: false,
 			success: function (response) {
 				reloadData();
 				$('#modal-new-agent').modal('hide');
@@ -156,7 +156,7 @@ function get_agency() {
 				selectOptions.append($('<option></option>'));
 				selectOptions.append($('<option>', {
 					selected: selected,
-					value: option.IDNo + '-' + option.CODE,
+					value: option.IDNo,
 					text: option.AGENCY
 				}));
 			});
@@ -181,7 +181,7 @@ function edit_get_agency(id) {
 				}
 				selectOptions.append($('<option>', {
 					selected: selected,
-					value: option.IDNo + '-' + option.CODE,
+					value: option.IDNo,
 					text: option.AGENCY
 				}));
 			});

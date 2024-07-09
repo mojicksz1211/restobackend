@@ -137,7 +137,7 @@ $(document).ready(function () {
 							var total_initial = total_nn_init + total_cc_init;
 							var total_buy_in_chips = total_nn + total_cc;
 							var total_cash_out_chips = total_cash_out_nn + total_cash_out_cc;
-							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling + total_rolling_real + total_rolling_nn_real + total_rolling_cc_real;
+							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling + total_rolling_real + total_rolling_nn_real + total_rolling_cc_real - total_cash_out_chips;
 
 							var total_rolling_real_chips = total_rolling_real + total_rolling_nn_real + total_rolling_cc_real;
 

@@ -10,6 +10,8 @@ const mysql2 = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 
+const multer = require('multer');
+
 const app = express();
 
 app.use(bodyParser.urlencoded({
@@ -22,6 +24,32 @@ const connection = mysql.createConnection({
 	password: '',
 	database: 'cagex'
 });
+
+// Set up multer storage (in memory)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10000000 },
+  fileFilter: function(req, file, cb) {
+    checkFileType(file, cb);
+  }
+}).single('photo');
+
+// Check file type
+function checkFileType(file, cb) {
+  // Allowed ext
+  const filetypes = /jpeg|jpg|png|gif/;
+  // Check ext
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  // Check mime
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb('Error: Images Only!');
+  }
+}
 
 pageRouter.use(session({
 	secret: 'username',
@@ -243,7 +271,7 @@ pageRouter.post('/login', (req, res) => {
 			return;
 		}
 
-		if (results) {
+		if (results.length > 0) {
 			const user = results[0];
 			const salt = user.SALT;
 			const username1 = user.USERNAME;
@@ -257,7 +285,7 @@ pageRouter.post('/login', (req, res) => {
 					return;
 				}
 
-				if (result) {
+				if (result.length > 0) {
 					req.session.username = username;
 					req.session.firstname = user.FIRSTNAME;
 					req.session.lastname = user.LASTNAME;
@@ -540,39 +568,43 @@ pageRouter.put('/agency/remove/:id', (req, res) => {
 
 // ADD AGENT
 pageRouter.post('/add_agent', (req, res) => {
-	const {
-		txtAgencyLine,
-		txtAgenctCode,
-		txtName,
-		txtRemarks,
-		// txtFirstname,
-		// txtMiddleName,
-		// txtLastname,
-		txtContact
-	} = req.body;
-	let date_now = new Date();
+	upload(req, res, (err) => {
+		const {
+			txtAgencyLine,
+			txtAgenctCode,
+			txtName,
+			txtRemarks,
+			// txtFirstname,
+			// txtMiddleName,
+			// txtLastname,
+			txtContact
+		} = req.body;
+		let date_now = new Date();
+
+		// const agency = txtAgencyLine;
+		console.log(req.file);
+		const photo  = req.file.buffer;
+
+		const query = `INSERT INTO agent (AGENCY, PHOTO, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+		connection.query(query, [txtAgencyLine, photo, txtAgenctCode, txtName, txtContact,txtRemarks, req.session.user_id, date_now], (err, result) => {
+			if (err) {
+				console.error('Error inserting agent:', err);
+				res.status(500).send('Error inserting agent');
+				return;
+			}
+
+			const agent_id = result.insertId;
+
+			const account = `INSERT INTO account (AGENT_ID, GUESTNo, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
+
+			connection.query(account, [agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
+				if (err) throw err;
+
+				res.redirect('/agent');
+			});
 
 
-	const agency = txtAgencyLine.split('-');
-	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [agency[0], txtAgenctCode, txtName, txtContact,txtRemarks, req.session.user_id, date_now], (err, result) => {
-		if (err) {
-			console.error('Error inserting agent:', err);
-			res.status(500).send('Error inserting agent');
-			return;
-		}
-
-		const agent_id = result.insertId;
-
-		const account = `INSERT INTO account (AGENT_ID, GUESTNo, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-
-		connection.query(account, [agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
-			if (err) throw err;
-
-			res.redirect('/agent');
 		});
-
-
 	});
 });
 
@@ -1903,7 +1935,7 @@ pageRouter.post('/add_game_list', (req, res) => {
 
 // GET GAME LIST
 pageRouter.get('/game_list_data', (req, res) => {
-	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, account.IDNo AS account_no, agent.AGENT_CODE AS agent_code, CONCAT_WS(" ", FIRSTNAME,  MIDDLENAME, LASTNAME) AS agent_name FROM game_list 
+	const query = `SELECT *, game_list.IDNo AS game_list_id, game_list.ACTIVE AS game_status, account.IDNo AS account_no, agent.AGENT_CODE AS agent_code, agent.NAME AS agent_name FROM game_list 
 	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
 	JOIN agent ON agent.IDNo = account.AGENT_ID
 	JOIN agency ON agency.IDNo = agent.AGENCY
@@ -2165,12 +2197,12 @@ pageRouter.get('/export', async (req, res) => {
   
 	  // Define the columns
 	  worksheet.columns = [
-		{ header: 'Encoded Date', key: 'ENCODED_DT', width: 20 },
+		{ header: 'Date', key: 'ENCODED_DT', width: 20 },
 		{ header: 'Transaction', key: 'TRANSACTION', width: 30 },
 		{ header: 'Amount', key: 'AMOUNT', width: 15 },
 		{ header: 'Remarks', key: 'REMARKS', width: 30 },
 	  ];
-  
+
 	  // Add rows from the database query
 	  rows.forEach(row => {
 		worksheet.addRow(row);
@@ -2178,12 +2210,27 @@ pageRouter.get('/export', async (req, res) => {
   
 	  // Write the workbook to a buffer
 	  const buffer = await workbook.xlsx.writeBuffer();
+
+	  const query1 = `SELECT NAME, AGENT_CODE FROM agent
+	  JOIN account ON account.AGENT_ID = agent.IDNo
+	  WHERE account.IDNo = ?`;
+
+	  let filename = 'Account Details - ';
+
+	  const agents = await connection.query(`
+		SELECT NAME, AGENT_CODE FROM agent
+	  JOIN account ON account.AGENT_ID = agent.IDNo
+	  WHERE account.IDNo = ?`, [accountId]);
+
+		if (agents) {
+			const agent = agents[0];
+
+			filename = 'Account Details - ' + agent[0].NAME + '('+ agent[0].AGENT_CODE +')';
+		}
   
-	  // Set the response headers
 	  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-	  res.setHeader('Content-Disposition', 'attachment; filename=test.xlsx');
+	  res.setHeader('Content-Disposition', 'attachment; filename='+filename+'.xlsx');
   
-	  // Send the buffer as a response
 	  res.send(buffer);
 	} catch (error) {
 	  console.error('Error exporting data:', error);
@@ -2198,7 +2245,6 @@ pageRouter.get('/export', async (req, res) => {
 		}
 	  }
 	}
-  });
-
+});
 
 module.exports = pageRouter;
