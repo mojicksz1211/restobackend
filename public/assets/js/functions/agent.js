@@ -58,8 +58,8 @@ $(document).ready(function () {
 			url: '/add_agent',
 			type: 'POST',
 			data: formData,
-			processData: false, 
-			contentType: false,
+			// processData: false, 
+			// contentType: false,
 			success: function (response) {
 				reloadData();
 				$('#modal-new-agent').modal('hide');

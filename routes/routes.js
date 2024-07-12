@@ -568,25 +568,18 @@ pageRouter.put('/agency/remove/:id', (req, res) => {
 
 // ADD AGENT
 pageRouter.post('/add_agent', (req, res) => {
-	upload(req, res, (err) => {
 		const {
 			txtAgencyLine,
 			txtAgenctCode,
 			txtName,
 			txtRemarks,
-			// txtFirstname,
-			// txtMiddleName,
-			// txtLastname,
 			txtContact
 		} = req.body;
 		let date_now = new Date();
 
-		// const agency = txtAgencyLine;
-		console.log(req.file);
-		const photo  = req.file.buffer;
 
-		const query = `INSERT INTO agent (AGENCY, PHOTO, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query, [txtAgencyLine, photo, txtAgenctCode, txtName, txtContact,txtRemarks, req.session.user_id, date_now], (err, result) => {
+		const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+		connection.query(query, [txtAgencyLine, txtAgenctCode, txtName, txtContact,txtRemarks, req.session.user_id, date_now], (err, result) => {
 			if (err) {
 				console.error('Error inserting agent:', err);
 				res.status(500).send('Error inserting agent');
@@ -605,7 +598,6 @@ pageRouter.post('/add_agent', (req, res) => {
 
 
 		});
-	});
 });
 
 //GET AGENT
