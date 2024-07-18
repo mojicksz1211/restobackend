@@ -13,16 +13,15 @@ $(document).ready(function () {
 				$(cell).addClass('text-center');
 			}
 		}],
-		createdRow: function(row, data, index) {
-			  $('td:eq(7)', row).css('background-color', 'red');
+		createdRow: function (row, data, index) {
+			$('td:eq(7)', row).css('background-color', '#fff');
 
-			  if(parseInt(data[10].split(',').join('')) < 0) {
-				$('td:eq(10)', row).css(
-					{
-						'background-color' : 'red',
-						'color' : '#fff',
-					});
-			  }
+			if (parseInt(data[10].split(',').join('')) < 0) {
+				$('td:eq(10)', row).css({
+					'background-color': '#fff',
+					'color': 'red'
+				});
+			}
 		},
 	});
 
@@ -151,10 +150,10 @@ $(document).ready(function () {
 
 							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
 							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_real_chips).toLocaleString() + '</button>';
-							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;color:#fff;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
+							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
 
 							// dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString(), parseFloat(net).toLocaleString(), status, btn]).draw();
-							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td,parseFloat(total_rolling_chips).toLocaleString(), cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
+							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td, parseFloat(total_rolling_chips).toLocaleString(), cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
 						},
 						error: function (xhr, status, error) {
 							console.error('Error fetching options:', error);
@@ -337,7 +336,7 @@ function addGameList(id) {
 
 function addBuyin(id) {
 	$('#modal-add-buyin').modal('show');
-	
+
 	$('.txtAmount').val('');
 	$('.txtNN').val('');
 	$('.txtCC').val('');
@@ -348,7 +347,7 @@ function addBuyin(id) {
 
 function addRolling(id) {
 	$('#modal-add-rolling').modal('show');
-	
+
 	$('.txtAmount').val('');
 	$('.txtNN').val('');
 	$('.txtCC').val('');
@@ -358,13 +357,13 @@ function addRolling(id) {
 
 function addCashout(id) {
 	$('#modal-add-cashout').modal('show');
-	
+
 	$('.txtAmount').val('');
 	$('.txtNN').val('');
 	$('.txtCC').val('');
 
 	$('.form-check-input').prop('checked', false);
-	
+
 	$('.game_list_id').val(id);
 }
 
@@ -525,10 +524,10 @@ function viewRecord(id) {
 	window.location.href = '/game_record/' + id;
 }
 
-$(document).ready(function(){
-	$("input[data-type='number']").keyup(function(event){
+$(document).ready(function () {
+	$("input[data-type='number']").keyup(function (event) {
 		// skip for arrow keys
-		if(event.which >= 37 && event.which <= 40){
+		if (event.which >= 37 && event.which <= 40) {
 			event.preventDefault();
 		}
 		var $this = $(this);
@@ -539,7 +538,7 @@ $(document).ready(function(){
 })
 
 function onlyNumberKey(evt) {
- 
+
 	let ASCIICode = (evt.which) ? evt.which : evt.keyCode
 	if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
 		return false;

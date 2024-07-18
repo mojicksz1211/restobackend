@@ -35,10 +35,10 @@ $(document).ready(function () {
             </button>
           </div>`;
 
-			var agency_name = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
-			var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
+					var agency_name = `<a href="#" onclick="(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.agency_name}</a>`
+					var acct_no = `<a href="#" onclick="edit_agent(${row.agent_id}, ${row.agency_id}, '${row.AGENT_CODE}', '${row.NAME}', '${row.CONTACTNo}')">${row.AGENT_CODE}</a>`
 
-					dataTable.row.add([agency_name, acct_no, row.NAME, row.CONTACTNo,row.REMARKS, status, btn]).draw();
+					dataTable.row.add([agency_name, acct_no, row.NAME, row.CONTACTNo, row.REMARKS, status, btn]).draw();
 				});
 			},
 			error: function (xhr, status, error) {

@@ -28,27 +28,29 @@ const connection = mysql.createConnection({
 // Set up multer storage (in memory)
 const storage = multer.memoryStorage();
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10000000 },
-  fileFilter: function(req, file, cb) {
-    checkFileType(file, cb);
-  }
+	storage: storage,
+	limits: {
+		fileSize: 10000000
+	},
+	fileFilter: function (req, file, cb) {
+		checkFileType(file, cb);
+	}
 }).single('photo');
 
 // Check file type
 function checkFileType(file, cb) {
-  // Allowed ext
-  const filetypes = /jpeg|jpg|png|gif/;
-  // Check ext
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  // Check mime
-  const mimetype = filetypes.test(file.mimetype);
+	// Allowed ext
+	const filetypes = /jpeg|jpg|png|gif/;
+	// Check ext
+	const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+	// Check mime
+	const mimetype = filetypes.test(file.mimetype);
 
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb('Error: Images Only!');
-  }
+	if (mimetype && extname) {
+		return cb(null, true);
+	} else {
+		cb('Error: Images Only!');
+	}
 }
 
 pageRouter.use(session({
@@ -568,36 +570,36 @@ pageRouter.put('/agency/remove/:id', (req, res) => {
 
 // ADD AGENT
 pageRouter.post('/add_agent', (req, res) => {
-		const {
-			txtAgencyLine,
-			txtAgenctCode,
-			txtName,
-			txtRemarks,
-			txtContact
-		} = req.body;
-		let date_now = new Date();
+	const {
+		txtAgencyLine,
+		txtAgenctCode,
+		txtName,
+		txtRemarks,
+		txtContact
+	} = req.body;
+	let date_now = new Date();
 
 
-		const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query, [txtAgencyLine, txtAgenctCode, txtName, txtContact,txtRemarks, req.session.user_id, date_now], (err, result) => {
-			if (err) {
-				console.error('Error inserting agent:', err);
-				res.status(500).send('Error inserting agent');
-				return;
-			}
+	const query = `INSERT INTO agent (AGENCY, AGENT_CODE, NAME, CONTACTNo, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [txtAgencyLine, txtAgenctCode, txtName, txtContact, txtRemarks, req.session.user_id, date_now], (err, result) => {
+		if (err) {
+			console.error('Error inserting agent:', err);
+			res.status(500).send('Error inserting agent');
+			return;
+		}
 
-			const agent_id = result.insertId;
+		const agent_id = result.insertId;
 
-			const account = `INSERT INTO account (AGENT_ID, GUESTNo, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
+		const account = `INSERT INTO account (AGENT_ID, GUESTNo, MEMBERSHIPNo, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
 
-			connection.query(account, [agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
-				if (err) throw err;
+		connection.query(account, [agent_id, '', '', req.session.user_id, date_now], (err, results2) => {
+			if (err) throw err;
 
-				res.redirect('/agent');
-			});
-
-
+			res.redirect('/agent');
 		});
+
+
+	});
 });
 
 //GET AGENT
@@ -645,7 +647,7 @@ pageRouter.put('/agent/:id', (req, res) => {
 	const account_code = agency[1] + '-' + txtAgenctCode;
 
 	const query = `UPDATE agent SET  AGENCY = ?, AGENT_CODE = ?, NAME = ?, CONTACTNo = ?, REMARKS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [agency[0], txtAgenctCode, txtName,txtContact,txtRemarks, req.session.user_id, date_now, id], (err, result) => {
+	connection.query(query, [agency[0], txtAgenctCode, txtName, txtContact, txtRemarks, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating agent:', err);
 			res.status(500).send('Error updating agent');
@@ -1909,10 +1911,10 @@ pageRouter.post('/add_game_list', (req, res) => {
 	connection.query(query, [txtAccountCode, txtGameNo, txtChips, txtCommisionType, txtCommisionRate, req.session.user_id, date_now], (err, result) => {
 
 		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query2, [result.insertId, date_now, 1, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
+		connection.query(query2, [result.insertId, date_now, 1, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
 
 			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-			connection.query(query3, [result.insertId, date_now, 3, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result3) => {
+			connection.query(query3, [result.insertId, date_now, 3, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result3) => {
 
 				if (err) {
 					console.error('Error inserting details', err);
@@ -1984,7 +1986,7 @@ pageRouter.put('/game_list/change_status/:id', (req, res) => {
 	} = req.body;
 
 	const query = `UPDATE game_list SET ACTIVE = ?, GAME_ENDED = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [txtStatus,date_now, req.session.user_id, date_now, id], (err, result) => {
+	connection.query(query, [txtStatus, date_now, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating GAME LIST:', err);
 			res.status(500).send('Error updating GAME LIST');
@@ -2060,7 +2062,7 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 	connection.query(query, [game_id, date_now, 1, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result) => {
 
 		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query2, [game_id, date_now, 3, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
+		connection.query(query2, [game_id, date_now, 3, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
 			if (err) {
 				console.error('Error inserting details', err);
 				res.status(500).send('Error inserting details');
@@ -2086,7 +2088,7 @@ pageRouter.post('/game_list/add/cashout', (req, res) => {
 	let txtCCamount = txtCC.split(',').join("");
 
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS,TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 2, 0, txtNNamount, txtCCamount,txtTransType, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [game_id, date_now, 2, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting details', err);
 			res.status(500).send('Error inserting details');
@@ -2166,13 +2168,13 @@ const dbConfig = {
 pageRouter.get('/export', async (req, res) => {
 	const accountId = req.query.id; // Assuming `id` is passed as a query parameter
 	let connection;
-	
+
 	try {
-	  // Create a connection to the database
-	  connection = await mysql2.createConnection(dbConfig);
-  
-	  // Perform the query
-	  const [rows] = await connection.query(`
+		// Create a connection to the database
+		connection = await mysql2.createConnection(dbConfig);
+
+		// Perform the query
+		const [rows] = await connection.query(`
 		SELECT 
 		  account_ledger.ENCODED_DT, 
 		  transaction_type.TRANSACTION, 
@@ -2182,34 +2184,49 @@ pageRouter.get('/export', async (req, res) => {
 		JOIN transaction_type ON transaction_type.IDNo = account_ledger.TRANSACTION_ID
 		WHERE account_ledger.ACTIVE=1 AND account_ledger.ACCOUNT_ID= ? 
 		ORDER BY account_ledger.IDNo DESC`, [accountId]);
-  
-	  // Create a new workbook and worksheet
-	  const workbook = new ExcelJS.Workbook();
-	  const worksheet = workbook.addWorksheet('Data');
-  
-	  // Define the columns
-	  worksheet.columns = [
-		{ header: 'Date', key: 'ENCODED_DT', width: 20 },
-		{ header: 'Transaction', key: 'TRANSACTION', width: 30 },
-		{ header: 'Amount', key: 'AMOUNT', width: 15 },
-		{ header: 'Remarks', key: 'REMARKS', width: 30 },
-	  ];
 
-	  // Add rows from the database query
-	  rows.forEach(row => {
-		worksheet.addRow(row);
-	  });
-  
-	  // Write the workbook to a buffer
-	  const buffer = await workbook.xlsx.writeBuffer();
+		// Create a new workbook and worksheet
+		const workbook = new ExcelJS.Workbook();
+		const worksheet = workbook.addWorksheet('Data');
 
-	  const query1 = `SELECT NAME, AGENT_CODE FROM agent
+		// Define the columns
+		worksheet.columns = [{
+				header: 'Date',
+				key: 'ENCODED_DT',
+				width: 20
+			},
+			{
+				header: 'Transaction',
+				key: 'TRANSACTION',
+				width: 30
+			},
+			{
+				header: 'Amount',
+				key: 'AMOUNT',
+				width: 15
+			},
+			{
+				header: 'Remarks',
+				key: 'REMARKS',
+				width: 30
+			},
+		];
+
+		// Add rows from the database query
+		rows.forEach(row => {
+			worksheet.addRow(row);
+		});
+
+		// Write the workbook to a buffer
+		const buffer = await workbook.xlsx.writeBuffer();
+
+		const query1 = `SELECT NAME, AGENT_CODE FROM agent
 	  JOIN account ON account.AGENT_ID = agent.IDNo
 	  WHERE account.IDNo = ?`;
 
-	  let filename = 'Account Details - ';
+		let filename = 'Account Details - ';
 
-	  const agents = await connection.query(`
+		const agents = await connection.query(`
 		SELECT NAME, AGENT_CODE FROM agent
 	  JOIN account ON account.AGENT_ID = agent.IDNo
 	  WHERE account.IDNo = ?`, [accountId]);
@@ -2217,25 +2234,25 @@ pageRouter.get('/export', async (req, res) => {
 		if (agents) {
 			const agent = agents[0];
 
-			filename = 'Account Details - ' + agent[0].NAME + '('+ agent[0].AGENT_CODE +')';
+			filename = 'Account Details - ' + agent[0].NAME + '(' + agent[0].AGENT_CODE + ')';
 		}
-  
-	  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-	  res.setHeader('Content-Disposition', 'attachment; filename='+filename+'.xlsx');
-  
-	  res.send(buffer);
+
+		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		res.setHeader('Content-Disposition', 'attachment; filename=' + filename + '.xlsx');
+
+		res.send(buffer);
 	} catch (error) {
-	  console.error('Error exporting data:', error);
-	  res.status(500).send('Error exporting data');
+		console.error('Error exporting data:', error);
+		res.status(500).send('Error exporting data');
 	} finally {
-	  // Close the database connection if it was established
-	  if (connection) {
-		try {
-		  await connection.end();
-		} catch (err) {
-		  console.error('Error closing the connection:', err);
+		// Close the database connection if it was established
+		if (connection) {
+			try {
+				await connection.end();
+			} catch (err) {
+				console.error('Error closing the connection:', err);
+			}
 		}
-	  }
 	}
 });
 
