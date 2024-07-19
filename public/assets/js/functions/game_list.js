@@ -36,14 +36,6 @@ $(document).ready(function () {
 
 				data.forEach(function (row) {
 
-					var status = '';
-					if (row.game_status == 2) {
-						status = `<button type="button" onclick="changeStatus(${row.game_list_id})" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
-						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Status"  style="font-size:8px !important;">ON GAME</button>`;
-					} else {
-						status = `<a href="#" onclick="changeStatus(${row.game_list_id})">${moment(row.GAME_ENDED).format('MMMM DD, YYYY HH:mm:ss')}</a>`;
-					}
-
 					var btn = `<div class="btn-group">
 						<button type="button" onclick="viewRecord(${row.game_list_id})" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
 						data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Details">
@@ -137,7 +129,7 @@ $(document).ready(function () {
 							var total_initial = total_nn_init + total_cc_init;
 							var total_buy_in_chips = total_nn + total_cc;
 							var total_cash_out_chips = total_cash_out_nn + total_cash_out_cc;
-							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling + total_rolling_real + total_rolling_nn_real + total_rolling_cc_real - total_cash_out_chips;
+							var total_rolling_chips = total_rolling_nn + total_rolling_cc + total_rolling + total_rolling_real + total_rolling_nn_real + total_rolling_cc_real - total_cash_out_nn;
 
 							var total_rolling_real_chips = total_rolling_real + total_rolling_nn_real + total_rolling_cc_real;
 
@@ -149,9 +141,29 @@ $(document).ready(function () {
 
 							var winloss = parseFloat(total_amount - total_cash_out_chips).toLocaleString();
 
-							var buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
-							var rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_real_chips).toLocaleString() + '</button>';
-							var cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;color:#fff;" onclick="addCashout(' + row.game_list_id + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
+
+							
+							var status = '';
+
+							var buyin_td = '';
+							var rolling_td = '';
+							var cashout_td = '';
+							if (row.game_status == 2) {
+								status = `<button type="button" onclick="changeStatus(${row.game_list_id}, ${net}, ${row.ACCOUNT_ID })" class="btn btn-sm btn-alt-info js-bs-tooltip-enabled"
+								data-bs-toggle="tooltip" aria-label="Details" data-bs-original-title="Status"  style="font-size:8px !important;">ON GAME</button>`;
+
+								buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ', ' + row.ACCOUNT_ID + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
+								rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_real_chips).toLocaleString() + '</button>';
+								cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;color:#fff;" onclick="addCashout(' + row.game_list_id + ', ' + row.ACCOUNT_ID + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
+
+							} else {
+								status = `<a href="#" onclick="changeStatus(${row.game_list_id}, ${net}, ${row.ACCOUNT_ID })">${moment(row.GAME_ENDED).format('MMMM DD, YYYY HH:mm:ss')}</a>`;
+
+								buyin_td = parseFloat(total_buy_in_chips).toLocaleString();
+								rolling_td = parseFloat(total_rolling_real_chips).toLocaleString();
+								cashout_td = '<span style="font-size:11px;text-decoration: none;color:#fff;" >'+ parseFloat(total_cash_out_chips).toLocaleString() + '</span>';
+
+							}
 
 							// dataTable.row.add([`${row.GAME_NO}`, `${row.game_list_id} (${row.agent_name})`, parseFloat(total_buy_in).toLocaleString(), parseFloat(total_cash_out).toLocaleString(), parseFloat(total_rolling).toLocaleString(), parseFloat(gross).toLocaleString(), parseFloat(net).toLocaleString(), status, btn]).draw();
 							dataTable.row.add([`GAME-${row.game_list_id}`, `${row.agent_code} (${row.agent_name})`, total_initial.toLocaleString(), buyin_td, total_amount.toLocaleString(), rolling_td,parseFloat(total_rolling_chips).toLocaleString(), cashout_td, `${row.COMMISSION_PERCENTAGE}%`, net, winloss, status, btn_his]).draw();
@@ -335,7 +347,7 @@ function addGameList(id) {
 	get_account();
 }
 
-function addBuyin(id) {
+function addBuyin(id, account) {
 	$('#modal-add-buyin').modal('show');
 	
 	$('.txtAmount').val('');
@@ -344,6 +356,7 @@ function addBuyin(id) {
 	$('.form-check-input').prop('checked', false);
 
 	$('.game_list_id').val(id);
+	$('.txtAccountCode').val(account);
 }
 
 function addRolling(id) {
@@ -356,7 +369,7 @@ function addRolling(id) {
 	$('.game_list_id').val(id);
 }
 
-function addCashout(id) {
+function addCashout(id, account) {
 	$('#modal-add-cashout').modal('show');
 	
 	$('.txtAmount').val('');
@@ -366,6 +379,8 @@ function addCashout(id) {
 	$('.form-check-input').prop('checked', false);
 	
 	$('.game_list_id').val(id);
+	$('.txtAccountCode').val(account);
+
 }
 
 
@@ -438,8 +453,11 @@ function showHistory(record_id) {
 	reloadDataRecord()
 }
 
-function changeStatus(id) {
+function changeStatus(id, net, account) {
 	$('#modal-change_status').modal('show');
+
+	$('.txtAccountCode').val(account);
+	$('.txtAmount').val(net);
 
 	game_id = id;
 }
