@@ -14,7 +14,6 @@ $(document).ready(function () {
 			}
 		}],
 		createdRow: function (row, data, index) {
-			$('td:eq(7)', row).css('background-color', '#fff');
 
 			if (parseInt(data[10].split(',').join('')) < 0) {
 				$('td:eq(10)', row).css({
@@ -141,7 +140,7 @@ $(document).ready(function () {
 							var winloss = parseFloat(total_amount - total_cash_out_chips).toLocaleString();
 
 
-							
+
 							var status = '';
 
 							var buyin_td = '';
@@ -153,14 +152,14 @@ $(document).ready(function () {
 
 								buyin_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addBuyin(' + row.game_list_id + ', ' + row.ACCOUNT_ID + ')">' + parseFloat(total_buy_in_chips).toLocaleString() + '</button>';
 								rolling_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addRolling(' + row.game_list_id + ')">' + parseFloat(total_rolling_real_chips).toLocaleString() + '</button>';
-								cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;color:#fff;" onclick="addCashout(' + row.game_list_id + ', ' + row.ACCOUNT_ID + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
+								cashout_td = '<button class="btn btn-link" style="font-size:11px;text-decoration: underline;" onclick="addCashout(' + row.game_list_id + ', ' + row.ACCOUNT_ID + ')">' + parseFloat(total_cash_out_chips).toLocaleString() + '</button>';
 
 							} else {
 								status = `<a href="#" onclick="changeStatus(${row.game_list_id}, ${net}, ${row.ACCOUNT_ID })">${moment(row.GAME_ENDED).format('MMMM DD, YYYY HH:mm:ss')}</a>`;
 
 								buyin_td = parseFloat(total_buy_in_chips).toLocaleString();
 								rolling_td = parseFloat(total_rolling_real_chips).toLocaleString();
-								cashout_td = '<span style="font-size:11px;text-decoration: none;color:#fff;" >'+ parseFloat(total_cash_out_chips).toLocaleString() + '</span>';
+								cashout_td = '<span style="font-size:11px;text-decoration: none;" >' + parseFloat(total_cash_out_chips).toLocaleString() + '</span>';
 
 							}
 
