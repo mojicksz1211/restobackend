@@ -96,6 +96,10 @@ pageRouter.get("/login", function (req, res) {
 	res.render("login");
 });
 
+pageRouter.get("/dashboard2", function (req, res) {
+	res.render("dashboard2", sessions(req, 'dashboard'));
+});
+
 pageRouter.get("/", function (req, res) {
 	res.render("dashboard", sessions(req, 'dashboard'));
 });
@@ -1907,11 +1911,11 @@ pageRouter.post('/add_game_list', (req, res) => {
 	let txtNNamount = txtNN.split(',').join("");
 	let txtCCamount = txtCC.split(',').join("");
 
-	if(txtNNamount == '') {
+	if (txtNNamount == '') {
 		txtNNamount = 0;
 	}
 
-	if(txtCCamount == '') {
+	if (txtCCamount == '') {
 		txtCCamount = 0;
 	}
 
@@ -1924,10 +1928,10 @@ pageRouter.post('/add_game_list', (req, res) => {
 			const query3 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 			connection.query(query3, [result.insertId, date_now, 3, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result3) => {
 
-				if(txtTransType == 2) {
+				if (txtTransType == 2) {
 					const query4 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
 					connection.query(query4, [txtAccountCode, 2, parseFloat(txtNNamount) + parseFloat(txtCCamount), req.session.user_id, date_now], (err, result3) => {
-	
+
 						if (err) {
 							console.error('Error inserting details', err);
 							res.status(500).send('Error inserting details');
@@ -2009,34 +2013,32 @@ pageRouter.put('/game_list/change_status/:id', (req, res) => {
 	} = req.body;
 
 	const query = `UPDATE game_list SET ACTIVE = ?, GAME_ENDED = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [txtStatus,date_now, req.session.user_id, date_now, id], (err, result) => {
+	connection.query(query, [txtStatus, date_now, req.session.user_id, date_now, id], (err, result) => {
 
-		if(txtStatus == 1) {
+		if (txtStatus == 1) {
 			const query2 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
-			connection.query(query2, [txtAccountCode, 1, txtAmount, req.session.user_id, date_now], (err, result3) => {
-			});
+			connection.query(query2, [txtAccountCode, 1, txtAmount, req.session.user_id, date_now], (err, result3) => {});
 
 			if (err) {
 				console.error('Error updating GAME LIST:', err);
 				res.status(500).send('Error updating GAME LIST');
 				return;
 			}
-	
+
 			res.send('GAME LIST STATUS updated successfully');
 		} else {
 			const query2 = `UPDATE account_ledger SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? WHERE ACCOUNT_ID = ? AND AMOUNT = ?`;
-			connection.query(query2, [0, req.session.user_id, date_now, txtAccountCode, txtAmount], (err, result3) => {
-			});
+			connection.query(query2, [0, req.session.user_id, date_now, txtAccountCode, txtAmount], (err, result3) => {});
 
 			if (err) {
 				console.error('Error updating GAME LIST:', err);
 				res.status(500).send('Error updating GAME LIST');
 				return;
 			}
-	
+
 			res.send('GAME LIST STATUS updated successfully');
 		}
-		
+
 
 	});
 });
@@ -2103,11 +2105,11 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 	let txtNNamount = txtNN.split(',').join("");
 	let txtCCamount = txtCC.split(',').join("");
 
-	if(txtNNamount == '') {
+	if (txtNNamount == '') {
 		txtNNamount = 0;
 	}
 
-	if(txtCCamount == '') {
+	if (txtCCamount == '') {
 		txtCCamount = 0;
 	}
 
@@ -2115,8 +2117,8 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 	connection.query(query, [game_id, date_now, 1, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result) => {
 
 		const query2 = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS, TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-		connection.query(query2, [game_id, date_now, 3, 0,txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
-			if(txtTransType == 2) {
+		connection.query(query2, [game_id, date_now, 3, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result2) => {
+			if (txtTransType == 2) {
 				const query3 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
 				connection.query(query3, [txtAccountCode, 2, parseFloat(txtNNamount) + parseFloat(txtCCamount), req.session.user_id, date_now], (err, result3) => {
 
@@ -2135,7 +2137,7 @@ pageRouter.post('/game_list/add/buyin', (req, res) => {
 				}
 				res.redirect('/game_list');
 			}
-			
+
 		});
 	});
 });
@@ -2155,16 +2157,16 @@ pageRouter.post('/game_list/add/cashout', (req, res) => {
 	let txtNNamount = txtNN.split(',').join("");
 	let txtCCamount = txtCC.split(',').join("");
 
-	if(txtNNamount == '') {
+	if (txtNNamount == '') {
 		txtNNamount = 0;
 	}
 
-	if(txtCCamount == '') {
+	if (txtCCamount == '') {
 		txtCCamount = 0;
 	}
 
 	const query = `INSERT INTO  game_record(GAME_ID, TRADING_DATE, CAGE_TYPE, AMOUNT, NN_CHIPS, CC_CHIPS,TRANSACTION, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [game_id, date_now, 2, 0, txtNNamount, txtCCamount,txtTransType, req.session.user_id, date_now], (err, result) => {
+	connection.query(query, [game_id, date_now, 2, 0, txtNNamount, txtCCamount, txtTransType, req.session.user_id, date_now], (err, result) => {
 
 		const query2 = `INSERT INTO  account_ledger(ACCOUNT_ID, TRANSACTION_ID, AMOUNT, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?)`;
 		connection.query(query2, [txtAccountCode, 1, parseFloat(txtNNamount) + parseFloat(txtCCamount), req.session.user_id, date_now], (err, result3) => {
