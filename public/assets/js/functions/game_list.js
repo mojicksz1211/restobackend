@@ -2,6 +2,12 @@ var account_id;
 var record_id;
 var game_id;
 
+function addGameList(id) {
+	$('#modal-new-game-list').modal('show');
+
+	get_account();
+}
+
 $(document).ready(function () {
 	if ($.fn.DataTable.isDataTable('#game_list-tbl')) {
 		$('#game_list-tbl').DataTable().destroy();
@@ -338,12 +344,6 @@ $(document).ready(function () {
 	// }
 
 });
-
-function addGameList(id) {
-	$('#modal-new-game-list').modal('show');
-
-	get_account();
-}
 
 function addBuyin(id, account) {
 	$('#modal-add-buyin').modal('show');

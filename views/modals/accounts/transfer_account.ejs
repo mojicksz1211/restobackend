@@ -16,18 +16,19 @@
 					<div class="block-content">
 						<div class="mb-3">
 							<select class="js-select2 form-select" id="txtAccount" name="txtAccount" style="width: 100%;"
-								data-placeholder="Choose an Account...">
+								data-placeholder="Choose an Account..." required>
 								<option></option>
 							</select>
 						</div>
 						<div class="row mb-2">
 							<div class="col-sm-12">
-								<input type="text" onkeypress="return onlyNumberKey(event)" data-type="number" class="form-control txtAmount" name="txtAmount" placeholder="Amount">
+								<input type="text" onkeypress="return onlyNumberKey(event)" data-type="number"
+									class="form-control txtAmount" name="txtAmount" placeholder="Amount" required>
 							</div>
 						</div>
 					</div>
 					<div class="block-content block-content-full text-end bg-body">
-						<button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Save</button>
+						<button type="submit" class="btn btn-sm btn-primary">Save</button>
 						<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
 					</div>
 			</div>

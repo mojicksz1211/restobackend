@@ -96,79 +96,42 @@ pageRouter.get("/login", function (req, res) {
 	res.render("login");
 });
 
-pageRouter.get("/dashboard2", function (req, res) {
-	res.render("dashboard2", sessions(req, 'dashboard'));
-});
-
 pageRouter.get("/", function (req, res) {
 	res.render("dashboard", sessions(req, 'dashboard'));
 });
 
 pageRouter.get("/dashboard", checkSession, function (req, res) {
-	let cashDeno = 'SELECT * FROM cash WHERE ACTIVE = 1 ORDER BY DENOMINATION ASC';
-	let cashChips = 'SELECT * FROM cash_chips WHERE ACTIVE = 1 ORDER BY DENOMINATION ASC';
-	let nonNego = 'SELECT * FROM non_negotiable WHERE ACTIVE = 1 ORDER BY DENOMINATION ASC';
 
-	let junketCapitalDeposit = 'SELECT SUM(AMOUNT) AS cash_in FROM junket_capital WHERE ACTIVE = 1 AND CATEGORY_ID = 1';
-	let junketCapitalWithdraw = 'SELECT SUM(AMOUNT) AS cash_out FROM junket_capital WHERE ACTIVE = 1 AND CATEGORY_ID = 2';
+	let sqlCashDeposit = 'SELECT  SUM(AMOUNT) AS CASH_DEPOSIT FROM JUNKET_CAPITAL WHERE ACTIVE=1 AND TRANSACTION_ID=1';
+	let sqlCashWithdraw = 'SELECT  SUM(AMOUNT) AS CASH_WITHDRAW FROM JUNKET_CAPITAL WHERE ACTIVE=1 AND TRANSACTION_ID=2';
+	let sqlAccountDeposit = 'SELECT SUM(AMOUNT) AS ACCOUNT_DEPOSIT FROM ACCOUNT_LEDGER WHERE ACTIVE =1 AND TRANSACTION_ID = 1';
 
-	let accountDeposit = 'SELECT SUM(AMOUNT) AS account_deposit FROM account_ledger WHERE ACTIVE = 1 AND TRANSACTION_ID = 1';
-	let accountWithdraw = 'SELECT SUM(AMOUNT) AS account_withdraw FROM account_ledger WHERE ACTIVE = 1 AND TRANSACTION_ID = 2';
-
-	let houseExpense = 'SELECT SUM(AMOUNT) AS total_expense FROM junket_house_expense WHERE ACTIVE = 1';
-
-	let conciergeIn = 'SELECT SUM(AMOUNT) AS concierge_in FROM junket_concierge WHERE ACTIVE = 1 AND TRANSACTION_ID = 1';
-	let conciergeOut = 'SELECT SUM(AMOUNT) AS concierge_out FROM junket_concierge WHERE ACTIVE = 1 AND TRANSACTION_ID = 2';
-
-	connection.query(cashDeno, (err, results1) => {
+	connection.query(sqlCashDeposit, (err, cashDepositResult) => {
 		if (err) throw err;
-		connection.query(cashChips, (err, results2) => {
-			if (err) throw err;
-			connection.query(nonNego, (err, results3) => {
-				if (err) throw err;
-				connection.query(junketCapitalDeposit, (err, results4) => {
-					if (err) throw err;
-					connection.query(junketCapitalWithdraw, (err, results5) => {
-						if (err) throw err;
-						connection.query(accountDeposit, (err, results6) => {
-							if (err) throw err;
-							connection.query(accountWithdraw, (err, results7) => {
-								if (err) throw err;
-								connection.query(houseExpense, (err, results8) => {
-									if (err) throw err;
-									connection.query(conciergeIn, (err, results9) => {
-										if (err) throw err;
-										connection.query(conciergeOut, (err, results10) => {
-											if (err) throw err;
-											res.render('dashboard', {
-												username: req.session.username,
-												firstname: req.session.firstname,
-												lastname: req.session.lastname,
-												user_id: req.session.user_id,
-												currentPage: 'dashboard',
 
-												cashDeno: results1,
-												cashChips: results2,
-												nonNego: results3,
-												junketCapitalDeposit: results4,
-												junketCapitalWithdraw: results5,
-												accountDeposit: results6,
-												accountWithdraw: results7,
-												houseExpense: results8,
-												conciergeIn: results9,
-												conciergeOut: results10,
-											});
-										});
-									});
-								});
-							});
-						});
-					});
+		connection.query(sqlCashWithdraw, (err, cashWithdrawResult) => {
+			if (err) throw err;
+
+			connection.query(sqlAccountDeposit, (err, accountDepositResult) => {
+				if (err) throw err;
+
+				res.render('dashboard', {
+
+					username: req.session.username,
+					firstname: req.session.firstname,
+					lastname: req.session.lastname,
+					user_id: req.session.user_id,
+					currentPage: 'dashboard',
+
+					sqlCashDeposit: cashDepositResult,
+					sqlCashWithdraw: cashWithdrawResult,
+					sqlAccountDeposit: accountDepositResult,
+
 				});
 			});
 		});
 	});
-	// res.render("dashboard", sessions(req, 'dashboard'));
+
 });
 
 pageRouter.get("/agency", checkSession, function (req, res) {
@@ -837,6 +800,8 @@ pageRouter.post('/add_capital_category', (req, res) => {
 	} = req.body;
 	let date_now = new Date();
 
+
+
 	const query = `INSERT INTO capital_category(CATEGORY, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
 	connection.query(query, [txtCategory, req.session.user_id, date_now], (err, result) => {
 		if (err) {
@@ -1397,17 +1362,17 @@ pageRouter.put('/non_negotiable/remove/:id', (req, res) => {
 // ADD JUNKET CAPITAL 
 pageRouter.post('/add_junket_capital', (req, res) => {
 	const {
-		txtTrans,
-		txtCategory,
+
 		txtFullname,
-		txtDescription,
 		txtAmount,
-		Remarks
+		Remarks,
+		optWithdrawDeposit
+
 	} = req.body;
 	let date_now = new Date();
 
-	const query = `INSERT INTO junket_capital(TRANSACTION_ID, CATEGORY_ID, FULLNAME, DESCRIPTION, AMOUNT, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-	connection.query(query, [txtTrans, txtCategory, txtFullname, txtDescription, txtAmount, Remarks, req.session.user_id, date_now], (err, result) => {
+	const query = `INSERT INTO junket_capital(TRANSACTION_ID, FULLNAME, AMOUNT, REMARKS, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?, ?, ?, ?)`;
+	connection.query(query, [optWithdrawDeposit, txtFullname, txtAmount, Remarks, req.session.user_id, date_now], (err, result) => {
 		if (err) {
 			console.error('Error inserting junket', err);
 			res.status(500).send('Error inserting junket');
@@ -1419,10 +1384,7 @@ pageRouter.post('/add_junket_capital', (req, res) => {
 
 // GET JUNKET CAPITAL 
 pageRouter.get('/junket_capital_data', (req, res) => {
-	const query = `SELECT *, junket_capital.IDNo AS capital_id, transaction_type.TRANSACTION AS transaction, transaction_type.IDNo AS transaction_id, capital_category.IDNo AS category_id, capital_category.CATEGORY AS category FROM junket_capital
-    JOIN transaction_type ON transaction_type.IDNo = junket_capital.TRANSACTION_ID
-    JOIN capital_category ON capital_category.IDNo = junket_capital.CATEGORY_ID
-    WHERE junket_capital.ACTIVE=1 ORDER BY junket_capital.IDNo DESC`;
+	const query = `SELECT * FROM junket_capital WHERE junket_capital.ACTIVE=1 ORDER BY junket_capital.IDNo DESC`;
 	connection.query(query, (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);
@@ -1447,8 +1409,8 @@ pageRouter.put('/junket_capital/:id', (req, res) => {
 	let date_now = new Date();
 
 
-	const query = `UPDATE junket_capital SET TRANSACTION_ID = ?, CATEGORY_ID = ?, FULLNAME = ?, DESCRIPTION = ?, AMOUNT = ?, REMARKS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
-	connection.query(query, [txtTrans, txtCategory, txtFullname, txtDescription, txtAmount, Remarks, req.session.user_id, date_now, id], (err, result) => {
+	const query = `UPDATE junket_capital SET FULLNAME = ?, AMOUNT = ?, REMARKS = ?, EDITED_BY = ?, EDITED_DT = ? WHERE IDNo = ?`;
+	connection.query(query, [txtFullname, txtAmount, Remarks, req.session.user_id, date_now, id], (err, result) => {
 		if (err) {
 			console.error('Error updating Junket:', err);
 			res.status(500).send('Error updating Junket');
@@ -1958,7 +1920,7 @@ pageRouter.get('/game_list_data', (req, res) => {
 	JOIN account ON game_list.ACCOUNT_ID = account.IDNo
 	JOIN agent ON agent.IDNo = account.AGENT_ID
 	JOIN agency ON agency.IDNo = agent.AGENCY
-  	WHERE game_list.ACTIVE != 0 ORDER BY game_list.IDNo DESC`;
+  	WHERE game_list.ACTIVE != 0 ORDER BY game_list.IDNo ASC`;
 	connection.query(query, (error, result, fields) => {
 		if (error) {
 			console.error('Error fetching data:', error);

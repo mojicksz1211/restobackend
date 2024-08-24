@@ -1,36 +1,33 @@
-
 var cash_chips_id;
 
 $(document).ready(function () {
-    if ($.fn.DataTable.isDataTable('#cash-chips-tbl')) {
-        $('#cash-chips-tbl').DataTable().destroy();
-    }
+	if ($.fn.DataTable.isDataTable('#cash-chips-tbl')) {
+		$('#cash-chips-tbl').DataTable().destroy();
+	}
 
-    var dataTable = $('#cash-chips-tbl').DataTable({
-        columnDefs: [
-            {
-              createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
-                  $(cell).addClass('text-center');
-              }
-            }
-        ]
-    });
+	var dataTable = $('#cash-chips-tbl').DataTable({
+		columnDefs: [{
+			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+				$(cell).addClass('text-center');
+			}
+		}]
+	});
 
-    function reloadData() {
-        $.ajax({
-            url: '/cash_chips_data',
-            method: 'GET',
-            success: function (data) {
-                dataTable.clear();
-                data.forEach(function (row) {
-                    var status = '';
-                    if (row.ACTIVE == 1) {
-                        status = '<span class="badge bg-info">ACTIVE</span>';
-                    } else {
-                        status = '<span class="badge bg-danger">INACTIVE</span>';
-                    }
-                    var btn = `<div class="btn-group">
-                        <button type="button" onclick="editCashChips(${row.IDNo}, '${row.DENOMINATION}', '${row.QTY}')" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
+	function reloadData() {
+		$.ajax({
+			url: '/cash_chips_data',
+			method: 'GET',
+			success: function (data) {
+				dataTable.clear();
+				data.forEach(function (row) {
+					var status = '';
+					if (row.ACTIVE == 1) {
+						status = '<span class="badge bg-info">ACTIVE</span>';
+					} else {
+						status = '<span class="badge bg-danger">INACTIVE</span>';
+					}
+					var btn = `<div class="btn-group">
+                        <button type="button" onclick="editCashChips(${row.IDNo}, '${row.DENOMINATION}',  '${row.TOTAL}'), '${row.QTY}')" class="btn btn-sm btn-alt-secondary js-bs-tooltip-enabled"
                         data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
                         <i class="fa fa-pencil-alt"></i>
                         </button>
@@ -40,79 +37,76 @@ $(document).ready(function () {
                         </button>
                     </div>`;
 
-                    dataTable.row.add([row.DENOMINATION, row.QTY ,status, btn]).draw();
-                });
-            },
-            error: function (xhr, status, error) {
-                console.error('Error fetching data:', error);
-            }
-        });
-    }
+					dataTable.row.add([row.DENOMINATION, row.QTY, row.TOTAL, status, btn]).draw();
+				});
+			},
+			error: function (xhr, status, error) {
+				console.error('Error fetching data:', error);
+			}
+		});
+	}
 
-    reloadData();
+	reloadData();
 
-    $('#edit_cash_chips').submit(function(event) {
-        event.preventDefault(); 
-  
-        var formData = $(this).serialize();
-        $.ajax({
-            url: '/cash_chips/' + cash_chips_id,
-            type: 'PUT',
-            data: formData,
-            success: function(response) {
-                reloadData();
-                $('#modal-edit-cash-chips').modal('hide');
-            },
-            error: function(error) {
-                console.error('Error updating user role:', error);
-            }
-        });
-    });
+	$('#edit_cash_chips').submit(function (event) {
+		event.preventDefault();
+
+		var formData = $(this).serialize();
+		$.ajax({
+			url: '/cash_chips/' + cash_chips_id,
+			type: 'PUT',
+			data: formData,
+			success: function (response) {
+				reloadData();
+				$('#modal-edit-cash-chips').modal('hide');
+			},
+			error: function (error) {
+				console.error('Error updating user role:', error);
+			}
+		});
+	});
 });
 
 function addCashChips() {
-    $('#modal-new-cash-chips').modal('show');
+	$('#modal-new-cash-chips').modal('show');
 }
 
 
-function editCashChips(id, cash, qty ) {
-    $('#modal-edit-cash-chips').modal('show');
-    $('#txtDenomination').val(cash);
+function editCashChips(id, cash, qty) {
+	$('#modal-edit-cash-chips').modal('show');
+	$('#txtDenomination').val(cash);
 
-    if(qty != 'null') {
-        qty = qty
-    } else {
-        qty = '';
-    }
+	if (qty != 'null') {
+		qty = qty
+	} else {
+		qty = '';
+	}
 
-    $('#txtQTY').val(qty);
-  
-    cash_chips_id = id;
+	$('#txtQTY').val(qty);
+
+	cash_chips_id = id;
 }
 
-function archive_category(id){
-    Swal.fire({
-      title: 'Are you sure you want to delete this?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes'
-  }).then((result) => {
-      if (result.isConfirmed) {
-        $.ajax({
-          url: '/cash_chips/remove/' + id,
-          type: 'PUT',
-          success: function(response) {
-            window.location.reload();
-          },
-          error: function(error) {
-              console.error('Error deleting cash:', error);
-          }
-      });
-      }
-  })
+function archive_category(id) {
+	Swal.fire({
+		title: 'Are you sure you want to delete this?',
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		confirmButtonText: 'Yes'
+	}).then((result) => {
+		if (result.isConfirmed) {
+			$.ajax({
+				url: '/cash_chips/remove/' + id,
+				type: 'PUT',
+				success: function (response) {
+					window.location.reload();
+				},
+				error: function (error) {
+					console.error('Error deleting cash:', error);
+				}
+			});
+		}
+	})
 }
-  
-
-

@@ -22,3 +22,8 @@
 #game_list-tbl1_wrapper .row.dt-row .col-sm-12 {
 	overflow: auto;
 }
+
+/* Table Modificaton */
+.table {
+	font-size: 11px;
+}
