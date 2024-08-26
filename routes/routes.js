@@ -106,6 +106,35 @@ pageRouter.get("/dashboard", checkSession, function (req, res) {
 	let sqlCashWithdraw = 'SELECT  SUM(AMOUNT) AS CASH_WITHDRAW FROM JUNKET_CAPITAL WHERE ACTIVE=1 AND TRANSACTION_ID=2';
 	let sqlAccountDeposit = 'SELECT SUM(AMOUNT) AS ACCOUNT_DEPOSIT FROM ACCOUNT_LEDGER WHERE ACTIVE =1 AND TRANSACTION_ID = 1';
 
+	let sqlAccountCCChips = 'SELECT SUM(CC_CHIPS) AS TOTAL_CC FROM game_record WHERE ACTIVE =1';
+	let sqlAccountNNChips = 'SELECT SUM(NN_CHIPS) AS TOTAL_NN FROM game_record WHERE ACTIVE =1';
+
+	let sqlMarkerIssueGame = 'SELECT SUM(NN_CHIPS + CC_CHIPS) AS TOTAL_ISSUE_GAME FROM game_record WHERE ACTIVE =1 AND TRANSACTION = 3';
+	let sqlMarkerIssueAccount = 'SELECT SUM(AMOUNT) AS TOTAL_ISSUE_RECORD FROM account_ledger WHERE ACTIVE =1 AND TRANSACTION_ID = 3';
+
+	let sqlTotalRealRolling = 'SELECT SUM(NN_CHIPS + CC_CHIPS) AS TOTAL_REAL_ROLLING FROM game_record WHERE ACTIVE =1 AND CAGE_TYPE = 4';
+	let sqlTotalRolling = 'SELECT SUM(NN_CHIPS + CC_CHIPS) AS TOTAL_ROLLING FROM game_record WHERE ACTIVE =1 AND CAGE_TYPE IN (3,4)';
+	let sqlTotalCashOutRolling = 'SELECT SUM(NN_CHIPS) AS TOTAL_CASHOUT FROM game_record WHERE ACTIVE =1 AND CAGE_TYPE = 2';
+	let sqlTotalCashOut = 'SELECT SUM(NN_CHIPS + CC_CHIPS) AS TOTAL_CASHOUT FROM game_record WHERE ACTIVE =1 AND CAGE_TYPE = 2';
+
+	let sqlWinLoss = 'SELECT SUM(NN_CHIPS + CC_CHIPS) AS TOTAL_CASHIN FROM game_record WHERE ACTIVE =1 AND CAGE_TYPE = 1';
+
+	let sqlCommisionRolling = `SELECT SUM(game_record.NN_CHIPS + game_record.CC_CHIPS) AS TOTAL_ROLLING, game_list.COMMISSION_PERCENTAGE AS percentage FROM game_record 
+			LEFT JOIN game_list ON game_list.IDNo = game_record.GAME_ID
+			WHERE game_list.ACTIVE IN (1,2) AND game_list.COMMISSION_TYPE = 1 AND game_record.CAGE_TYPE IN (3,4) GROUP BY game_record.GAME_ID`;
+
+	let sqlCommisionCashout = `SELECT SUM(game_record.NN_CHIPS + game_record.CC_CHIPS) AS TOTAL_CASHOUT FROM game_record 
+			LEFT JOIN game_list ON game_list.IDNo = game_record.GAME_ID
+			WHERE game_list.ACTIVE IN (1,2) AND game_list.COMMISSION_TYPE = 1 AND game_record.CAGE_TYPE = 2 GROUP BY game_record.GAME_ID`;
+
+	let sqlSharedRolling = `SELECT SUM(game_record.NN_CHIPS) AS TOTAL_ROLLING, game_list.COMMISSION_PERCENTAGE AS percentage FROM game_record 
+			LEFT JOIN game_list ON game_list.IDNo = game_record.GAME_ID
+			WHERE game_list.ACTIVE IN (1,2) AND game_list.COMMISSION_TYPE = 2 AND game_record.CAGE_TYPE IN (3,4) GROUP BY game_record.GAME_ID`;
+
+	let sqlSharedCashout = `SELECT SUM(game_record.NN_CHIPS) AS TOTAL_CASHOUT FROM game_record 
+			LEFT JOIN game_list ON game_list.IDNo = game_record.GAME_ID
+			WHERE game_list.ACTIVE IN (1,2) AND game_list.COMMISSION_TYPE = 2 AND game_record.CAGE_TYPE = 2 GROUP BY game_record.GAME_ID`;
+
 	connection.query(sqlCashDeposit, (err, cashDepositResult) => {
 		if (err) throw err;
 
@@ -115,18 +144,106 @@ pageRouter.get("/dashboard", checkSession, function (req, res) {
 			connection.query(sqlAccountDeposit, (err, accountDepositResult) => {
 				if (err) throw err;
 
-				res.render('dashboard', {
+				connection.query(sqlAccountCCChips, (err, accountCCChips) => {
+					if (err) throw err;
 
-					username: req.session.username,
-					firstname: req.session.firstname,
-					lastname: req.session.lastname,
-					user_id: req.session.user_id,
-					currentPage: 'dashboard',
+					connection.query(sqlAccountNNChips, (err, accountNNChips) => {
+						if (err) throw err;
+						
+						connection.query(sqlMarkerIssueGame, (err, markerIssueGame) => {
+							if (err) throw err;
 
-					sqlCashDeposit: cashDepositResult,
-					sqlCashWithdraw: cashWithdrawResult,
-					sqlAccountDeposit: accountDepositResult,
+							connection.query(sqlMarkerIssueAccount, (err, markerIssueAccount) => {
+								if (err) throw err;
 
+								connection.query(sqlTotalRealRolling, (err, totalRealRolling) => {
+									if (err) throw err;
+
+									connection.query(sqlTotalRolling, (err, totalRolling) => {
+										if (err) throw err;
+
+										connection.query(sqlTotalCashOut, (err, totalCashOut) => {
+											if (err) throw err;
+
+											connection.query(sqlTotalCashOutRolling, (err, totalCashOutRolling) => {
+												if (err) throw err;
+		
+												connection.query(sqlWinLoss, (err, totalWinLoss) => {
+													if (err) throw err;
+
+													connection.query(sqlCommisionRolling, (err, totalCommisionRolling) => {
+														if (err) throw err;
+
+														connection.query(sqlCommisionCashout, (err, totalCommisionCashout) => {
+															if (err) throw err;
+
+															let totalCommission = 0;
+
+															for(let i=0; i<totalCommisionRolling.length; i++) {
+																let cashout = 0;
+																if(totalCommisionCashout[i]) {
+																	cashout = totalCommisionCashout[i].TOTAL_CASHOUT;
+																}
+
+																totalCommission += (totalCommisionRolling[i].TOTAL_ROLLING - cashout) * (totalCommisionRolling[i].percentage / 100);
+															}
+
+															connection.query(sqlSharedRolling, (err, totalSharedRolling) => {
+																if (err) throw err;
+
+																connection.query(sqlSharedCashout, (err, totalSharedCashout) => {
+																	if (err) throw err;
+
+																	let totalShared = 0;
+
+																	for(let j=0; j<totalSharedRolling.length; j++) {
+																		let cashout_shared = 0;
+
+																		if(totalSharedCashout[j]) {
+																			cashout_shared = totalSharedCashout[j].TOTAL_CASHOUT;
+																		}
+
+																		totalShared += (totalSharedRolling[j].TOTAL_ROLLING - cashout_shared) * (totalSharedRolling[j].percentage / 100);
+																	}
+
+
+																	res.render('dashboard', {
+
+																		username: req.session.username,
+																		firstname: req.session.firstname,
+																		lastname: req.session.lastname,
+																		user_id: req.session.user_id,
+																		currentPage: 'dashboard',
+
+																		sqlCashDeposit: cashDepositResult,
+																		sqlCashWithdraw: cashWithdrawResult,
+																		sqlAccountDeposit: accountDepositResult,
+																		sqlAccountCCChips: accountCCChips,
+																		sqlAccountNNChips: accountNNChips,
+																		sqlMarkerIssueGame: markerIssueGame,
+																		sqlMarkerIssueAccount: markerIssueAccount,
+																		sqlTotalRealRolling: totalRealRolling,
+																		sqlTotalRolling: totalRolling,
+																		sqlTotalCashOut: totalCashOut,
+																		sqlTotalCashOutRolling: totalCashOutRolling,
+																		sqlWinLoss: totalWinLoss,
+																		sqlCommision: totalCommission,
+																		sqlShared: totalShared,
+
+																	});
+
+																});
+															});
+														});
+													});
+												});
+											});
+										});
+									});
+								});
+							});
+						});
+					});
 				});
 			});
 		});

@@ -46,7 +46,7 @@
 								<div class="text-center py-4">
 									<i class="fa fa-coins fa-3x text-muted push"></i>
 									<h4 class="mb-0">
-										0.00
+										<%-  parseFloat(sqlAccountCCChips[0].TOTAL_CC).toLocaleString() %>
 									</h4>
 								</div>
 							</div>
@@ -61,7 +61,7 @@
 								<div class="text-center py-4">
 									<i class="fa fa-coins fa-3x text-muted push"></i>
 									<h4 class="mb-0">
-										0.00
+										<%-  parseFloat(sqlAccountNNChips[0].TOTAL_NN).toLocaleString() %>
 									</h4>
 								</div>
 							</div>
@@ -76,7 +76,7 @@
 								<div class="text-center py-4">
 									<i class="fa fa-equals fa-3x text-muted push"></i>
 									<h4 class="mb-0">
-										0.00
+										<%-  parseFloat(sqlAccountCCChips[0].TOTAL_CC + sqlAccountNNChips[0].TOTAL_NN).toLocaleString() %>
 									</h4>
 								</div>
 							</div>
@@ -91,7 +91,7 @@
 								<div class="text-center py-4">
 									<i class="fa fa-plus fa-3x text-muted push"></i>
 									<h4 class="mb-0">
-										0.00
+										<%-  parseFloat(sqlCashDeposit[0].CASH_DEPOSIT + sqlAccountDeposit[0].ACCOUNT_DEPOSIT).toLocaleString() %>
 									</h4>
 								</div>
 							</div>
@@ -105,7 +105,7 @@
 								<div class="ribbon-box">Marker</div>
 								<div class="text-center py-4">
 									<i class="fa fa-money-check fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlMarkerIssueGame[0].TOTAL_ISSUE_GAME + sqlMarkerIssueAccount[0].TOTAL_ISSUE_RECORD).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
@@ -118,7 +118,7 @@
 								<div class="ribbon-box">Commission</div>
 								<div class="text-center py-4">
 									<i class="fab fa-percent fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlCommision).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
@@ -132,7 +132,7 @@
 								<div class="ribbon-box">Share</div>
 								<div class="text-center py-4">
 									<i class="fa fa-share fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlShared).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
@@ -146,7 +146,7 @@
 								<div class="ribbon-box">Total Rolling</div>
 								<div class="text-center py-4">
 									<i class="fa fa-ticket fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlTotalRolling[0].TOTAL_ROLLING - sqlTotalCashOutRolling[0].TOTAL_CASHOUT).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
@@ -160,7 +160,7 @@
 								<div class="ribbon-box">House Rolling</div>
 								<div class="text-center py-4">
 									<i class="fa fa-house fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlTotalRealRolling[0].TOTAL_REAL_ROLLING).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
@@ -174,7 +174,7 @@
 								<div class="ribbon-box">House Win / Lose</div>
 								<div class="text-center py-4">
 									<i class="fa fa-arrow-down-up-across-line fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlWinLoss[0].TOTAL_CASHIN - sqlTotalCashOut[0].TOTAL_CASHOUT).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
@@ -188,7 +188,7 @@
 								<div class="ribbon-box">Chips Total</div>
 								<div class="text-center py-4">
 									<i class="fab fa-equals fa-3x text-muted push"></i>
-									<h4 class="mb-0">0.00</h4>
+									<h4 class="mb-0"><%-  parseFloat(sqlAccountCCChips[0].TOTAL_CC + sqlAccountNNChips[0].TOTAL_NN).toLocaleString() %></h4>
 								</div>
 							</div>
 						</div>
