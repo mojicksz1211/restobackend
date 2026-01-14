@@ -147,8 +147,12 @@ class ApiController {
 			const menus = await MenuModel.getByCategory(categoryId);
 			
 			// Format response for Android app
-			// Include full image URL
-			const baseUrl = req.protocol + '://' + req.get('host');
+			// Include full image URL - use HTTPS if available
+			let baseUrl = req.protocol + '://' + req.get('host');
+			// Force HTTPS if the request came through HTTPS or if hostname suggests HTTPS
+			if (req.get('x-forwarded-proto') === 'https' || req.get('host').includes('resto-admin.3core21.com')) {
+				baseUrl = 'https://' + req.get('host');
+			}
 			const formattedMenus = menus.map(menu => ({
 				id: menu.IDNo,
 				category_id: menu.CATEGORY_ID,

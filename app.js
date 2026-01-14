@@ -44,8 +44,21 @@ app.use((req, res, next) => {
 // Body parser middleware for handling form submissions
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// CORS middleware for static files (images, etc.)
+app.use((req, res, next) => {
+  // Add CORS headers for all requests (including static files)
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
-// Serve uploaded images
+// Serve uploaded images with CORS
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 app.use(session({
