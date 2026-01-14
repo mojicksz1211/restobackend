@@ -47,6 +47,13 @@
 
 						</select>
 					</div>
+					<div class="mb-3" id="new_table_wrapper" style="display:none;">
+						<select class="form-control" id="new_table_id" name="table_id" style="width: 100%;"
+							data-placeholder="Choose table..">
+							<option value="">Select Table</option>
+						</select>
+						<small class="text-muted">Required when role is Table-TabletMenu</small>
+					</div>
 			</div>
 					<div class="modal-footer">
 						<button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal"><%= __('modal_new_user_account.save') %></button>

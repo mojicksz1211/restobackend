@@ -212,9 +212,14 @@ router.put('/user_role/remove/:id', async (req, res) => {
 router.get('/users', async (req, res) => {
 	try {
 		const query = `
-			SELECT *, user_role.ROLE AS role, user_info.IDNo AS user_id 
+			SELECT 
+				user_info.*,
+				user_role.ROLE AS role, 
+				user_info.IDNo AS user_id,
+				rt.TABLE_NUMBER AS TABLE_NUMBER
 			FROM user_info 
 			JOIN user_role ON user_role.IDno = user_info.PERMISSIONS 
+			LEFT JOIN restaurant_tables rt ON rt.IDNo = user_info.TABLE_ID
 			WHERE user_info.ACTIVE = 1
 		`;
 		const [results] = await pool.execute(query);
@@ -235,6 +240,7 @@ router.post('/add_user', async (req, res) => {
 			txtPassword,
 			txtPassword2,
 			user_role,
+			table_id,
 			salt
 		} = req.body;
 
@@ -244,11 +250,28 @@ router.post('/add_user', async (req, res) => {
 			return res.status(500).json({ error: 'password' });
 		}
 
+		// 1-to-1 validation: if role=2 (Table-TabletMenu), TABLE_ID is required and must be unique among ACTIVE users
+		const roleId = parseInt(user_role);
+		let tableIdToSave = null;
+		if (roleId === 2) {
+			if (!table_id) {
+				return res.status(400).json({ error: 'Table is required for this role.' });
+			}
+			tableIdToSave = parseInt(table_id);
+			const [existing] = await pool.execute(
+				`SELECT IDNo FROM user_info WHERE TABLE_ID = ? AND ACTIVE = 1 LIMIT 1`,
+				[tableIdToSave]
+			);
+			if (existing.length > 0) {
+				return res.status(400).json({ error: 'Selected table is already assigned to another user.' });
+			}
+		}
+
 		const generated_pw = await argon2.hash(txtPassword);
 		const query = `
 			INSERT INTO user_info 
-			(FIRSTNAME, LASTNAME, USERNAME, PASSWORD, SALT, PERMISSIONS, LAST_LOGIN, ENCODED_BY, ENCODED_DT) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			(FIRSTNAME, LASTNAME, USERNAME, PASSWORD, SALT, PERMISSIONS, TABLE_ID, LAST_LOGIN, ENCODED_BY, ENCODED_DT) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		await pool.execute(query, [
@@ -258,6 +281,7 @@ router.post('/add_user', async (req, res) => {
 			generated_pw,
 			salt,
 			user_role,
+			tableIdToSave,
 			date_now,
 			req.session.user_id,
 			date_now
@@ -278,14 +302,32 @@ router.put('/user/:id', async (req, res) => {
 			txtFirstName,
 			txtLastName,
 			txtUserName,
-			user_role
+			user_role,
+			table_id
 		} = req.body;
 
 		const date_now = new Date();
 
+		// 1-to-1 validation: if role=2, TABLE_ID required and must not be used by other ACTIVE users
+		const roleId = parseInt(user_role);
+		let tableIdToSave = null;
+		if (roleId === 2) {
+			if (!table_id) {
+				return res.status(400).json({ error: 'Table is required for this role.' });
+			}
+			tableIdToSave = parseInt(table_id);
+			const [existing] = await pool.execute(
+				`SELECT IDNo FROM user_info WHERE TABLE_ID = ? AND ACTIVE = 1 AND IDNo <> ? LIMIT 1`,
+				[tableIdToSave, id]
+			);
+			if (existing.length > 0) {
+				return res.status(400).json({ error: 'Selected table is already assigned to another user.' });
+			}
+		}
+
 		const query = `
 			UPDATE user_info 
-			SET FIRSTNAME = ?, LASTNAME = ?, USERNAME = ?, PERMISSIONS = ?, EDITED_BY = ?, EDITED_DT = ? 
+			SET FIRSTNAME = ?, LASTNAME = ?, USERNAME = ?, PERMISSIONS = ?, TABLE_ID = ?, EDITED_BY = ?, EDITED_DT = ? 
 			WHERE IDNo = ?
 		`;
 
@@ -294,6 +336,7 @@ router.put('/user/:id', async (req, res) => {
 			txtLastName,
 			txtUserName,
 			user_role,
+			tableIdToSave,
 			req.session.user_id,
 			date_now,
 			id
@@ -314,7 +357,7 @@ router.put('/user/remove/:id', async (req, res) => {
 
 		const query = `
 			UPDATE user_info 
-			SET ACTIVE = ?, EDITED_BY = ?, EDITED_DT = ? 
+			SET ACTIVE = ?, TABLE_ID = NULL, EDITED_BY = ?, EDITED_DT = ? 
 			WHERE IDNo = ?
 		`;
 

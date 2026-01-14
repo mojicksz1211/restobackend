@@ -8,6 +8,10 @@
 
 var user_id;
 var dataTable;
+var tablesList = [];
+var edit_user_table_id = null;
+const TABLE_ROLE_ID = 2; // IDNo = 2 (Table-TabletMenu)
+var assignedTableIds = new Set(); // active users' assigned TABLE_IDs (1-to-1)
 
 $(document).ready(function () {
 	if ($.fn.DataTable.isDataTable('#usersTable')) {
@@ -24,6 +28,17 @@ $(document).ready(function () {
 
 	// Initial load
 	reloadUserData();
+	loadRestaurantTables();
+
+	// Toggle table select when role changes (new user)
+	$(document).on('change', '#user_role', function () {
+		toggleTableFieldForNew();
+	});
+
+	// Toggle table select when role changes (edit user)
+	$(document).on('change', '.edit_user_role', function () {
+		toggleTableFieldForEdit();
+	});
 
 	// Edit user form submit
 	$('#edit_user').submit(function (event) {
@@ -99,6 +114,71 @@ $(document).ready(function () {
 	});
 });
 
+function loadRestaurantTables() {
+	$.ajax({
+		url: '/restaurant_tables',
+		method: 'GET',
+		dataType: 'json',
+		success: function (rows) {
+			tablesList = rows || [];
+			populateTableSelect('#new_table_id');
+			populateTableSelect('#edit_table_id', edit_user_table_id);
+		},
+		error: function (xhr) {
+			console.error('Failed to load restaurant tables:', xhr.responseText);
+		}
+	});
+}
+
+function populateTableSelect(selector, selectedId = null) {
+	const $select = $(selector);
+	if ($select.length === 0) return;
+	$select.empty();
+	$select.append('<option value="">Select Table</option>');
+
+	const selected =
+		selectedId !== null && selectedId !== undefined && selectedId !== ''
+			? parseInt(selectedId)
+			: null;
+
+	(tablesList || []).forEach(function (t) {
+		const tid = parseInt(t.IDNo);
+		const isAssignedToOther = assignedTableIds.has(tid) && (selected === null || tid !== selected);
+		if (isAssignedToOther) return; // enforce 1-to-1: hide already assigned tables
+		$select.append(`<option value="${t.IDNo}">#${t.TABLE_NUMBER}</option>`);
+	});
+
+	if (selected !== null) {
+		$select.val(String(selected));
+	}
+}
+
+function toggleTableFieldForNew() {
+	const roleId = parseInt($('#user_role').val());
+	if (roleId === TABLE_ROLE_ID) {
+		$('#new_table_wrapper').show();
+		if (tablesList.length === 0) loadRestaurantTables();
+	} else {
+		$('#new_table_wrapper').hide();
+		$('#new_table_id').val('');
+	}
+}
+
+function toggleTableFieldForEdit() {
+	const roleId = parseInt($('.edit_user_role').val());
+	if (roleId === TABLE_ROLE_ID) {
+		$('#edit_table_wrapper').show();
+		if (tablesList.length === 0) loadRestaurantTables();
+		// keep selection
+		if (edit_user_table_id !== null) {
+			populateTableSelect('#edit_table_id', edit_user_table_id);
+		}
+	} else {
+		$('#edit_table_wrapper').hide();
+		$('#edit_table_id').val('');
+	}
+}
+
 // ============================================
 // GLOBAL FUNCTIONS
 // ============================================
@@ -110,12 +190,33 @@ function reloadUserData() {
 		method: 'GET',
 		success: function (data) {
 			dataTable.clear();
+
+			// rebuild assigned tables map for 1-to-1 UI filtering
+			assignedTableIds = new Set();
+			(data || []).forEach(function (u) {
+				const tid = u.TABLE_ID;
+				if (tid !== null && tid !== undefined && tid !== '') {
+					assignedTableIds.add(parseInt(tid));
+				}
+			});
+			// refresh selects based on assigned table IDs
+			populateTableSelect('#new_table_id');
+			populateTableSelect('#edit_table_id', edit_user_table_id);
+			toggleTableFieldForNew();
+			toggleTableFieldForEdit();
+
 			if (!data || data.length === 0) {
 				return;
 			}
 			data.forEach(function (row) {
 				var status = '';
-				if (row.ACTIVE.data[0] == 1) {
+				// ACTIVE can be BIT (Buffer) or TINYINT (number) depending on MySQL settings
+				const isActive =
+					row.ACTIVE && row.ACTIVE.data
+						? parseInt(row.ACTIVE.data[0]) === 1
+						: parseInt(row.ACTIVE) === 1;
+
+				if (isActive) {
 					status = '<span class="css-blue">ACTIVE</span>';
 				} else {
 					status = '<span class="css-red">INACTIVE</span>';
@@ -131,7 +232,7 @@ function reloadUserData() {
 						data-bs-toggle="tooltip" aria-label="Delete" data-bs-original-title="Delete">
 						<i class="fa fa-trash"></i>
 					</button>
-					<button type="button" class="btn btn-sm bg-info-subtle js-bs-tooltip-enabled" onclick="edit_user(${row.user_id}, '${firstname}', '${lastname}', '${username}', ${row.PERMISSIONS})"
+					<button type="button" class="btn btn-sm bg-info-subtle js-bs-tooltip-enabled" onclick="edit_user(${row.user_id}, '${firstname}', '${lastname}', '${username}', ${row.PERMISSIONS}, ${row.TABLE_ID || 'null'})"
 						data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
 						<i class="fa fa-pencil-alt"></i>
 					</button>
@@ -162,12 +263,16 @@ function generateSalt(length) {
 }
 
 // Open edit user modal with data
-function edit_user(id, firstname, lastname, username, role) {
+function edit_user(id, firstname, lastname, username, role, table_id) {
 	user_id = id;
+	edit_user_table_id = table_id !== undefined ? table_id : null;
 	$('#firstname').val(firstname);
 	$('#lastname').val(lastname);
 	$('#username').val(username);
 	get_user_role_edit(role);
+	// set table dropdown default (will show only if role is 2)
+	populateTableSelect('#edit_table_id', edit_user_table_id);
+	toggleTableFieldForEdit();
 	$('#modal-edit_user').modal('show');
 }
 
@@ -228,6 +333,7 @@ function get_user_role() {
 					text: option.ROLE
 				}));
 			});
+			toggleTableFieldForNew();
 		},
 		error: function (xhr, status, error) {
 			console.error('Error fetching user roles:', error);
@@ -262,6 +368,8 @@ function get_user_role_edit(id) {
 					text: option.ROLE
 				}));
 			});
+			// After roles loaded, toggle table field visibility
+			toggleTableFieldForEdit();
 		},
 		error: function (xhr, status, error) {
 			console.error('Error fetching user roles:', error);
@@ -278,4 +386,5 @@ function get_user_role_edit(id) {
 function add_user_modal() {
 	$('#modal-new_user').modal('show');
 	get_user_role();
+	toggleTableFieldForNew();
 }
