@@ -1,0 +1,48 @@
+<!-- ============================================ -->
+<!-- NEW TABLE MODAL -->
+<!-- File: views/modals/table/newTable.ejs -->
+<!-- Description: Modal form for creating new restaurant table -->
+<!-- ============================================ -->
+
+<div class="modal fade" id="modal-new_restaurant_table" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
+	data-keyboard="false" data-bs-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary">
+				<h5 class="block-title text-white">New Restaurant Table</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+
+			<div class="modal-body">
+				<form id="add_new_restaurant_table">
+					<div class="row mb-2">
+						<div class="col-sm-12">
+							<label class="form-label">Table Number</label>
+							<input type="text" class="form-control" name="TABLE_NUMBER" placeholder="Enter table number" required>
+						</div>
+					</div>
+					<div class="row mb-2">
+						<div class="col-sm-6">
+							<label class="form-label">Capacity</label>
+							<input type="number" class="form-control" name="CAPACITY" placeholder="0" min="1" value="1" required>
+						</div>
+						<div class="col-sm-6">
+							<label class="form-label">Status</label>
+							<select class="form-control" name="STATUS" required>
+								<option value="1">Available</option>
+								<option value="2">Occupied</option>
+								<option value="4">Reserved</option>
+								<option value="3">Not Available</option>
+							</select>
+						</div>
+					</div>
+			</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Save</button>
+						<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+			</form>
+		</div>
+	</div>
+</div>
+

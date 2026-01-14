@@ -1,211 +1,1121 @@
-<%- include ('partials/header_html'); -%>
+<%- include('partials/header') %>
+   <%- include('partials/loader') %>
+      <%- include('partials/sidebar') %>
 
-<head>
-	<%- include ('partials/title_meta'); -%>
-
-	<%- include ('partials/header_css'); -%>
-	<link rel="stylesheet" href="assets/js/plugins/select2/css/select2.min.css">
-
-</head>
-
-<body>
-	<div id="page-container"
-		class="sidebar-o sidebar-scroll page-header-dark enable-page-overlay side-scroll page-header-fixed">
-
-		<%- include ('partials/sidebar'); -%>
-		<%- include ('partials/topbar'); -%>
-
-		<!-- Main Container -->
-		<main id="main-container">
-
-			<!-- Page Content -->
-			<div class="content">
-				<div class="row">
-					<div class="col-md-6 col-xl-3">
-						<!-- Default Position -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Cash Balance</div>
-								<div class="text-center py-4">
-									<i class="fa fa-money-bill-wave fa-3x text-muted push"></i>
-									<h4 class="mb-0">
-										<a href="#modal-new-capital" data-bs-toggle="modal">
-											<%-  parseFloat(sqlCashDeposit[0].CASH_DEPOSIT + sqlAccountDeposit[0].ACCOUNT_DEPOSIT - sqlCashWithdraw[0].CASH_WITHDRAW).toLocaleString() %>
-										</a>
-									</h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Default Position -->
-					</div>
-					<div class="col-md-6 col-xl-3">
-						<!-- Bottom Right -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">CC Chips</div>
-								<div class="text-center py-4">
-									<i class="fa fa-coins fa-3x text-muted push"></i>
-									<h4 class="mb-0">
-										<%-  parseFloat(sqlAccountCCChips[0].TOTAL_CC).toLocaleString() %>
-									</h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Bottom Right -->
-					</div>
-					<div class="col-md-6 col-xl-3">
-						<!-- Top Left -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">NN Chips</div>
-								<div class="text-center py-4">
-									<i class="fa fa-coins fa-3x text-muted push"></i>
-									<h4 class="mb-0">
-										<%-  parseFloat(sqlAccountNNChips[0].TOTAL_NN).toLocaleString() %>
-									</h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Top Left -->
-					</div>
-					<div class="col-md-6 col-xl-3">
-						<!-- Bottom Right -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Total Chips</div>
-								<div class="text-center py-4">
-									<i class="fa fa-equals fa-3x text-muted push"></i>
-									<h4 class="mb-0">
-										<%-  parseFloat(sqlAccountCCChips[0].TOTAL_CC + sqlAccountNNChips[0].TOTAL_NN).toLocaleString() %>
-									</h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Bottom Right -->
-					</div>
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Deposit</div>
-								<div class="text-center py-4">
-									<i class="fa fa-plus fa-3x text-muted push"></i>
-									<h4 class="mb-0">
-										<%-  parseFloat(sqlCashDeposit[0].CASH_DEPOSIT + sqlAccountDeposit[0].ACCOUNT_DEPOSIT).toLocaleString() %>
-									</h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Marker</div>
-								<div class="text-center py-4">
-									<i class="fa fa-money-check fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlMarkerIssueGame[0].TOTAL_ISSUE_GAME + sqlMarkerIssueAccount[0].TOTAL_ISSUE_RECORD).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Commission</div>
-								<div class="text-center py-4">
-									<i class="fab fa-percent fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlCommision).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Share</div>
-								<div class="text-center py-4">
-									<i class="fa fa-share fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlShared).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Total Rolling</div>
-								<div class="text-center py-4">
-									<i class="fa fa-ticket fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlTotalRolling[0].TOTAL_ROLLING - sqlTotalCashOutRolling[0].TOTAL_CASHOUT).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">House Rolling</div>
-								<div class="text-center py-4">
-									<i class="fa fa-house fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlTotalRealRolling[0].TOTAL_REAL_ROLLING).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">House Win / Lose</div>
-								<div class="text-center py-4">
-									<i class="fa fa-arrow-down-up-across-line fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlWinLoss[0].TOTAL_CASHIN - sqlTotalCashOut[0].TOTAL_CASHOUT).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-
-					<div class="col-md-6 col-xl-3">
-						<!-- Success Color -->
-						<div class="block block-rounded">
-							<div class="block-content block-content-full ribbon ribbon-bookmark ribbon-info">
-								<div class="ribbon-box">Chips Total</div>
-								<div class="text-center py-4">
-									<i class="fab fa-equals fa-3x text-muted push"></i>
-									<h4 class="mb-0"><%-  parseFloat(sqlAccountCCChips[0].TOTAL_CC + sqlAccountNNChips[0].TOTAL_NN).toLocaleString() %></h4>
-								</div>
-							</div>
-						</div>
-						<!-- END Success Color -->
-					</div>
-				</div>
-			</div>
-			<!-- END Page Content -->
-
-		</main>
-		<!-- END Main Container -->
-
-		<%- include ('modals/Junket/new_capital') %>
-
-		<%- include ('partials/footer'); -%>
+         <%- include('partials/topbar') %>
 
 
-		<script src="/assets/js/functions/capital.js"></script>
+            <div class="conatiner-fluid content-inner mt-n5 py-0">
 
-		<%- include ('partials/footer_html'); -%>
+               <div id="user-role" data-permissions="<%= permissions %>"></div>
+               <style>
+                  .plus-icon {
+                     color: #5a6474;
+                     transition: color 0.3s ease-in-out;
+                     font-size: 18px;
+
+                  }
+
+                  .plus-icon:hover {
+                     color: #8a92a6;
+                  }
+
+                  .plus-spacing {
+                     margin-left: 7px;
+                     /* Pwede mong dagdagan kung masyadong dikit pa rin */
+                  }
+
+                  li.card {
+                     width: 291px !important;
+                     /* adjust as needed */
+                  }
+
+                  .d-slider1 .swiper-button-next:after {
+                     color: #000 !important;
+                     font-weight: bold !important;
+                     /* Make the arrows bold */
+                     opacity: 1 !important;
+                     /* Ensure buttons are fully opaque */
+                     transition: none !important;
+                     visibility: visible !important;
+                     /* Disable any transition */
+                     /* Ensure the color is applied */
+                  }
+
+                  .d-slider1 .swiper-button-prev:after {
+                     color: #000 !important;
+                     font-weight: bold !important;
+                     /* Make the arrows bold */
+                     opacity: 1 !important;
+                     /* Ensure buttons are fully opaque */
+                     transition: none !important;
+                     visibility: visible !important;
+                     /* Disable any transition */
+                     /* Ensure the color is applied */
+                  }
+
+                  .d-slider1 .swiper-button-next:before {
+                     color: #000 !important;
+                     font-weight: bold !important;
+                     /* Make the arrows bold */
+                     opacity: 1 !important;
+                     /* Ensure buttons are fully opaque */
+                     transition: none !important;
+                     visibility: visible !important;
+                     /* Disable any transition */
+                     /* Ensure the color is applied */
+                  }
+
+                  .d-slider1 .swiper-button-prev:before {
+                     color: #000 !important;
+                     font-weight: bold !important;
+                     /* Make the arrows bold */
+                     opacity: 1 !important;
+                     /* Ensure buttons are fully opaque */
+                     transition: none !important;
+                     visibility: visible !important;
+                     /* Disable any transition */
+                     /* Ensure the color is applied */
+                  }
+
+                  /* If the arrows are SVG, make sure the fill color stays black */
+                  .d-slider1 .swiper-button-next svg,
+                  .d-slider1 .swiper-button-prev svg {
+                     fill: #000 !important;
+                     /* Change fill color to black */
+                     opacity: 1 !important;
+                     /* Ensure buttons are fully opaque */
+                     visibility: visible !important;
+                     transition: none !important;
+                     /* Disable any transition */
+                  }
+
+                  /* Prevent color change on hover and active states */
+                  .d-slider1 .swiper-button-next:hover,
+                  .d-slider1 .swiper-button-prev:hover,
+                  .d-slider1 .swiper-button-next:active,
+                  .d-slider1 .swiper-button-prev:active {
+                     color: #000 !important;
+                     /* Ensure color stays black */
+                     fill: #000 !important;
+                     /* Ensure fill stays black */
+                     opacity: 1 !important;
+                     /* Ensure buttons are fully opaque */
+                     visibility: visible !important;
+                     transition: none !important;
+                     /* Disable any transition */
+                  }
+
+                  .my-custom-next,
+                  .my-custom-prev {
+                     color: #000;
+                     /* Always black text/icon */
+                     font-weight: bold;
+                     /* Make them bold if you want */
+                     cursor: pointer;
+                     /* Show pointer on hover */
+                     transition: none;
+                     /* Disable transitions */
+                     /* Add any other styling you need, e.g. padding, positioning, etc. */
+                  }
+
+                  /* Hover/active states (optional) */
+                  .my-custom-next:hover,
+                  .my-custom-prev:hover,
+                  .my-custom-next:active,
+                  .my-custom-prev:active {
+                     color: #000;
+                     /* Keep it black even on hover/click */
+                     transition: none;
+                  }
+
+                  /* Ensuring transfer account stays on top while keeping guest account in the background */
+                  #modal-guestAccount {
+                     z-index: 1050 !important;
+                     /* Default z-index */
+                  }
+
+                  #modal-account-details {
+                     z-index: 1060 !important;
+                     /* Account details modal above guest account */
+                  }
+
+                  #modal-transfer_account {
+                     z-index: 1070 !important;
+                     /* Transfer modal above everything */
+                  }
+
+                  /* Optional: Apply backdrop effect for modals */
+                  .modal-backdrop {
+                     z-index: 1040 !important;
+                     /* Ensure backdrop stays behind the account details */
+                  }
+               </style>
+               <!-- CARDS -->
+               <form id="expense-form" action="/insert-dash-history" method="POST">
+                  <div class="row">
+                     <div class="col-md-12 col-lg-12">
+                        <div class="row row-cols-1">
+                           <div class="overflow-hidden d-slider1 ">
+
+                              <ul class="p-0 m-0 mb-2 swiper-wrapper list-inline">
+
+                                 <!-- Card 1: Today's Revenue -->
+                                 <li class="swiper-slide card card-slide" data-aos="fade-up" data-aos-delay="700">
+                                    <div class="card-body">
+                                       <div class="progress-widget">
+                                          <div class="p-3 mb-2 rounded bg-secondary-subtle">
+                                             <svg class="icon-25" width="25" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                                             </svg>
+                                          </div>
+                                          <div class="progress-detail">
+                                             <h6 class="mb-2">
+                                                <%= __('dashboard.todays_revenue') %>
+                                             </h6>
+                                             <h6 class="counter">₱ 0</h6>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </li>
+
+
+                                 <!-- Card 2: Total Orders -->
+                                 <li class="swiper-slide card card-slide" data-aos="fade-up" data-aos-delay="800">
+                                    <div class="card-body">
+                                       <div class="progress-widget">
+                                          <div class="p-3 mb-2 rounded bg-secondary-subtle">
+                                             <svg class="icon-25" width="25" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                             </svg>
+                                          </div>
+                                          <div class="progress-detail">
+                                             <h6 class="mb-2">
+                                                <%= __('dashboard.total_orders') %>
+                                             </h6>
+                                             <h6 class="counter">0</h6>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </li>
+
+                                 <!-- Card 3: Active Tables -->
+                                 <li class="swiper-slide card card-slide" data-aos="fade-up" data-aos-delay="900">
+                                    <div class="card-body">
+                                       <div class="progress-widget">
+                                          <div class="p-3 mb-2 rounded bg-secondary-subtle">
+                                             <svg class="icon-25" width="25" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                                                <path d="M2 4h20v16H2z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                             </svg>
+                                          </div>
+                                          <div class="progress-detail">
+                                             <h6 class="mb-2">
+                                                <%= __('dashboard.active_tables') %>
+                                             </h6>
+                                             <h6 class="counter">0</h6>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </li>
+
+                                 <!-- Card 4: Pending Orders -->
+                                 <li class="swiper-slide card card-slide" data-aos="fade-up" data-aos-delay="1100">
+                                    <div class="card-body">
+                                       <div class="progress-widget">
+                                          <div class="p-3 mb-2 rounded bg-secondary-subtle">
+                                             <svg class="icon-25" width="25" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                             </svg>
+                                          </div>
+                                          <div class="progress-detail">
+                                             <h6 class="mb-2">
+                                                <%= __('dashboard.pending_orders') %>
+                                             </h6>
+                                             <h6 class="counter">0</h6>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </li>
+                                 <!-- Card 5: Popular Items -->
+                                 <li class="swiper-slide card card-slide" data-aos="fade-up" data-aos-delay="1200">
+                                    <div class="card-body">
+                                       <div class="progress-widget">
+                                          <div class="p-3 mb-2 rounded bg-secondary-subtle">
+                                             <svg class="icon-25" width="25" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                             </svg>
+                                          </div>
+                                          <div class="progress-detail">
+                                             <h6 class="mb-2">
+                                                <%= __('dashboard.popular_items') %>
+                                             </h6>
+                                             <h6 class="counter">0</h6>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </li>
+                                 <!-- <li class="swiper-slide card card-slide" data-aos="fade-up" data-aos-delay="1300">
+                                 <div class="card-body">
+                                    <div class="progress-widget">
+                                       <div class="p-3 mb-2 rounded bg-secondary-subtle">
+                                          <svg class="icon-25" width="25" viewBox="0 0 24 24" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                             <path fill-rule="evenodd" clip-rule="evenodd"
+                                                d="M9.5 12.5537C12.2546 12.5537 14.4626 10.3171 14.4626 7.52684C14.4626 4.73663 12.2546 2.5 9.5 2.5C6.74543 2.5 4.53737 4.73663 4.53737 7.52684C4.53737 10.3171 6.74543 12.5537 9.5 12.5537ZM9.5 15.0152C5.45422 15.0152 2 15.6621 2 18.2464C2 20.8298 5.4332 21.5 9.5 21.5C13.5448 21.5 17 20.8531 17 18.2687C17 15.6844 13.5668 15.0152 9.5 15.0152ZM19.8979 9.58786H21.101C21.5962 9.58786 22 9.99731 22 10.4995C22 11.0016 21.5962 11.4111 21.101 11.4111H19.8979V12.5884C19.8979 13.0906 19.4952 13.5 18.999 13.5C18.5038 13.5 18.1 13.0906 18.1 12.5884V11.4111H16.899C16.4027 11.4111 16 11.0016 16 10.4995C16 9.99731 16.4027 9.58786 16.899 9.58786H18.1V8.41162C18.1 7.90945 18.5038 7.5 18.999 7.5C19.4952 7.5 19.8979 7.90945 19.8979 8.41162V9.58786Z"
+                                                fill="currentColor" />
+                                          </svg>
+                                       </div>
+                                       <div class="progress-detail">
+                                          <p class="mb-2">Users</p>
+                                          <h6 class="counter">11</h6>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </li> -->
+                              </ul>
+                              <div class="swiper-button swiper-button-next"></div>
+                              <div class="swiper-button swiper-button-prev"></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <style>
+                     .highlight-row {
+                        background-color: #ffeaa7 !important;
+                     }
+                  </style>
+                  <!-- END CARDS -->
+                  <!-- JUNKET BALANC -->
+                  <div class="col-md-12 col-lg-12">
+                     <div class="row">
+
+                        <div class="col-lg-4">
+                           <div class="card">
+                              <div class="card-body">
+                                 <h5 class="mb-3">
+                                    <%= __('dashboard.house_balance') %>
+                                 </h5>
+                                 <h2 class="counter mb-2" id="cash-balance-value">₱
+                                    <%- ( (+sqlCashDeposit[0].CASH_DEPOSIT || 0) +
+                                       (+sqlMArkerReturnDeposit[0].MARKER_RETURN_DEPOSIT || 0) -
+                                       (+sqlCashWithdraw[0].CASH_WITHDRAW || 0) - (+sqlNNChipsBuyin[0].NNChipsBuyin ||
+                                       0) + (+sqlNNChipsReturn[0].NNChipsReturn || 0) +
+                                       (+sqlNNChipsAccountMarker[0].TOTAL_NN_MARKER || 0) -
+                                       (+sqlAccountSettlement[0].ACCOUNT_SETTLEMENT || 0) +
+                                       (+sqlMArkerReturnCash[0].MARKER_RETURN_CASH || 0) -
+                                       (+sqlAccountDeduct[0].ACCOUNT_DEDUCT || 0) +
+                                       (+sqlAccountMarkerReturn[0].MARKER_RETURN || 0) -
+                                       (+sqlJunketExpense[0].JUNKET_EXPENSE || 0) +
+                                       (+sqlNNChipsBuyinCashDeposit[0].NN_CHIPS_BUYIN_CASH_DEPOSIT || 0) +
+                                       (+sqlCCChipsBuyinCashDeposit[0].CC_CHIPS_BUYIN_CASH_DEPOSIT || 0) -
+                                       (+sqlMarkerIssueAccount[0].TOTAL_ISSUE_RECORD || 0) -
+                                       (+sqlTotalCashOut[0].TOTAL_CASHOUT || 0) +
+                                       (+sqlNNChipsAccountDeposit[0].TOTAL_NN_DEPOSIT || 0) +
+                                       (+sqlAccountTransfer[0].ACCOUNT_TRANSFER || 0) ).toLocaleString() %>
+                                 </h2>
+
+
+
+
+
+                                 <a href="#" class="mt-4 btn btn-primary d-block rounded " data-bs-toggle="modal"
+                                    data-bs-target="#modal-new-capital">
+                                    <%= __('dashboard.history') %>
+                                 </a>
+                                 <div class="mt-3">
+                                    <div class="pb-3">
+                                       <div
+                                          class="d-flex align-items-center justify-content-between mb-2 cursor-pointer"
+                                          data-bs-target="#modal-Cash-In" data-bs-toggle="modal">
+                                          <p class="mt-0">
+                                             <%= __('dashboard.cash_in') %>
+                                          </p>
+                                          <h6 id="cash-in-total">₱0</h6>
+                                       </div>
+                                       <div class="progress bg-info-subtle shadow-none w-100 mb-1" style="height: 10px">
+                                          <div class="progress-bar bg-info" data-toggle="progress-bar"
+                                             role="progressbar" aria-valuenow="60" aria-valuemin="0"
+                                             aria-valuemax="100"></div>
+                                       </div>
+                                    </div>
+                                    <div class="pb-3">
+                                       <div
+                                          class="d-flex align-items-center justify-content-between mb-2 cursor-pointer"
+                                          data-bs-target="#modal-Transaction" data-bs-toggle="modal">
+                                          <p class="mb-0">
+                                             <%= __('dashboard.chips_transaction') %>
+                                          </p>
+                                          <h6 id="chips-transaction-total">₱0</h6>
+                                       </div>
+                                       <div class="progress bg-success-subtle shadow-none w-100 mb-1"
+                                          style="height: 10px">
+                                          <div class="progress-bar bg-success" data-toggle="progress-bar"
+                                             role="progressbar" aria-valuenow="80" aria-valuemin="0"
+                                             aria-valuemax="100">
+                                          </div>
+                                       </div>
+                                    </div>
+                                    <div class="pb-3">
+                                       <div
+                                          class="d-flex align-items-center justify-content-between mb-2 cursor-pointer"
+                                          data-bs-target="#modal-Expenses" data-bs-toggle="modal">
+                                          <p class="mb-0">
+                                             <%= __('dashboard.expenses') %>
+                                          </p>
+                                          <h6 id="junket-expense-total">₱0</h6>
+                                       </div>
+                                       <div class="progress bg-primary-subtle shadow-none w-100 " style="height: 10px">
+                                          <div class="progress-bar bg-primary" data-toggle="progress-bar"
+                                             role="progressbar" aria-valuenow="55" aria-valuemin="0"
+                                             aria-valuemax="100">
+                                          </div>
+                                       </div>
+                                    </div>
+
+
+                                 </div>
+                              </div>
+
+                           </div>
+
+                        </div>
+
+                        <div class="col-lg-4">
+
+
+                           <div class="card" data-aos="fade-up" data-aos-delay="500">
+                              <div class="text-center card-body d-flex justify-content-around">
+                                 <div>
+                                    <h6 class="mb-2 ">
+                                       <%= __('dashboard.expenses') %>
+                                    </h6>
+                                    <h4 class="counter mb-0" id="expense">₱ <%-
+                                          parseFloat(sqlJunketExpenseReset[0].RESET_EXPENSE || 0).toLocaleString() %>
+                                          <input type="hidden" name="EXPENSE_HISTORY"
+                                             value="<%- sqlJunketExpenseReset[0].RESET_EXPENSE || 0 %>">
+                                    </h4>
+
+                                 </div>
+                                 <hr class="hr-vertial">
+                                 <div>
+                                    <a href="/house_expense" target="_blank" class="mt-4 btn btn-primary-subtle
+                            d-block rounded">
+                                       <%= __('dashboard.details') %>
+                                    </a>
+                                 </div>
+                              </div>
+                           </div>
+
+
+
+                           <div class="card" data-aos="fade-up" data-aos-delay="500">
+                              <div class="text-center card-body d-flex justify-content-around">
+                                 <div>
+                                    <h6 class="mb-2 ">
+                                       <%= __('dashboard.guest_balance') %>
+
+                                    </h6>
+                                    <h4 class="counter ">₱ <%- Math.round( (+sqlAccountDeposit[0].ACCOUNT_DEPOSIT || 0)
+                                          + (+sqlSettlementDepositAmount[0].SETTLEMENT_DEPOSIT || 0) -
+                                          (+sqlAccountWithdraw[0].ACCOUNT_WITHDRAW || 0) -
+                                          (+sqlAccountDeduct[0].ACCOUNT_DEDUCT || 0) +
+                                          (+sqlMarkerIssueAccount[0].TOTAL_ISSUE_RECORD || 0) -
+                                          (+sqlMArkerReturnDeposit[0].MARKER_RETURN_DEPOSIT || 0) ).toLocaleString() %>
+
+                                          <span class="ms-2 plus-spacing">
+                                             <a href="#" class="btn btn-sm btn-primary-subtle" data-bs-toggle="modal"
+                                                data-bs-target="#modal-guestAccount">
+                                                <%= __('dashboard.details') %>
+                                             </a></span>
+                                    </h4>
+
+                                 </div>
+
+                                 <div class="vr"></div> <!-- Bootstrap vertical divider -->
+
+                                 <div>
+                                    <h6 class="mb-2 ">
+                                       <%= __('dashboard.accounts') %>
+
+                                    </h6>
+                                    <h4><%- Math.round( (+sqlAgentCount[0].TOTAL_AGENT || 0) ).toLocaleString() %>
+                                          <a href="/agency" target="_blank">
+                                             <span class="ms-2 plus-spacing">
+                                                <i class="fa-solid fa-eye plus-icon tooltip-hover"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" title="Details"></i>
+                                             </span>
+                                          </a>
+                                    </h4>
+
+                                 </div>
+                              </div>
+                           </div>
+
+
+
+                           <div class="card" data-aos="fade-up" data-aos-delay="500">
+                              <div class="text-center card-body d-flex justify-content-around">
+                                 <div>
+                                    <h6 class="mb-2 ">
+                                       <%= __('dashboard.guest_credit') %>
+                                    </h6>
+                                    <h4 class="counter mb-0">₱ <%- ( (+sqlMarkerIssueGame[0].TOTAL_ISSUE_GAME || 0) +
+                                          (+sqlMarkerIssueAccount[0].TOTAL_ISSUE_RECORD || 0) -
+                                          (+sqlNNChipsAccountMarker[0].TOTAL_NN_MARKER || 0) -
+                                          (+sqlMArkerReturnCash[0].MARKER_RETURN_CASH || 0) -
+                                          (+sqlMArkerReturnDeposit[0].MARKER_RETURN_DEPOSIT || 0) -
+                                          (+sqlChipsReturnMarker[0].CHIPS_RETURN_MARKER || 0) ).toLocaleString() %>
+                                    </h4>
+
+                                 </div>
+                                 <hr class="hr-vertial">
+                                 <div>
+                                    <a href="#" class="mt-4 btn btn-primary-subtle
+                               d-block rounded" data-bs-toggle="modal" data-bs-target="#modal-new-marker">
+                                       <%= __('dashboard.details') %>
+                                    </a>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        <div class="col-lg-4">
+                           <div class="card" data-aos="fade-up" data-aos-delay="600">
+                              <div class="card-header">
+                                 <!-- Top Row: Win/Loss + Dropdown -->
+                                 <div class="d-flex justify-content-between align-items-center ">
+                                    <!-- LEFT: Title and Amount -->
+                                    <div>
+                                       <h6 class="mb-2">
+                                          <%= __('dashboard.win_loss') %>
+                                       </h6>
+                                       <div class="d-flex align-items-center">
+                                          <h4 class="card-title counter m-0" id="winlossweekly">
+                                             ₱ <span class="text-muted">Loading...</span>
+                                          </h4>
+                                          <span id="winloss-trend" class="badge trend-indicator"
+                                             style="margin-left: 10px;"></span>
+                                       </div>
+
+
+                                       <div id="winloss-comparison " class="mt-1 "></div>
+                                       <input type="hidden" name="WINLOSS_HISTORY1" value="0">
+                                    </div>
+
+                                    <!-- RIGHT: Dropdown -->
+                                    <div class="dropdown">
+                                       <a href="#" class="text-gray dropdown-toggle" id="dropdownMenuButton3"
+                                          data-bs-toggle="dropdown" aria-expanded="false">
+                                          <%= __('dashboard.Weekly') %>
+                                       </a>
+                                       <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu-end"
+                                          aria-labelledby="dropdownMenuButton3" id="winloss-filter">
+                                          <li><a class="dropdown-item" href="#" data-range="week">
+                                                <%= __('dashboard.Weekly') %>
+                                             </a></li>
+                                          <li><a class="dropdown-item" href="#" data-range="month">
+                                                <%= __('dashboard.Monthly') %>
+                                             </a></li>
+                                          <li><a class="dropdown-item" href="#" data-range="year">
+                                                <%= __('dashboard.Yearly') %>
+                                             </a></li>
+                                       </ul>
+                                    </div>
+                                 </div>
+
+
+
+
+                              </div>
+
+                              <div class="card-body">
+                                 <div id="d-activity" class="d-activity"></div>
+                                 <div class="d-flex align-items-center justify-content-center mt-2">
+
+                                    <!-- Left Arrow -->
+                                    <button id="prev-week-btn" type="button" class="circle-btn me-2"
+                                       title="Previous Week">
+                                       <i class="fas fa-chevron-left"></i>
+                                    </button>
+
+                                    <!-- Centered Week Label + Date Range -->
+                                    <div class="d-flex flex-column align-items-center text-center">
+                                       <div id="week-label">This Week</div>
+                                       <span id="week-date-range" class="text-muted small"></span>
+                                    </div>
+
+                                    <!-- Right Arrow -->
+                                    <button id="next-week-btn" type="button" class="circle-btn ms-2 d-none"
+                                       title="This Week">
+                                       <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+
+
+
+
+
+                        <!-- ON GAME -->
+                        <div class="col-lg-4">
+                           <div class="overflow-hidden card" data-aos="fade-up" data-aos-delay="600">
+                              <div class="flex-wrap card-header d-flex justify-content-between">
+                                 <div class="header-title">
+                                    <h4 class="mb-2 card-title">
+                                       <%= __('dashboard.on_game') %>
+                                    </h4>
+                                    <p class="mb-0">
+
+                                    </p>
+                                 </div>
+                              </div>
+                              <div class="p-0 card-body">
+                                 <div class="mt-4 table-responsive">
+                                    <table id="on_game-tbl" class="table mb-0 table-striped" role="grid">
+                                       <thead>
+                                          <tr>
+                                             <th>
+                                                <%= __('dashboard.game_number') %>
+                                             </th>
+                                             <th>
+                                                <%= __('dashboard.guest') %>
+                                             </th>
+                                             <th>
+                                                <%= __('dashboard.game_type') %>
+                                             </th>
+                                             <th>
+                                                <%= __('dashboard.total_buyin') %>
+                                             </th>
+                                             <!-- <th>Total Rolling</th>
+                                       <th>Chips Return</th> -->
+                                          </tr>
+                                       </thead>
+                                       <tbody>
+                                          <tr>
+                                             <td></td>
+                                             <td></td>
+                                             <td></td>
+                                             <td></td>
+                                             <!-- <td></td>
+                                       <td></td> -->
+                                          </tr>
+                                       </tbody>
+                                       <tfoot>
+                                          <tr>
+                                             <td colspan="4" class="text-center">
+                                                <a href="/game_list" target="_blank"
+                                                   class="btn btn-primary-subtle btn-lg w-100">
+                                                   <%= __('dashboard.show_details') %>
+                                                </a>
+                                             </td>
+                                          </tr>
+                                       </tfoot>
+                                    </table>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        <!-- END ON GAME -->
+                        <div class="col-lg-4">
+                           <div class="card" data-aos="fade-up" data-aos-delay="900">
+                              <div class="flex-wrap card-header d-flex justify-content-between">
+                                 <div class="header-title">
+                                    <h4 class="card-title">
+                                       <%= __('dashboard.rolling') %>
+                                    </h4>
+                                 </div>
+                              </div>
+                              <div class="card-body">
+                                 <div class="flex-wrap d-flex align-items-center justify-content-between">
+
+                                    <!-- In-update na chart container: -->
+                                    <div id="myChart" class="col-md-12 col-lg-12 myChart"
+                                       data-totalrolling="<%- ((+sqlTotalRollingReset[0].RESET_ROLLING || 0) - (+sqlTotalCashOutRollingReset[0].RESET_CASHOUT || 0) + (+sqlTotalRollingManual[0].TOTAL_ROLLING || 0)) %>"
+                                       data-houserolling="<%- (+sqlCCChipsReturnReset[0].CCResetReturn || 0) %>">
+                                       <span id="totalrolling"></span>
+                                       <span id="totalhouserolling"></span>
+                                    </div>
+                                    <input type="hidden" name="HOUSE_ROLLING_HISTORY"
+                                       value="<%- (+sqlCCChipsReturnReset[0].CCResetReturn || 0) %>">
+                                    <input type="hidden" name="TOTAL_ROLLING_HISTORY"
+                                       value="<%- ((+sqlTotalRollingReset[0].RESET_ROLLING || 0) - (+sqlTotalCashOutRollingReset[0].RESET_CASHOUT || 0) + (+sqlTotalRollingManual[0].TOTAL_ROLLING || 0)) %>">
+
+
+
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                           <div class="card" data-aos="fade-up" data-aos-delay="600">
+                              <div class="flex-wrap card-header d-flex justify-content-between">
+                                 <div class="header-title">
+                                    <h4 class="mb-2 card-title">
+                                       <%= __('dashboard.activity_overview') %>
+                                    </h4>
+                                    <p class="mb-0">
+                                       <svg class="me-2 icon-24" width="24" height="24" viewBox="0 0 24 24">
+                                          <path fill="#17904b"
+                                             d="M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z" />
+                                       </svg>
+                                       <%= __('dashboard.latest_activities') %>
+                                    </p>
+                                 </div>
+                              </div>
+                              <div class="card-body" id="activity-overview">
+                                 <p class='text-muted'>
+                                    <%= __('dashboard.loading_activity_logs') %>
+                                 </p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+            </div>
+
+            </form>
+            <%- include('partials/footer') %>
+
+
+
+
+                                                   <script src="/assets/js/functions/reset.js"></script>
+
+
+                                                   <!-- <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                           // Retrieve user permissions from the HTML element
+                           var userPermissions = parseInt(document.getElementById('user-role').getAttribute('data-permissions'), 10);
+
+                           document.getElementById('cash-balance-link').addEventListener('click', function (event) {
+                              // Use the permissions to determine if the user can access the feature
+                              if (userPermissions !== 11 && userPermissions !== 1 && userPermissions !== 2) { // 11 indicates manager
+                                 event.preventDefault(); // Prevent the link's default action (opening the modal)
+
+                                 Swal.fire({
+                                    icon: 'warning',
+                                    title: 'No Permission',
+                                    text: 'You do not have permission to access this feature.',
+                                    confirmButtonText: 'OK',
+                                    confirmButtonColor: '#6f9c40'
+                                 });
+                              } else {
+                                 // If the user is a manager, manually open the modal
+                                 var modal = new bootstrap.Modal(document.getElementById('modal-new-capital'));
+                                 modal.show();
+                              }
+                           });
+                        });
+                     </script> -->
+
+
+                                                   <script>
+                                                      // ─────────────────────────────────────────────────────────────────────────────
+                                                      // ACTIVITY LOGS SCRIPT
+                                                      // ─────────────────────────────────────────────────────────────────────────────
+
+                                                      function formatDate(dateString) {
+                                                         const opts = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+                                                         return new Date(dateString).toLocaleDateString("en-US", opts);
+                                                      }
+
+                                                      function highlightName(text) {
+                                                         return text.replace(/₱([\d,]+)(\.\d{2})?/g, '<strong>₱$1</strong>');
+                                                      }
+
+                                                      function getClickableText(fullText, linkUrl, ledgerId, guest = '', acctName = '') {
+                                                         const prefixes = ["New Booking", "Transaction", "Junket Expense"];
+                                                         const pfx = prefixes.find(p => fullText.startsWith(p));
+                                                         if (!pfx) {
+                                                            return `<span style="color:grey;">${highlightName(fullText)}</span>`;
+                                                         }
+
+                                                         const rem = fullText.slice(pfx.length);
+                                                         const highlightedRem = highlightName(rem);
+
+                                                         if (ledgerId && linkUrl !== '#') {
+                                                            return `
+      <a href="${linkUrl}"
+         data-ledger-id="${ledgerId}"
+         data-guest="${guest}"
+         data-account-name="${acctName}"
+         style="color:grey; text-decoration:none;">
+        ${pfx}<span style="color:grey;">${highlightedRem}</span>
+      </a>`;
+                                                         } else {
+                                                            return `<span style="color:grey;">${pfx}<span>${highlightedRem}</span></span>`;
+                                                         }
+                                                      }
+
+                                                      document.addEventListener("DOMContentLoaded", () => {
+                                                         fetch('/activity_logs')
+                                                            .then(r => r.json())
+                                                            .then(data => {
+                                                               const container = document.getElementById("activity-overview");
+                                                               if (!container) return;
+                                                               container.innerHTML = data.length
+                                                                  ? data.map(log => {
+                                                                     let url = "#";
+                                                                     if (log.related_id) {
+                                                                        if (["transaction", "added", "edited", "deleted"].includes(log.action_type)) {
+                                                                           url = `/accounts?id=${log.related_id}`;
+                                                                        } else if (["expense_added", "expense_edited"].includes(log.action_type)) {
+                                                                           url = `/junket/house_expense?id=${log.related_id}`;
+                                                                        } else if (["user_added", "user_edited"].includes(log.action_type)) {
+                                                                           url = `/user_management?id=${log.related_id}`;
+                                                                        } else if (["role_added", "role_edited"].includes(log.action_type)) {
+                                                                           url = `/userRoles?id=${log.related_id}`;
+                                                                        } else if (["booking_added"].includes(log.action_type)) {
+                                                                           url = `/booking?id=${log.related_id}`;
+                                                                        }
+                                                                     }
+
+                                                                     let displayName = log.name;
+                                                                     if (log.action_type === "transaction" && log.guest_name && log.account_name) {
+                                                                        displayName = displayName
+                                                                           .replace(`Deposit - ${log.guest_name}`, `Deposit - ${log.guest_name} Deposit to Account ${log.account_name}`)
+                                                                           .replace(`Withdraw - ${log.guest_name}`, `Withdraw - ${log.guest_name} Withdraw from Account ${log.account_name}`);
+                                                                     }
+
+                                                                     return `
+              <div class="mb-2 d-flex profile-media align-items-top">
+                <div class="mt-1 profile-dots-pills border-primary"></div>
+                <div class="ms-4">
+                  <h6 class="mb-1" style="color:grey;">
+                    ${getClickableText(displayName, url, log.related_id, log.guest_name, log.account_name)}
+                  </h6>
+                  <span style="color:grey;">${formatDate(log.action_time)}</span>
+                </div>
+              </div>`;
+                                                                  }).join("")
+                                                                  : "<p class='text-muted' style='color:grey;'>No recent activity.</p>";
+                                                            })
+                                                            .catch(console.error);
+                                                      });
+
+                                                      // click handler para sa 'Transaction' links
+                                                      document.getElementById("activity-overview").addEventListener("click", e => {
+                                                         const a = e.target.closest("a[data-ledger-id]");
+                                                         if (!a || !a.innerText.trim().startsWith("Transaction")) return;
+                                                         e.preventDefault();
+
+                                                         const ledgerId = a.getAttribute("data-ledger-id");
+                                                         const guestName = a.getAttribute("data-guest");
+                                                         const acctName = a.getAttribute("data-account-name");
+                                                         console.log("Activity click → ledgerId:", ledgerId, "guest:", guestName, "acctName:", acctName);
+
+                                                         account_details_v2(ledgerId, guestName, acctName);
+                                                      });
+
+                                                      // END OF ACTIVITY LOGS SCRIPT
+
+
+                                                      let currentWeekOffset = 0;
+
+                                                      function loadWinloss(range, label, offset = 0) {
+                                                         currentWeekOffset = offset;
+
+                                                         // Show loading state (with null checks)
+                                                         const winlossEl = document.getElementById('winlossweekly');
+                                                         if (winlossEl) {
+                                                            winlossEl.innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading...</span>';
+                                                         }
+                                                         const comparisonEl = document.getElementById('winloss-comparison');
+                                                         if (comparisonEl) {
+                                                            comparisonEl.innerHTML = '';
+                                                         }
+
+                                                         // Update week label
+                                                         if (range === 'week') {
+                                                            const labelText = offset === 0 ? 'This Week' : `Week -${Math.abs(offset)}`;
+                                                            const weekLabelEl = document.getElementById('week-label');
+                                                            if (weekLabelEl) {
+                                                               weekLabelEl.textContent = labelText;
+                                                            }
+
+                                                            const dateRange = getDateRange(offset);
+                                                            const weekDateRangeEl = document.getElementById('week-date-range');
+                                                            if (weekDateRangeEl) {
+                                                               weekDateRangeEl.textContent = `(${dateRange})`;
+                                                            }
+                                                         } else {
+                                                            const weekDateRangeEl = document.getElementById('week-date-range');
+                                                            if (weekDateRangeEl) {
+                                                               weekDateRangeEl.textContent = '';
+                                                            }
+                                                         }
+
+
+                                                         // Only update dropdown label if not custom offset
+                                                         if (range !== 'week' || offset === 0) {
+                                                            const dropdownEl = document.getElementById('dropdownMenuButton3');
+                                                            if (dropdownEl) {
+                                                               dropdownEl.textContent = label;
+                                                            }
+                                                         }
+
+                                                         fetch(`/get_winloss?range=${range}&offset=${offset}`)
+                                                            .then(res => res.json())
+                                                            .then(data => {
+                                                               const formatted = parseFloat(data.winloss).toLocaleString();
+                                                               if (winlossEl) {
+                                                                  winlossEl.innerHTML = `₱ ${formatted}`;
+                                                               }
+                                                               const winlossInput = document.querySelector('input[name="WINLOSS_HISTORY1"]');
+                                                               if (winlossInput) {
+                                                                  winlossInput.value = data.winloss;
+                                                               }
+
+                                                               // Update comparison data
+                                                               if (data.percentChange !== undefined) {
+                                                                  const comparisonEl = document.getElementById('winloss-comparison');
+                                                                  if (comparisonEl) {
+                                                                     const percentChange = data.percentChange.toFixed(1);
+                                                                     const isPositive = percentChange > 0;
+                                                                     const arrowIcon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+                                                                     const colorClass = isPositive ? 'text-success' : 'text-danger';
+
+                                                                     comparisonEl.innerHTML = `
+                  <small class="${colorClass}">
+                     <i class="fas ${arrowIcon}"></i> ${Math.abs(percentChange)}% vs Last Month
+                  </small>
+               `;
+                                                                  }
+                                                               }
+
+                                                               if (data.chart && data.chart.data && Array.isArray(data.chart.data) && data.chart.labels && Array.isArray(data.chart.labels)) {
+                                                                  if (typeof updateWinlossChart === 'function') {
+                                                                  updateWinlossChart(data.chart);
+                                                                  }
+                                                               }
+
+                                                               // Toggle arrows: only show "→" when not on current week
+                                                               const nextWeekBtn = document.getElementById('next-week-btn');
+                                                               if (nextWeekBtn) {
+                                                                  nextWeekBtn.classList.toggle('d-none', offset === 0);
+                                                               }
+                                                            })
+                                                            .catch(err => {
+                                                               // Silent error handling for template
+                                                               if (winlossEl) {
+                                                                  winlossEl.innerHTML = '₱ 0';
+                                                               }
+                                                            });
+                                                      }
+                                                      function getDateRange(offset = 0) {
+                                                         const today = new Date();
+                                                         const day = today.getDay();
+                                                         const diffToMonday = day === 0 ? -6 : 1 - day;
+
+                                                         const start = new Date(today);
+                                                         start.setDate(start.getDate() + diffToMonday + (offset * 7));
+
+                                                         const end = new Date(start);
+                                                         end.setDate(start.getDate() + 6);
+
+                                                         const options = { month: 'short', day: 'numeric' };
+                                                         return `${start.toLocaleDateString('en-US', options)} – ${end.toLocaleDateString('en-US', options)}`;
+                                                      }
+
+                                                      // Dropdown
+                                                      document.querySelectorAll('#winloss-filter a.dropdown-item').forEach(item => {
+                                                         item.addEventListener('click', function (e) {
+                                                            e.preventDefault();
+                                                            const range = this.getAttribute('data-range');
+                                                            const label = this.textContent.trim();
+                                                            currentWeekOffset = 0;
+                                                            loadWinloss(range, label, 0);
+                                                         });
+                                                      });
+
+                                                      // Arrows
+                                                      const prevWeekBtn = document.getElementById('prev-week-btn');
+                                                      if (prevWeekBtn) {
+                                                         prevWeekBtn.addEventListener('click', () => {
+                                                         currentWeekOffset--;
+                                                         loadWinloss('week', `Week -${Math.abs(currentWeekOffset)}`, currentWeekOffset);
+                                                      });
+                                                      }
+                                                      const nextWeekBtn2 = document.getElementById('next-week-btn');
+                                                      if (nextWeekBtn2) {
+                                                         nextWeekBtn2.addEventListener('click', () => {
+                                                         currentWeekOffset = 0;
+                                                         loadWinloss('week', 'This Week', 0);
+                                                      });
+                                                      }
+
+                                                      // Init (only if elements exist)
+                                                      window.addEventListener('DOMContentLoaded', () => {
+                                                         const winlossWeeklyCheck = document.getElementById('winlossweekly');
+                                                         if (winlossWeeklyCheck) {
+                                                         loadWinloss('week', 'This Week', 0);
+                                                         }
+                                                      });
+
+
+
+
+
+
+                                                      // END OF WIN / LOSS
+                                                   </script>
+
+
+
+
+
+                                                   <style>
+                                                      .cursor-pointer {
+                                                         cursor: pointer !important;
+                                                      }
+
+
+                                                      #week-label {
+                                                         min-width: 100px;
+                                                         text-align: center;
+                                                         font-weight: 500;
+                                                         font-size: 14px;
+                                                         line-height: 1.2;
+                                                      }
+
+                                                      #week-date-range {
+                                                         font-size: 12px;
+                                                         line-height: 1.2;
+                                                      }
+
+
+                                                      .circle-btn {
+                                                         width: 36px;
+                                                         height: 36px;
+                                                         border-radius: 50%;
+                                                         display: flex;
+                                                         align-items: center;
+                                                         justify-content: center;
+                                                         border: 1px solid var(--bs-secondary);
+                                                         /* uses Bootstrap color */
+                                                         color: var(--bs-secondary);
+                                                         background-color: transparent;
+                                                         transition: all 0.2s ease;
+                                                      }
+
+                                                      .circle-btn:hover {
+                                                         background-color: var(--bs-secondary);
+                                                         color: white;
+                                                         box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+                                                      }
+
+                                                      /* Trend indicator styles */
+                                                      .trend-indicator {
+                                                         font-size: 12px;
+                                                         padding: 4px 8px;
+                                                         border-radius: 4px;
+                                                         font-weight: 500;
+                                                      }
+
+                                                      .trend-indicator.positive {
+                                                         background-color: rgba(25, 135, 84, 0.1);
+                                                         color: var(--bs-success);
+                                                      }
+
+                                                      .trend-indicator.negative {
+                                                         background-color: rgba(220, 53, 69, 0.1);
+                                                         color: var(--bs-danger);
+                                                      }
+
+                                                      /* Custom tooltip styles */
+                                                      .custom-tooltip {
+                                                         font-family: var(--bs-body-font-family);
+                                                      }
+
+                                                      #on_game-tbl th,
+                                                      #on_game-tbl td {
+                                                         text-align: center;
+                                                         font-size: 14px;
+                                                         vertical-align: middle;
+                                                         /* Para naka-center rin vertically */
+                                                      }
+
+                                                      .css-blue {
+                                                         max-width: 100%;
+                                                         font-family: Inter, sans-serif;
+                                                         font-size: 0.75rem;
+                                                         /* Slightly smaller font */
+                                                         display: inline-flex;
+                                                         align-items: center;
+                                                         justify-content: center;
+                                                         height: 24px;
+                                                         /* Reduced height for a badge-like appearance */
+                                                         cursor: unset;
+                                                         vertical-align: middle;
+                                                         box-sizing: border-box;
+                                                         padding: 2px 10px;
+                                                         /* Reduced padding for a thinner look */
+                                                         color: rgb(32, 174, 243);
+                                                         background-color: rgba(32, 174, 243, 0.12);
+                                                         white-space: nowrap;
+                                                         transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+                                                         outline: 0px;
+                                                         text-decoration: none;
+                                                         border-radius: 999px;
+                                                      }
+
+                                                      .css-green {
+                                                         max-width: 100%;
+                                                         font-family: Inter, sans-serif;
+                                                         font-size: 0.75rem;
+                                                         /* Slightly smaller font */
+                                                         display: inline-flex;
+                                                         align-items: center;
+                                                         justify-content: center;
+                                                         height: 24px;
+                                                         /* Reduced height for a badge-like appearance */
+                                                         cursor: unset;
+                                                         vertical-align: middle;
+                                                         box-sizing: border-box;
+                                                         padding: 2px 10px;
+                                                         /* Reduced padding for a thinner look */
+                                                         color: rgb(255, 255, 255);
+                                                         background-color: rgba(255, 255, 255, 0.12);
+                                                         white-space: nowrap;
+                                                         transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+                                                         outline: 0px;
+                                                         text-decoration: none;
+                                                         border-radius: 999px;
+                                                      }
+
+                                                      .highlighted-row {
+                                                         background-color: #fff3cd !important;
+                                                         border-left: 4px solid #ffc107;
+                                                      }
+
+                                                      #prev-week-btn,
+                                                      #next-week-btn {
+                                                         background-color: transparent;
+                                                         border: 1px solid #e0e0e0;
+                                                         color: #666;
+                                                         width: 28px;
+                                                         height: 28px;
+                                                         border-radius: 50%;
+                                                         display: flex;
+                                                         align-items: center;
+                                                         justify-content: center;
+                                                         transition: all 0.2s ease;
+                                                      }
+
+                                                      #prev-week-btn:hover,
+                                                      #next-week-btn:hover {
+                                                         background-color: #f5f5f5;
+                                                         color: #333;
+                                                      }
+
+                                                      #prev-week-btn:focus,
+                                                      #next-week-btn:focus {
+                                                         box-shadow: none;
+                                                         outline: none;
+                                                      }
+                                                   </style>

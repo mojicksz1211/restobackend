@@ -189,24 +189,19 @@ $.extend(DataTable.ext.buttons, {
 				return conf.text;
 			}
 
-			// Use DataTables' internal data structure until this is presented
-			// is a public API. The other option is to use
-			// `$( column(col).node() ).text()` but the node might not have been
-			// populated when Buttons is constructed.
+			var title = dt.column(conf.columns).title();
 			var idx = dt.column(conf.columns).index();
-			var title = dt.settings()[0].aoColumns[idx].sTitle;
-
-			if (!title) {
-				title = dt.column(idx).header().innerHTML;
-			}
 
 			title = title
 				.replace(/\n/g, ' ') // remove new lines
 				.replace(/<br\s*\/?>/gi, ' ') // replace line breaks with spaces
-				.replace(/<select(.*?)<\/select>/g, '') // remove select tags, including options text
-				.replace(/<!\-\-.*?\-\->/g, '') // strip HTML comments
-				.replace(/<.*?>/g, '') // strip HTML
-				.replace(/^\s+|\s+$/g, ''); // trim
+				.replace(/<select(.*?)<\/select\s*>/gi, ''); // remove select tags, including options text
+
+			// Strip HTML comments
+			title = DataTable.Buttons.stripHtmlComments(title);
+
+			// Use whatever HTML stripper DataTables is configured for
+			title = DataTable.util.stripHtml(title).trim();
 
 			return conf.columnText ? conf.columnText(dt, idx, title) : title;
 		}

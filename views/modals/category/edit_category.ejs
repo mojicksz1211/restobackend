@@ -1,0 +1,44 @@
+<!-- ============================================ -->
+<!-- EDIT CATEGORY MODAL -->
+<!-- File: views/modals/category/edit_category.ejs -->
+<!-- Description: Modal form for editing existing category -->
+<!-- ============================================ -->
+
+<div class="modal fade" id="modal-edit_category" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
+	data-keyboard="false" data-bs-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+
+			<div class="modal-header bg-primary">
+
+				<h5 class="block-title text-white">Edit Category</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+
+
+			<div class="modal-body">
+				<form id="edit_category">
+					<input type="hidden" name="IDNo" id="edit_category_id">
+					<div class="row mb-2">
+						<div class="col-sm-12">
+							<label class="form-label">Category Name</label>
+							<input type="text" class="form-control" name="CAT_NAME" id="edit_category_name" placeholder="Enter category name" required>
+						</div>
+					</div>
+					<div class="row mb-2">
+						<div class="col-sm-12">
+							<label class="form-label">Description</label>
+							<textarea class="form-control" name="CAT_DESC" id="edit_category_desc" placeholder="Enter category description" rows="3"></textarea>
+						</div>
+					</div>
+			</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Update</button>
+						<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+			</form>
+		</div>
+	</div>
+</div>
+

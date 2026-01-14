@@ -525,8 +525,8 @@ var StateRestoreCollection = /** @class */ (function () {
                         split: split
                     },
                     extend: 'stateRestore',
-                    text: state.s.identifier,
-                    popoverTitle: state.s.identifier
+                    text: StateRestore.entityEncode(state.s.identifier),
+                    popoverTitle: StateRestore.entityEncode(state.s.identifier)
                 });
             }
         }
@@ -876,8 +876,8 @@ var StateRestoreCollection = /** @class */ (function () {
         var keys = Object.keys(localStorage);
         var _loop_2 = function (key) {
             // eslint-disable-next-line no-useless-escape
-            if (key.match(new RegExp('^DataTables_stateRestore_.*_' + location.pathname.replace(/\//g, '/') + '$')) ||
-                key.match(new RegExp('^DataTables_stateRestore_.*_' + location.pathname.replace(/\//g, '/') +
+            if (key.match(new RegExp('^DataTables_stateRestore_.*_' + location.pathname + '$')) ||
+                key.match(new RegExp('^DataTables_stateRestore_.*_' + location.pathname +
                     '_' + this_2.s.dt.table().node().id + '$'))) {
                 var loadedState_1 = JSON.parse(localStorage.getItem(key));
                 if (loadedState_1.stateRestore.isPreDefined ||

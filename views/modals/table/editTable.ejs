@@ -1,0 +1,49 @@
+<!-- ============================================ -->
+<!-- EDIT TABLE MODAL -->
+<!-- File: views/modals/table/editTable.ejs -->
+<!-- Description: Modal form for editing existing restaurant table -->
+<!-- ============================================ -->
+
+<div class="modal fade" id="modal-edit_restaurant_table" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
+	data-keyboard="false" data-bs-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary">
+				<h5 class="block-title text-white">Edit Restaurant Table</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+
+			<div class="modal-body">
+				<form id="edit_restaurant_table">
+					<input type="hidden" name="IDNo" id="edit_restaurant_table_id">
+					<div class="row mb-2">
+						<div class="col-sm-12">
+							<label class="form-label">Table Number</label>
+							<input type="text" class="form-control" name="TABLE_NUMBER" id="edit_table_number" placeholder="Enter table number" required>
+						</div>
+					</div>
+					<div class="row mb-2">
+						<div class="col-sm-6">
+							<label class="form-label">Capacity</label>
+							<input type="number" class="form-control" name="CAPACITY" id="edit_capacity" placeholder="0" min="1" required>
+						</div>
+						<div class="col-sm-6">
+							<label class="form-label">Status</label>
+							<select class="form-control" name="STATUS" id="edit_status" required>
+								<option value="1">Available</option>
+								<option value="2">Occupied</option>
+								<option value="4">Reserved</option>
+								<option value="3">Not Available</option>
+							</select>
+						</div>
+					</div>
+			</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Update</button>
+						<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+			</form>
+		</div>
+	</div>
+</div>
+
