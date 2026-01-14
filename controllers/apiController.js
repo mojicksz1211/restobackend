@@ -117,7 +117,14 @@ class ApiController {
 
 	// Get all categories (for filter button)
 	static async getCategories(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+
 		try {
+			// Log request
+			console.log(`[${timestamp}] [API REQUEST] GET /api/categories - IP: ${clientIp}, User-Agent: ${userAgent}`);
+
 			const categories = await CategoryModel.getAll();
 			
 			// Format response for Android app
@@ -127,12 +134,16 @@ class ApiController {
 				description: cat.CAT_DESC || null
 			}));
 
+			// Log success
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/categories - IP: ${clientIp}, Categories returned: ${formattedCategories.length}`);
+
 			res.json({
 				success: true,
 				data: formattedCategories
 			});
 		} catch (error) {
-			console.error('Error fetching categories:', error);
+			// Log error
+			console.error(`[${timestamp}] [API ERROR] GET /api/categories - IP: ${clientIp}, Error:`, error);
 			res.status(500).json({ 
 				success: false,
 				error: 'Failed to fetch categories' 
@@ -142,8 +153,15 @@ class ApiController {
 
 	// Get menu items (with optional category filter)
 	static async getMenuItems(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const categoryId = req.query.category_id || null;
+
 		try {
-			const categoryId = req.query.category_id || null;
+			// Log request
+			console.log(`[${timestamp}] [API REQUEST] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, User-Agent: ${userAgent}`);
+
 			const menus = await MenuModel.getByCategory(categoryId);
 			
 			// Format response for Android app
@@ -164,13 +182,18 @@ class ApiController {
 				is_available: menu.IS_AVAILABLE === 1
 			}));
 
+			// Log success with details
+			const availableCount = formattedMenus.filter(m => m.is_available).length;
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, Total items: ${formattedMenus.length}, Available: ${availableCount}`);
+
 			res.json({
 				success: true,
 				data: formattedMenus,
 				count: formattedMenus.length
 			});
 		} catch (error) {
-			console.error('Error fetching menu items:', error);
+			// Log error
+			console.error(`[${timestamp}] [API ERROR] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, Error:`, error);
 			res.status(500).json({ 
 				success: false,
 				error: 'Failed to fetch menu items' 
