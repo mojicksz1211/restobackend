@@ -1,1 +1,113 @@
-# restaurantAdmin
+# 🍽️ Restaurant Admin Management System
+
+A comprehensive restaurant management system built with Node.js, Express, and MySQL. This system provides an admin dashboard for managing restaurant operations including menu items, categories, tables, and user accounts.
+
+## ✨ Features
+
+- **Menu Management** - Create, update, and manage restaurant menu items
+- **Category Management** - Organize menu items by categories
+- **Table Management** - Manage restaurant table assignments
+- **User Management** - Admin user accounts and role management
+- **Multi-language Support** - Support for English, Japanese, Korean, and Chinese
+- **Dashboard** - Comprehensive admin dashboard with analytics
+- **API Endpoints** - RESTful API for external integrations
+- **Authentication** - Secure user authentication and session management
+
+## 🛠️ Tech Stack
+
+- **Backend**: Node.js, Express.js
+- **Database**: MySQL
+- **Template Engine**: EJS
+- **Authentication**: Passport.js, JWT
+- **File Upload**: Multer
+- **Other**: ExcelJS, Telegram Bot API, i18n
+
+## 📋 Prerequisites
+
+- Node.js (v14 or higher)
+- MySQL (v5.7 or higher)
+- npm or yarn
+
+## 🚀 Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Jegel-sys/restaurantAdmin.git
+cd restaurantAdmin
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Configure environment variables:
+Create a `.env` file in the root directory:
+```env
+DB_HOST=localhost
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_NAME=restaurant_db
+SESSION_SECRET=your_secret_key
+JWT_SECRET=your_jwt_secret
+```
+
+4. Set up the database:
+Import the SQL schema file from the `sql/` directory into your MySQL database.
+
+5. Start the application:
+```bash
+# Development mode
+npm run dev
+
+# Production mode
+npm start
+```
+
+## 📁 Project Structure
+
+```
+restaurantAdmin/
+├── config/          # Configuration files
+├── controllers/     # Business logic controllers
+├── models/          # Database models
+├── routes/          # Route definitions
+├── views/           # EJS templates
+├── public/          # Static assets
+├── middleware/      # Custom middleware
+├── utils/           # Utility functions
+└── locales/         # Translation files
+```
+
+For detailed file structure, see [FILE_STRUCTURE.md](./FILE_STRUCTURE.md)
+
+## 📚 API Documentation
+
+For API endpoints and usage, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+
+## 🔐 Security Features
+
+- Password hashing with Argon2
+- Session management with Redis
+- CSRF protection
+- Rate limiting
+- Helmet.js for security headers
+
+## 🌐 Supported Languages
+
+- English (en)
+- Japanese (ja)
+- Korean (ko)
+- Chinese (zh)
+
+## 📝 License
+
+MIT License
+
+## 👥 Author
+
+Jegel-sys
+
+## 📧 Contact
+
+For questions or support, please contact: jeljelcabuso@gmail.com
