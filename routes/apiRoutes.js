@@ -11,6 +11,15 @@ const router = express.Router();
 const ApiController = require('../controllers/apiController');
 
 // ============================================
+// POST ROUTES
+// ============================================
+
+// POST - Login for mobile app
+// URL: /api/login
+// Body: { username: "string", password: "string" }
+router.post("/login", ApiController.login);
+
+// ============================================
 // GET ROUTES
 // ============================================
 
