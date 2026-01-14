@@ -5,8 +5,6 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const session = require('express-session');
-const RedisStore = require('connect-redis')(session);
-const redis = require('redis');
 const flash = require('connect-flash');
 const i18n = require('i18n');
 require('dotenv').config();
@@ -50,24 +48,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  legacyMode: true,
-});
-
-// Redis v3 connects automatically, no need for .connect()
-redisClient.on('connect', () => {
-  console.log('Redis connected successfully!');
-});
-
-redisClient.on('error', (err) => {
-  console.error('Redis error:', err);
-});
-
 app.use(session({
-  store: new RedisStore({ client: redisClient }),
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'your_secret_key',
   resave: false,
   saveUninitialized: false,
   cookie: {

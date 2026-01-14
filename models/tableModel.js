@@ -83,6 +83,16 @@ class TableModel {
 		const [result] = await pool.execute(query, [id]);
 		return result.affectedRows > 0;
 	}
+
+	static async updateStatus(id, status) {
+		const query = `
+			UPDATE restaurant_tables 
+			SET STATUS = ?
+			WHERE IDNo = ?
+		`;
+		const [result] = await pool.execute(query, [status, id]);
+		return result.affectedRows > 0;
+	}
 }
 
 module.exports = TableModel;

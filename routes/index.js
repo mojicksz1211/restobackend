@@ -11,6 +11,8 @@ module.exports = [
     require('./categoryRoutes'),          // Category routes
     require('./dashboardRoutes'),         // Dashboard routes
     require('./menuRoutes'),              // Menu routes
+    require('./orderRoutes'),             // Order routes
+    require('./billingRoutes'),           // Billing routes
     require('./tableRoutes')   // Restaurant table routes
 ];
   
