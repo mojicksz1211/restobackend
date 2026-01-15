@@ -586,24 +586,24 @@ class ApiController {
 			await OrderItemsModel.createForOrder(order_id, orderItems, user_id);
 			console.log(`[${timestamp}] [ADDITIONAL ORDER] Order items added to database - ${orderItems.length} items added`);
 
-			// Calculate new totals - ensure all values are parsed as floats
-			// Force numeric conversion to prevent string concatenation
-			const existingSubtotal = Number(existingOrder.SUBTOTAL) || 0;
+			// Calculate new totals - use actual existing items total instead of SUBTOTAL field
+			// This ensures accuracy even if SUBTOTAL field was not updated correctly before
 			const existingTaxAmount = Number(existingOrder.TAX_AMOUNT) || 0;
 			const existingServiceCharge = Number(existingOrder.SERVICE_CHARGE) || 0;
 			const existingDiscountAmount = Number(existingOrder.DISCOUNT_AMOUNT) || 0;
-			const existingGrandTotal = Number(existingOrder.GRAND_TOTAL) || 0;
 
-			// Ensure newItemsTotal is also numeric
+			// Use existingItemsTotal (calculated from actual items) instead of existingOrder.SUBTOTAL
+			// This ensures we get the correct total from all existing items in the database
+			const existingSubtotalNum = Number(existingItemsTotal);
 			const newItemsTotalNum = Number(newItemsTotal);
 
-			const newSubtotal = Number((existingSubtotal + newItemsTotalNum).toFixed(2));
+			const newSubtotal = Number((existingSubtotalNum + newItemsTotalNum).toFixed(2));
 			const newTaxAmount = Number((existingTaxAmount).toFixed(2)); // Keep existing tax amount
 			const newServiceCharge = Number((existingServiceCharge).toFixed(2)); // Keep existing service charge
 			const newDiscountAmount = Number((existingDiscountAmount).toFixed(2)); // Keep existing discount amount
 			const newGrandTotal = Number((newSubtotal + newTaxAmount + newServiceCharge - newDiscountAmount).toFixed(2));
 
-			console.log(`[${timestamp}] [ADDITIONAL ORDER] Calculated new totals: Subtotal: ${newSubtotal} (was ${existingSubtotal} + ${newItemsTotal}), Grand Total: ${newGrandTotal} (was ${existingGrandTotal})`);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Calculated new totals: Subtotal: ${newSubtotal} (was ${existingSubtotalNum} + ${newItemsTotalNum}), Grand Total: ${newGrandTotal} (was ${Number(existingOrder.GRAND_TOTAL) || 0})`);
 
 			// Update order totals
 			const updatePayload = {
