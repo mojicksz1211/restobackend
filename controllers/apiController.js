@@ -442,12 +442,13 @@ class ApiController {
 			console.log(`[${timestamp}] [CREATE ORDER] Order created in database - Order ID: ${orderId}`);
 
 			// Prepare order items
+			// Order Item Status codes: 3=PENDING, 2=PREPARING, 1=READY
 			const orderItems = items.map(item => ({
 				menu_id: parseInt(item.menu_id),
 				qty: parseFloat(item.qty),
 				unit_price: parseFloat(item.unit_price),
 				line_total: parseFloat(item.qty) * parseFloat(item.unit_price),
-				status: item.status || 1
+				status: item.status || 3 // Default status: PENDING (3)
 			}));
 
 			// Create order items
@@ -576,12 +577,13 @@ class ApiController {
 			});
 
 			// Prepare new order items
+			// Order Item Status codes: 3=PENDING, 2=PREPARING, 1=READY
 			const orderItems = items.map(item => ({
 				menu_id: parseInt(item.menu_id),
 				qty: parseFloat(item.qty),
 				unit_price: parseFloat(item.unit_price),
 				line_total: parseFloat(item.qty) * parseFloat(item.unit_price),
-				status: item.status || 1
+				status: item.status || 3 // Default status: PENDING (3)
 			}));
 
 			// Add new items to existing order
