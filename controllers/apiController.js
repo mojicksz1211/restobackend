@@ -587,17 +587,21 @@ class ApiController {
 			console.log(`[${timestamp}] [ADDITIONAL ORDER] Order items added to database - ${orderItems.length} items added`);
 
 			// Calculate new totals - ensure all values are parsed as floats
-			const existingSubtotal = parseFloat(existingOrder.SUBTOTAL || 0);
-			const existingTaxAmount = parseFloat(existingOrder.TAX_AMOUNT || 0);
-			const existingServiceCharge = parseFloat(existingOrder.SERVICE_CHARGE || 0);
-			const existingDiscountAmount = parseFloat(existingOrder.DISCOUNT_AMOUNT || 0);
-			const existingGrandTotal = parseFloat(existingOrder.GRAND_TOTAL || 0);
+			// Force numeric conversion to prevent string concatenation
+			const existingSubtotal = Number(existingOrder.SUBTOTAL) || 0;
+			const existingTaxAmount = Number(existingOrder.TAX_AMOUNT) || 0;
+			const existingServiceCharge = Number(existingOrder.SERVICE_CHARGE) || 0;
+			const existingDiscountAmount = Number(existingOrder.DISCOUNT_AMOUNT) || 0;
+			const existingGrandTotal = Number(existingOrder.GRAND_TOTAL) || 0;
 
-			const newSubtotal = existingSubtotal + newItemsTotal;
-			const newTaxAmount = existingTaxAmount; // Keep existing tax amount
-			const newServiceCharge = existingServiceCharge; // Keep existing service charge
-			const newDiscountAmount = existingDiscountAmount; // Keep existing discount amount
-			const newGrandTotal = newSubtotal + newTaxAmount + newServiceCharge - newDiscountAmount;
+			// Ensure newItemsTotal is also numeric
+			const newItemsTotalNum = Number(newItemsTotal);
+
+			const newSubtotal = Number((existingSubtotal + newItemsTotalNum).toFixed(2));
+			const newTaxAmount = Number((existingTaxAmount).toFixed(2)); // Keep existing tax amount
+			const newServiceCharge = Number((existingServiceCharge).toFixed(2)); // Keep existing service charge
+			const newDiscountAmount = Number((existingDiscountAmount).toFixed(2)); // Keep existing discount amount
+			const newGrandTotal = Number((newSubtotal + newTaxAmount + newServiceCharge - newDiscountAmount).toFixed(2));
 
 			console.log(`[${timestamp}] [ADDITIONAL ORDER] Calculated new totals: Subtotal: ${newSubtotal} (was ${existingSubtotal} + ${newItemsTotal}), Grand Total: ${newGrandTotal} (was ${existingGrandTotal})`);
 
