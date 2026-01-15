@@ -597,6 +597,9 @@ class ApiController {
 			const existingSubtotalNum = Number(existingItemsTotal);
 			const newItemsTotalNum = Number(newItemsTotal);
 
+			// Calculate existing grand total from existing subtotal + tax + service charge - discount
+			const existingGrandTotal = Number((existingSubtotalNum + existingTaxAmount + existingServiceCharge - existingDiscountAmount).toFixed(2));
+
 			const newSubtotal = Number((existingSubtotalNum + newItemsTotalNum).toFixed(2));
 			const newTaxAmount = Number((existingTaxAmount).toFixed(2)); // Keep existing tax amount
 			const newServiceCharge = Number((existingServiceCharge).toFixed(2)); // Keep existing service charge
