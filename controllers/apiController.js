@@ -10,6 +10,7 @@ const CategoryModel = require('../models/categoryModel');
 const pool = require('../config/db');
 const argon2 = require('argon2');
 const crypto = require('crypto');
+const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 
 // Helper function to check if password is Argon2 hash
 function isArgonHash(hash) {
@@ -77,7 +78,15 @@ class ApiController {
 					// Log successful login
 					console.log(`[${timestamp}] [LOGIN SUCCESS] User: ${username} (ID: ${user.IDNo}, Name: ${user.FIRSTNAME} ${user.LASTNAME}), IP: ${clientIp}, Permissions: ${user.PERMISSIONS}, Table ID: ${user.TABLE_ID || 'N/A'}`);
 
-					// Return user data (without password)
+					// Generate JWT tokens
+					const tokenPayload = {
+						user_id: user.IDNo,
+						username: user.USERNAME,
+						permissions: user.PERMISSIONS
+					};
+					const tokens = generateTokenPair(tokenPayload);
+
+					// Return user data with JWT tokens
 					return res.json({
 						success: true,
 						data: {
@@ -87,6 +96,11 @@ class ApiController {
 							lastname: user.LASTNAME,
 							permissions: user.PERMISSIONS,
 							table_id: user.TABLE_ID || null
+						},
+						tokens: {
+							accessToken: tokens.accessToken,
+							refreshToken: tokens.refreshToken,
+							expiresIn: tokens.expiresIn
 						}
 					});
 				} else {
@@ -198,6 +212,83 @@ class ApiController {
 				success: false,
 				error: 'Failed to fetch menu items' 
 			});
+		}
+	}
+
+	// Refresh token endpoint
+	static async refreshToken(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+
+		try {
+			const { refreshToken } = req.body;
+
+			if (!refreshToken) {
+				console.log(`[${timestamp}] [REFRESH FAILED] No refresh token provided - IP: ${clientIp}`);
+				return res.status(400).json({
+					success: false,
+					error: 'Refresh token is required'
+				});
+			}
+
+			// Verify refresh token
+			const decoded = verifyRefreshToken(refreshToken);
+
+			// Get user info from database to ensure user is still active
+			const query = 'SELECT * FROM user_info WHERE IDNo = ? AND ACTIVE = 1';
+			const [results] = await pool.execute(query, [decoded.user_id]);
+
+			if (results.length === 0) {
+				console.log(`[${timestamp}] [REFRESH FAILED] User not found or inactive - User ID: ${decoded.user_id}, IP: ${clientIp}`);
+				return res.status(401).json({
+					success: false,
+					error: 'User not found or inactive'
+				});
+			}
+
+			const user = results[0];
+
+			// Generate new token pair
+			const tokenPayload = {
+				user_id: user.IDNo,
+				username: user.USERNAME,
+				permissions: user.PERMISSIONS
+			};
+			const tokens = generateTokenPair(tokenPayload);
+
+			// Log successful refresh
+			console.log(`[${timestamp}] [REFRESH SUCCESS] User: ${user.USERNAME} (ID: ${user.IDNo}), IP: ${clientIp}`);
+
+			return res.json({
+				success: true,
+				tokens: {
+					accessToken: tokens.accessToken,
+					refreshToken: tokens.refreshToken,
+					expiresIn: tokens.expiresIn
+				}
+			});
+		} catch (error) {
+			// Log error
+			console.error(`[${timestamp}] [REFRESH ERROR] IP: ${clientIp}, Error:`, error);
+			
+			if (error.message === 'Refresh token expired') {
+				return res.status(401).json({
+					success: false,
+					error: 'Refresh token expired',
+					code: 'REFRESH_TOKEN_EXPIRED'
+				});
+			} else if (error.message === 'Invalid refresh token') {
+				return res.status(401).json({
+					success: false,
+					error: 'Invalid refresh token',
+					code: 'INVALID_REFRESH_TOKEN'
+				});
+			} else {
+				return res.status(500).json({
+					success: false,
+					error: 'Internal server error'
+				});
+			}
 		}
 	}
 }
