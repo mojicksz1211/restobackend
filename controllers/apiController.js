@@ -586,14 +586,20 @@ class ApiController {
 			await OrderItemsModel.createForOrder(order_id, orderItems, user_id);
 			console.log(`[${timestamp}] [ADDITIONAL ORDER] Order items added to database - ${orderItems.length} items added`);
 
-			// Calculate new totals
-			const newSubtotal = existingOrder.SUBTOTAL + newItemsTotal;
-			const newTaxAmount = existingOrder.TAX_AMOUNT || 0;
-			const newServiceCharge = existingOrder.SERVICE_CHARGE || 0;
-			const newDiscountAmount = existingOrder.DISCOUNT_AMOUNT || 0;
+			// Calculate new totals - ensure all values are parsed as floats
+			const existingSubtotal = parseFloat(existingOrder.SUBTOTAL || 0);
+			const existingTaxAmount = parseFloat(existingOrder.TAX_AMOUNT || 0);
+			const existingServiceCharge = parseFloat(existingOrder.SERVICE_CHARGE || 0);
+			const existingDiscountAmount = parseFloat(existingOrder.DISCOUNT_AMOUNT || 0);
+			const existingGrandTotal = parseFloat(existingOrder.GRAND_TOTAL || 0);
+
+			const newSubtotal = existingSubtotal + newItemsTotal;
+			const newTaxAmount = existingTaxAmount; // Keep existing tax amount
+			const newServiceCharge = existingServiceCharge; // Keep existing service charge
+			const newDiscountAmount = existingDiscountAmount; // Keep existing discount amount
 			const newGrandTotal = newSubtotal + newTaxAmount + newServiceCharge - newDiscountAmount;
 
-			console.log(`[${timestamp}] [ADDITIONAL ORDER] Calculated new totals: Subtotal: ${newSubtotal} (was ${existingOrder.SUBTOTAL} + ${newItemsTotal}), Grand Total: ${newGrandTotal} (was ${existingOrder.GRAND_TOTAL})`);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Calculated new totals: Subtotal: ${newSubtotal} (was ${existingSubtotal} + ${newItemsTotal}), Grand Total: ${newGrandTotal} (was ${existingGrandTotal})`);
 
 			// Update order totals
 			const updatePayload = {
@@ -614,14 +620,15 @@ class ApiController {
 			// Update billing record
 			const existingBilling = await BillingModel.getByOrderId(order_id);
 			if (existingBilling) {
+				const existingAmountDue = parseFloat(existingBilling.AMOUNT_DUE || existingGrandTotal);
 				await BillingModel.updateForOrder(order_id, {
 					amount_due: newGrandTotal
 				});
-				console.log(`[${timestamp}] [ADDITIONAL ORDER] Billing record updated - New Amount Due: ${newGrandTotal} (was ${existingBilling.AMOUNT_DUE || existingOrder.GRAND_TOTAL})`);
+				console.log(`[${timestamp}] [ADDITIONAL ORDER] Billing record updated - New Amount Due: ${newGrandTotal} (was ${existingAmountDue})`);
 			}
 
 			// Log success summary
-			console.log(`[${timestamp}] [ADDITIONAL ORDER SUCCESS] Order ID: ${order_id}, Order No: ${existingOrder.ORDER_NO}, Items Added: ${items.length}, Old Total: ${existingOrder.GRAND_TOTAL}, New Total: ${newGrandTotal}, User ID: ${user_id}, IP: ${clientIp}`);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER SUCCESS] Order ID: ${order_id}, Order No: ${existingOrder.ORDER_NO}, Items Added: ${items.length}, Old Total: ${existingGrandTotal}, New Total: ${newGrandTotal}, User ID: ${user_id}, IP: ${clientIp}`);
 
 			// Return success response
 			return res.json({
