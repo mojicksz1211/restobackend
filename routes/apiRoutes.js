@@ -67,6 +67,22 @@ router.get("/menu", authenticateJWT, ApiController.getMenuItems);
 // Response: { success: true, data: { order_id, order_no, table_id, status, grand_total, items_count } }
 router.post("/orders", authenticateJWT, ApiController.createOrder);
 
+// POST - Add items to existing order (Additional Order)
+// URL: /api/orders/:order_id/items
+// Headers: Authorization: Bearer <accessToken>
+// Body: {
+//   items: [
+//     {
+//       menu_id: number (required),
+//       qty: number (required),
+//       unit_price: number (required),
+//       status: number (optional, default: 1)
+//     }
+//   ] (required, at least one item)
+// }
+// Response: { success: true, data: { order_id, order_no, items_added, new_subtotal, new_grand_total } }
+router.post("/orders/:order_id/items", authenticateJWT, ApiController.addItemsToOrder);
+
 // ============================================
 // EXPORT
 // ============================================

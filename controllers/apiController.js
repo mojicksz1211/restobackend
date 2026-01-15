@@ -30,17 +30,12 @@ class ApiController {
 	// Login endpoint for mobile app
 	static async login(req, res) {
 		const timestamp = new Date().toISOString();
-		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
-		const userAgent = req.headers['user-agent'] || 'Unknown';
 
 		try {
 			const { username, password } = req.body;
 
-			// Log login attempt
-			console.log(`[${timestamp}] [LOGIN ATTEMPT] Username: ${username || 'N/A'}, IP: ${clientIp}, User-Agent: ${userAgent}`);
-
 			if (!username || !password) {
-				console.log(`[${timestamp}] [LOGIN FAILED] Missing credentials - Username: ${username || 'N/A'}, IP: ${clientIp}`);
+				console.log(`[${timestamp}] [LOGIN FAILED] Missing credentials - Username: ${username || 'N/A'}`);
 				return res.status(400).json({
 					success: false,
 					error: 'Username and password are required'
@@ -71,7 +66,6 @@ class ApiController {
 				if (isValid) {
 					// Optional: auto-upgrade legacy MD5 password to Argon2
 					if (isLegacy) {
-						console.log(`[${timestamp}] [PASSWORD UPGRADE] Upgrading MD5 to Argon2 for user: ${username} (ID: ${user.IDNo})`);
 						const newHash = await argon2.hash(password);
 						await pool.execute(`UPDATE user_info SET PASSWORD = ?, SALT = NULL WHERE IDNo = ?`, [newHash, user.IDNo]);
 					}
@@ -79,8 +73,8 @@ class ApiController {
 					// Update last login
 					await pool.execute(`UPDATE user_info SET LAST_LOGIN = ? WHERE IDNo = ?`, [new Date(), user.IDNo]);
 
-					// Log successful login
-					console.log(`[${timestamp}] [LOGIN SUCCESS] User: ${username} (ID: ${user.IDNo}, Name: ${user.FIRSTNAME} ${user.LASTNAME}), IP: ${clientIp}, Permissions: ${user.PERMISSIONS}, Table ID: ${user.TABLE_ID || 'N/A'}`);
+					// Log successful login - simple format
+					console.log(`[${timestamp}] [LOGIN] ${username}`);
 
 					// Generate JWT tokens
 					const tokenPayload = {
@@ -109,7 +103,7 @@ class ApiController {
 					});
 				} else {
 					// Log failed password
-					console.log(`[${timestamp}] [LOGIN FAILED] Incorrect password - Username: ${username} (ID: ${user.IDNo}), IP: ${clientIp}`);
+					console.log(`[${timestamp}] [LOGIN FAILED] ${username}`);
 					return res.status(401).json({
 						success: false,
 						error: 'Incorrect password'
@@ -117,7 +111,7 @@ class ApiController {
 				}
 			} else {
 				// Log user not found
-				console.log(`[${timestamp}] [LOGIN FAILED] User not found or inactive - Username: ${username}, IP: ${clientIp}`);
+				console.log(`[${timestamp}] [LOGIN FAILED] ${username}`);
 				return res.status(401).json({
 					success: false,
 					error: 'User not found or inactive'
@@ -125,7 +119,7 @@ class ApiController {
 			}
 		} catch (error) {
 			// Log error
-			console.error(`[${timestamp}] [LOGIN ERROR] Username: ${req.body?.username || 'N/A'}, IP: ${clientIp}, Error:`, error);
+			console.error(`[${timestamp}] [LOGIN ERROR] ${req.body?.username || 'N/A'}`);
 			return res.status(500).json({
 				success: false,
 				error: 'Internal server error'
@@ -363,8 +357,20 @@ class ApiController {
 				user_id: user_id
 			};
 
+			// Log order creation details
+			console.log(`[${timestamp}] [CREATE ORDER] Starting order creation - User ID: ${user_id}, IP: ${clientIp}`);
+			console.log(`[${timestamp}] [CREATE ORDER] Order Details: Order No: ${orderData.ORDER_NO}, Table ID: ${orderData.TABLE_ID || 'N/A'}, Order Type: ${orderData.ORDER_TYPE || 'N/A'}`);
+			console.log(`[${timestamp}] [CREATE ORDER] Order Totals: Subtotal: ${orderData.SUBTOTAL}, Tax: ${orderData.TAX_AMOUNT}, Service Charge: ${orderData.SERVICE_CHARGE}, Discount: ${orderData.DISCOUNT_AMOUNT}, Grand Total: ${orderData.GRAND_TOTAL}`);
+			console.log(`[${timestamp}] [CREATE ORDER] Items Count: ${items.length}`);
+			
+			// Log each item detail
+			items.forEach((item, index) => {
+				console.log(`[${timestamp}] [CREATE ORDER] Item ${index + 1}: Menu ID: ${item.menu_id}, Qty: ${item.qty}, Unit Price: ${item.unit_price}, Line Total: ${parseFloat(item.qty) * parseFloat(item.unit_price)}`);
+			});
+
 			// Create order
 			const orderId = await OrderModel.create(orderData);
+			console.log(`[${timestamp}] [CREATE ORDER] Order created in database - Order ID: ${orderId}`);
 
 			// Prepare order items
 			const orderItems = items.map(item => ({
@@ -377,6 +383,7 @@ class ApiController {
 
 			// Create order items
 			await OrderItemsModel.createForOrder(orderId, orderItems, user_id);
+			console.log(`[${timestamp}] [CREATE ORDER] Order items created - ${orderItems.length} items added`);
 
 			// Create billing record
 			await BillingModel.createForOrder({
@@ -386,14 +393,16 @@ class ApiController {
 				status: 3, // Pending payment
 				user_id: user_id
 			});
+			console.log(`[${timestamp}] [CREATE ORDER] Billing record created - Amount Due: ${orderData.GRAND_TOTAL}`);
 
 			// Update table status to Occupied (2) if a table is assigned
 			if (orderData.TABLE_ID) {
 				await TableModel.updateStatus(orderData.TABLE_ID, 2);
+				console.log(`[${timestamp}] [CREATE ORDER] Table status updated - Table ID: ${orderData.TABLE_ID}, Status: Occupied (2)`);
 			}
 
-			// Log success
-			console.log(`[${timestamp}] [API SUCCESS] POST /api/orders - Order created: ID ${orderId}, Order No: ${orderData.ORDER_NO}, Items: ${items.length}, Total: ${orderData.GRAND_TOTAL} - IP: ${clientIp}`);
+			// Log success summary
+			console.log(`[${timestamp}] [CREATE ORDER SUCCESS] Order ID: ${orderId}, Order No: ${orderData.ORDER_NO}, Items: ${items.length}, Grand Total: ${orderData.GRAND_TOTAL}, User ID: ${user_id}, IP: ${clientIp}`);
 
 			// Return success response
 			return res.json({
@@ -413,6 +422,157 @@ class ApiController {
 			return res.status(500).json({
 				success: false,
 				error: 'Failed to create order',
+				message: error.message
+			});
+		}
+	}
+
+	// Add additional items to existing order
+	static async addItemsToOrder(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+		const { order_id } = req.params;
+
+		try {
+			// Log request
+			console.log(`[${timestamp}] [API REQUEST] POST /api/orders/${order_id}/items - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+
+			// Validate order_id
+			if (!order_id) {
+				console.log(`[${timestamp}] [API ERROR] POST /api/orders/${order_id}/items - Missing order_id - IP: ${clientIp}`);
+				return res.status(400).json({
+					success: false,
+					error: 'Order ID is required'
+				});
+			}
+
+			// Get existing order
+			const existingOrder = await OrderModel.getById(order_id);
+			if (!existingOrder) {
+				console.log(`[${timestamp}] [ADDITIONAL ORDER ERROR] Order not found - Order ID: ${order_id}, User ID: ${user_id}, IP: ${clientIp}`);
+				return res.status(404).json({
+					success: false,
+					error: 'Order not found'
+				});
+			}
+
+			// Log existing order details
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Starting additional order - Order ID: ${order_id}, Order No: ${existingOrder.ORDER_NO}, User ID: ${user_id}, IP: ${clientIp}`);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Existing Order Details: Table ID: ${existingOrder.TABLE_ID || 'N/A'}, Order Type: ${existingOrder.ORDER_TYPE || 'N/A'}, Status: ${existingOrder.STATUS}`);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Existing Order Totals: Subtotal: ${existingOrder.SUBTOTAL}, Tax: ${existingOrder.TAX_AMOUNT || 0}, Service Charge: ${existingOrder.SERVICE_CHARGE || 0}, Discount: ${existingOrder.DISCOUNT_AMOUNT || 0}, Grand Total: ${existingOrder.GRAND_TOTAL}`);
+
+			// Validate items
+			const { items } = req.body;
+			if (!items || !Array.isArray(items) || items.length === 0) {
+				console.log(`[${timestamp}] [ADDITIONAL ORDER ERROR] No items provided - Order ID: ${order_id}, User ID: ${user_id}, IP: ${clientIp}`);
+				return res.status(400).json({
+					success: false,
+					error: 'At least one order item is required'
+				});
+			}
+
+			// Validate item structure
+			for (const item of items) {
+				if (!item.menu_id || !item.qty || !item.unit_price) {
+					console.log(`[${timestamp}] [ADDITIONAL ORDER ERROR] Invalid item structure - Order ID: ${order_id}, User ID: ${user_id}, IP: ${clientIp}`);
+					return res.status(400).json({
+						success: false,
+						error: 'Each item must have menu_id, qty, and unit_price'
+					});
+				}
+			}
+
+			// Get existing order items
+			const existingItems = await OrderItemsModel.getByOrderId(order_id);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Existing items count: ${existingItems.length}`);
+
+			// Calculate new item totals
+			const newItemsTotal = items.reduce((sum, item) => {
+				return sum + (parseFloat(item.qty) * parseFloat(item.unit_price));
+			}, 0);
+
+			// Calculate existing items total
+			const existingItemsTotal = existingItems.reduce((sum, item) => {
+				return sum + (parseFloat(item.LINE_TOTAL) || 0);
+			}, 0);
+
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] New items total: ${newItemsTotal}, Existing items total: ${existingItemsTotal}`);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Items to add: ${items.length}`);
+
+			// Log each new item detail
+			items.forEach((item, index) => {
+				console.log(`[${timestamp}] [ADDITIONAL ORDER] New Item ${index + 1}: Menu ID: ${item.menu_id}, Qty: ${item.qty}, Unit Price: ${item.unit_price}, Line Total: ${parseFloat(item.qty) * parseFloat(item.unit_price)}`);
+			});
+
+			// Prepare new order items
+			const orderItems = items.map(item => ({
+				menu_id: parseInt(item.menu_id),
+				qty: parseFloat(item.qty),
+				unit_price: parseFloat(item.unit_price),
+				line_total: parseFloat(item.qty) * parseFloat(item.unit_price),
+				status: item.status || 1
+			}));
+
+			// Add new items to existing order
+			await OrderItemsModel.createForOrder(order_id, orderItems, user_id);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Order items added to database - ${orderItems.length} items added`);
+
+			// Calculate new totals
+			const newSubtotal = existingOrder.SUBTOTAL + newItemsTotal;
+			const newTaxAmount = existingOrder.TAX_AMOUNT || 0;
+			const newServiceCharge = existingOrder.SERVICE_CHARGE || 0;
+			const newDiscountAmount = existingOrder.DISCOUNT_AMOUNT || 0;
+			const newGrandTotal = newSubtotal + newTaxAmount + newServiceCharge - newDiscountAmount;
+
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Calculated new totals: Subtotal: ${newSubtotal} (was ${existingOrder.SUBTOTAL} + ${newItemsTotal}), Grand Total: ${newGrandTotal} (was ${existingOrder.GRAND_TOTAL})`);
+
+			// Update order totals
+			const updatePayload = {
+				TABLE_ID: existingOrder.TABLE_ID,
+				ORDER_TYPE: existingOrder.ORDER_TYPE,
+				STATUS: existingOrder.STATUS,
+				SUBTOTAL: newSubtotal,
+				TAX_AMOUNT: newTaxAmount,
+				SERVICE_CHARGE: newServiceCharge,
+				DISCOUNT_AMOUNT: newDiscountAmount,
+				GRAND_TOTAL: newGrandTotal,
+				user_id: user_id
+			};
+
+			await OrderModel.update(order_id, updatePayload);
+			console.log(`[${timestamp}] [ADDITIONAL ORDER] Order totals updated in database`);
+
+			// Update billing record
+			const existingBilling = await BillingModel.getByOrderId(order_id);
+			if (existingBilling) {
+				await BillingModel.updateForOrder(order_id, {
+					amount_due: newGrandTotal
+				});
+				console.log(`[${timestamp}] [ADDITIONAL ORDER] Billing record updated - New Amount Due: ${newGrandTotal} (was ${existingBilling.AMOUNT_DUE || existingOrder.GRAND_TOTAL})`);
+			}
+
+			// Log success summary
+			console.log(`[${timestamp}] [ADDITIONAL ORDER SUCCESS] Order ID: ${order_id}, Order No: ${existingOrder.ORDER_NO}, Items Added: ${items.length}, Old Total: ${existingOrder.GRAND_TOTAL}, New Total: ${newGrandTotal}, User ID: ${user_id}, IP: ${clientIp}`);
+
+			// Return success response
+			return res.json({
+				success: true,
+				data: {
+					order_id: parseInt(order_id),
+					order_no: existingOrder.ORDER_NO,
+					items_added: items.length,
+					new_subtotal: newSubtotal,
+					new_grand_total: newGrandTotal
+				}
+			});
+		} catch (error) {
+			// Log error
+			console.error(`[${timestamp}] [API ERROR] POST /api/orders/${order_id}/items - IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to add items to order',
 				message: error.message
 			});
 		}
