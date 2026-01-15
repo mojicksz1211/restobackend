@@ -156,6 +156,31 @@ class OrderModel {
 		const [result] = await pool.execute(query, [status, user_id, id]);
 		return result.affectedRows > 0;
 	}
+
+	// Get orders by user ID (for mobile app sync)
+	static async getByUserId(userId) {
+		const query = `
+			SELECT 
+				o.IDNo,
+				o.ORDER_NO,
+				o.TABLE_ID,
+				o.ORDER_TYPE,
+				o.STATUS,
+				o.SUBTOTAL,
+				o.TAX_AMOUNT,
+				o.SERVICE_CHARGE,
+				o.DISCOUNT_AMOUNT,
+				o.GRAND_TOTAL,
+				o.ENCODED_DT,
+				o.ENCODED_BY
+			FROM orders o
+			WHERE o.ENCODED_BY = ?
+			ORDER BY o.ENCODED_DT DESC
+		`;
+
+		const [rows] = await pool.execute(query, [userId]);
+		return rows;
+	}
 }
 
 module.exports = OrderModel;

@@ -43,6 +43,12 @@ router.get("/categories", authenticateJWT, ApiController.getCategories);
 // Query params: ?category_id=X (optional - filter by category)
 router.get("/menu", authenticateJWT, ApiController.getMenuItems);
 
+// GET - Get user orders (for syncing with local storage)
+// URL: /api/orders
+// Headers: Authorization: Bearer <accessToken>
+// Response: { success: true, data: [{ order_id, order_no, items: [...] }] }
+router.get("/orders", authenticateJWT, ApiController.getUserOrders);
+
 // POST - Create new order
 // URL: /api/orders
 // Headers: Authorization: Bearer <accessToken>
