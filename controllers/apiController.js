@@ -7,6 +7,10 @@
 
 const MenuModel = require('../models/menuModel');
 const CategoryModel = require('../models/categoryModel');
+const OrderModel = require('../models/orderModel');
+const OrderItemsModel = require('../models/orderItemsModel');
+const BillingModel = require('../models/billingModel');
+const TableModel = require('../models/tableModel');
 const pool = require('../config/db');
 const argon2 = require('argon2');
 const crypto = require('crypto');
@@ -289,6 +293,128 @@ class ApiController {
 					error: 'Internal server error'
 				});
 			}
+		}
+	}
+
+	// Create order endpoint for mobile app
+	static async createOrder(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+
+		try {
+			// Log request
+			console.log(`[${timestamp}] [API REQUEST] POST /api/orders - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+
+			// Validate required fields
+			const {
+				order_no,
+				table_id,
+				order_type,
+				subtotal,
+				tax_amount,
+				service_charge,
+				discount_amount,
+				grand_total,
+				items
+			} = req.body;
+
+			// Validate order number
+			if (!order_no || order_no.trim() === '') {
+				console.log(`[${timestamp}] [API ERROR] POST /api/orders - Missing order_no - IP: ${clientIp}`);
+				return res.status(400).json({
+					success: false,
+					error: 'Order number is required'
+				});
+			}
+
+			// Validate items
+			if (!items || !Array.isArray(items) || items.length === 0) {
+				console.log(`[${timestamp}] [API ERROR] POST /api/orders - No items provided - IP: ${clientIp}`);
+				return res.status(400).json({
+					success: false,
+					error: 'At least one order item is required'
+				});
+			}
+
+			// Validate item structure
+			for (const item of items) {
+				if (!item.menu_id || !item.qty || !item.unit_price) {
+					console.log(`[${timestamp}] [API ERROR] POST /api/orders - Invalid item structure - IP: ${clientIp}`);
+					return res.status(400).json({
+						success: false,
+						error: 'Each item must have menu_id, qty, and unit_price'
+					});
+				}
+			}
+
+			// Prepare order data
+			const orderData = {
+				ORDER_NO: order_no.trim(),
+				TABLE_ID: table_id || null,
+				ORDER_TYPE: order_type || null,
+				STATUS: 1, // Default status: Pending/Active
+				SUBTOTAL: parseFloat(subtotal) || 0,
+				TAX_AMOUNT: parseFloat(tax_amount) || 0,
+				SERVICE_CHARGE: parseFloat(service_charge) || 0,
+				DISCOUNT_AMOUNT: parseFloat(discount_amount) || 0,
+				GRAND_TOTAL: parseFloat(grand_total) || 0,
+				user_id: user_id
+			};
+
+			// Create order
+			const orderId = await OrderModel.create(orderData);
+
+			// Prepare order items
+			const orderItems = items.map(item => ({
+				menu_id: parseInt(item.menu_id),
+				qty: parseFloat(item.qty),
+				unit_price: parseFloat(item.unit_price),
+				line_total: parseFloat(item.qty) * parseFloat(item.unit_price),
+				status: item.status || 1
+			}));
+
+			// Create order items
+			await OrderItemsModel.createForOrder(orderId, orderItems, user_id);
+
+			// Create billing record
+			await BillingModel.createForOrder({
+				order_id: orderId,
+				amount_due: orderData.GRAND_TOTAL,
+				amount_paid: 0,
+				status: 3, // Pending payment
+				user_id: user_id
+			});
+
+			// Update table status to Occupied (2) if a table is assigned
+			if (orderData.TABLE_ID) {
+				await TableModel.updateStatus(orderData.TABLE_ID, 2);
+			}
+
+			// Log success
+			console.log(`[${timestamp}] [API SUCCESS] POST /api/orders - Order created: ID ${orderId}, Order No: ${orderData.ORDER_NO}, Items: ${items.length}, Total: ${orderData.GRAND_TOTAL} - IP: ${clientIp}`);
+
+			// Return success response
+			return res.json({
+				success: true,
+				data: {
+					order_id: orderId,
+					order_no: orderData.ORDER_NO,
+					table_id: orderData.TABLE_ID,
+					status: orderData.STATUS,
+					grand_total: orderData.GRAND_TOTAL,
+					items_count: items.length
+				}
+			});
+		} catch (error) {
+			// Log error
+			console.error(`[${timestamp}] [API ERROR] POST /api/orders - IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to create order',
+				message: error.message
+			});
 		}
 	}
 }

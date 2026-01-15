@@ -43,6 +43,30 @@ router.get("/categories", authenticateJWT, ApiController.getCategories);
 // Query params: ?category_id=X (optional - filter by category)
 router.get("/menu", authenticateJWT, ApiController.getMenuItems);
 
+// POST - Create new order
+// URL: /api/orders
+// Headers: Authorization: Bearer <accessToken>
+// Body: {
+//   order_no: "string" (required),
+//   table_id: number (optional),
+//   order_type: string (optional),
+//   subtotal: number (optional, default: 0),
+//   tax_amount: number (optional, default: 0),
+//   service_charge: number (optional, default: 0),
+//   discount_amount: number (optional, default: 0),
+//   grand_total: number (optional, default: 0),
+//   items: [
+//     {
+//       menu_id: number (required),
+//       qty: number (required),
+//       unit_price: number (required),
+//       status: number (optional, default: 1)
+//     }
+//   ] (required, at least one item)
+// }
+// Response: { success: true, data: { order_id, order_no, table_id, status, grand_total, items_count } }
+router.post("/orders", authenticateJWT, ApiController.createOrder);
+
 // ============================================
 // EXPORT
 // ============================================
