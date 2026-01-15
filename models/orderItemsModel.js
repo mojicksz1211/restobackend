@@ -91,7 +91,7 @@ class OrderItemsModel {
 					item.qty,
 					item.unit_price,
 					item.line_total,
-					item.status || 1,
+					item.status || 3,  // Default: 3=PENDING
 					user_id,
 					new Date()
 				]);
