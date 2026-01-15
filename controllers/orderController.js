@@ -53,7 +53,7 @@ class OrderController {
 				ORDER_NO: req.body.ORDER_NO,
 				TABLE_ID: req.body.TABLE_ID,
 				ORDER_TYPE: req.body.ORDER_TYPE,
-				STATUS: parseInt(req.body.STATUS) || 1,
+				STATUS: parseInt(req.body.STATUS) || 3,
 				SUBTOTAL: parseFloat(req.body.SUBTOTAL) || 0,
 				TAX_AMOUNT: parseFloat(req.body.TAX_AMOUNT) || 0,
 				SERVICE_CHARGE: parseFloat(req.body.SERVICE_CHARGE) || 0,
@@ -98,7 +98,7 @@ class OrderController {
 			const payload = {
 				TABLE_ID: req.body.TABLE_ID,
 				ORDER_TYPE: req.body.ORDER_TYPE,
-				STATUS: parseInt(req.body.STATUS) || 1,
+				STATUS: parseInt(req.body.STATUS) || 3,
 				SUBTOTAL: parseFloat(req.body.SUBTOTAL) || 0,
 				TAX_AMOUNT: parseFloat(req.body.TAX_AMOUNT) || 0,
 				SERVICE_CHARGE: parseFloat(req.body.SERVICE_CHARGE) || 0,
@@ -108,8 +108,11 @@ class OrderController {
 			};
 
 			const updated = await OrderModel.update(id, payload);
-			const items = Array.isArray(req.body.ORDER_ITEMS) ? req.body.ORDER_ITEMS : [];
-			await OrderItemsModel.replaceForOrder(id, items, req.session.user_id);
+			// Only replace order items if ORDER_ITEMS is explicitly provided in the request
+			if (req.body.ORDER_ITEMS !== undefined) {
+				const items = Array.isArray(req.body.ORDER_ITEMS) ? req.body.ORDER_ITEMS : [];
+				await OrderItemsModel.replaceForOrder(id, items, req.session.user_id);
+			}
 			
 			const existingBilling = await BillingModel.getByOrderId(id);
 			if (existingBilling) {
@@ -126,8 +129,8 @@ class OrderController {
 			}
 
 			// Handle Table Status Changes
-			if (payload.STATUS === 4 || payload.STATUS === 5) {
-				// Order is CLOSED (4) or CANCELLED (5) -> Set table to AVAILABLE (1)
+			if (payload.STATUS === 1 || payload.STATUS === -1) {
+				// Order is SETTLED (1) or CANCELLED (-1) -> Set table to AVAILABLE (1)
 				if (payload.TABLE_ID) {
 					await TableModel.updateStatus(payload.TABLE_ID, 1);
 				}

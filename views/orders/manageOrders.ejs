@@ -84,11 +84,10 @@
 						<div class="col-md-4">
 							<label class="form-label">Status</label>
 							<select class="form-control" id="new_order_status">
-								<option value="1">Open</option>
-								<option value="2">In Progress</option>
-								<option value="3">Served</option>
-								<option value="4">Closed</option>
-								<option value="5">Cancelled</option>
+								<option value="3" selected>Pending</option>
+								<option value="2">Confirmed</option>
+								<option value="1">Settled</option>
+								<option value="-1">Cancelled</option>
 							</select>
 						</div>
 						<div class="col-md-2">
@@ -192,11 +191,10 @@
 						<div class="col-md-4">
 							<label class="form-label">Status</label>
 							<select class="form-control" id="edit_order_status">
-								<option value="1">Open</option>
-								<option value="2">In Progress</option>
-								<option value="3">Served</option>
-								<option value="4">Closed</option>
-								<option value="5">Cancelled</option>
+								<option value="3">Pending</option>
+								<option value="2">Confirmed</option>
+								<option value="1">Settled</option>
+								<option value="-1">Cancelled</option>
 							</select>
 						</div>
 						<div class="col-md-2">
@@ -276,8 +274,8 @@
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
-				<table class="table table-bordered small-text" id="orderItemsTable">
-					<thead>
+					<table class="table table-bordered small-text" id="orderItemsTable">
+						<thead>
 							<tr>
 								<th>Menu Item</th>
 								<th>Qty</th>
@@ -285,6 +283,7 @@
 								<th>Line Total</th>
 								<th>Status</th>
 								<th>Remarks</th>
+								<th>Prepared By</th>
 								<th>Actions</th>
 							</tr>
 						</thead>

@@ -19,9 +19,12 @@ class OrderItemsModel {
 				oi.UNIT_PRICE,
 				oi.LINE_TOTAL,
 				oi.STATUS,
-				oi.REMARKS
+				oi.REMARKS,
+				oi.EDITED_BY,
+				u.FIRSTNAME AS PREPARED_BY
 			FROM order_items oi
 			LEFT JOIN menu m ON m.IDNo = oi.MENU_ID
+			LEFT JOIN user_info u ON u.IDNo = oi.EDITED_BY
 			WHERE oi.ORDER_ID = ?
 			ORDER BY oi.ENCODED_DT ASC
 		`;
@@ -54,7 +57,7 @@ class OrderItemsModel {
 			item.qty,
 			item.unit_price,
 			item.line_total,
-			item.status || 1,
+			item.status || 3,  // Default: 3=PENDING
 			user_id,
 			new Date()
 		]);

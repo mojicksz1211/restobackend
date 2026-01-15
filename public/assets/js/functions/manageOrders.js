@@ -12,11 +12,10 @@ const orderTypeLabels = {
 };
 
 const orderStatusLabels = {
-	1: { text: 'Open', className: 'bg-success' },
-	2: { text: 'In Progress', className: 'bg-warning' },
-	3: { text: 'Served', className: 'bg-info' },
-	4: { text: 'Closed', className: 'bg-primary' },
-	5: { text: 'Cancelled', className: 'bg-danger' }
+	3: { text: 'Pending', className: 'bg-warning' },
+	2: { text: 'Confirmed', className: 'bg-info' },
+	1: { text: 'Settled', className: 'bg-success' },
+	'-1': { text: 'Cancelled', className: 'bg-danger' }
 };
 
 let ordersDataTable;
@@ -198,7 +197,7 @@ function gatherOrderPayload(prefix, includeOrderNo) {
 	const payload = {
 		TABLE_ID: $(`#${prefix}_order_table_id`).val() || null,
 		ORDER_TYPE: $(`#${prefix}_order_type`).val(),
-		STATUS: parseInt($(`#${prefix}_order_status`).val()) || 1,
+		STATUS: parseInt($(`#${prefix}_order_status`).val()) || 3,
 		SUBTOTAL: parseFloat($(`#${prefix}_order_subtotal`).val()) || 0,
 		TAX_AMOUNT: parseFloat($(`#${prefix}_order_tax`).val()) || 0,
 		SERVICE_CHARGE: parseFloat($(`#${prefix}_order_service`).val()) || 0,
@@ -268,7 +267,7 @@ function addOrderItem(prefix) {
 		qty,
 		unit_price: unitPrice,
 		line_total: lineTotal,
-		status: 1
+		status: 3  // Default: 3=PENDING
 	});
 
 	qtyInput.val(1);
@@ -312,19 +311,41 @@ function removeOrderItem(prefix, index) {
 }
 
 function renderActionButtons(order) {
-	return `
-		<div class="btn-group" role="group">
+	// STATUS is a number from database (tinyint)
+	const status = Number(order.STATUS);
+	
+	let buttons = '';
+	
+	if (status === 3) {
+		// PENDING: Show Confirmation and Edit buttons
+		buttons = `
+			<button type="button" class="btn btn-sm btn-success" onclick="confirmOrder(${order.IDNo})" title="Confirm Order">
+				<i class="fa fa-check"></i> Confirmation
+			</button>
+			<button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditOrderModal(${order.IDNo})" title="Edit Order">
+				<i class="fa fa-pencil-alt"></i>
+			</button>
+		`;
+	} else if (status === 2) {
+		// CONFIRMED: Show View Items and Additional Order buttons
+		buttons = `
 			<button type="button" class="btn btn-sm btn-info" onclick="openOrderItemsModal(${order.IDNo})" title="View Items">
 				<i class="fa fa-list"></i>
 			</button>
 			<button type="button" class="btn btn-sm btn-success" onclick="openAdditionalOrderModal(${order.IDNo}, '${order.ORDER_NO}')" title="Additional Order">
 				<i class="fa fa-plus-circle"></i>
 			</button>
-			<button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditOrderModal(${order.IDNo})" title="Edit Order">
-				<i class="fa fa-pencil-alt"></i>
+		`;
+	} else {
+		// Other statuses (1=SETTLED, -1=CANCELLED): Show View Items only
+		buttons = `
+			<button type="button" class="btn btn-sm btn-info" onclick="openOrderItemsModal(${order.IDNo})" title="View Items">
+				<i class="fa fa-list"></i>
 			</button>
-		</div>
-	`;
+		`;
+	}
+	
+	return `<div class="btn-group" role="group">${buttons}</div>`;
 }
 
 function openNewOrderModal() {
@@ -367,7 +388,7 @@ function openEditOrderModal(orderId) {
 					$('#edit_order_no').val(order.ORDER_NO);
 					populateTableSelect('#edit_order_table_id', order.TABLE_ID);
 					$('#edit_order_type').val(order.ORDER_TYPE || 'DINE_IN');
-					$('#edit_order_status').val(order.STATUS || 1);
+					$('#edit_order_status').val(order.STATUS || 3);
 					$('#edit_order_subtotal').val(order.SUBTOTAL || 0);
 					$('#edit_order_tax').val(order.TAX_AMOUNT || 0);
 					$('#edit_order_service').val(order.SERVICE_CHARGE || 0);
@@ -424,7 +445,7 @@ function openAdditionalOrderModal(orderId, orderNo) {
 				qty: parseInt(item.QTY) || 0,
 				unit_price: parseFloat(item.UNIT_PRICE) || 0,
 				line_total: parseFloat(item.LINE_TOTAL) || 0,
-				status: item.STATUS || 1
+				status: item.STATUS || 3  // Default: 3=PENDING
 			}));
 			renderOrderItems('additional');
 			recalculateGrandTotal('additional');
@@ -493,44 +514,64 @@ function orderMenuSelectionChanged(prefix) {
 function openOrderItemsModal(orderId) {
 	$('#orderItemsTable tbody').empty();
 	$('#modal-order_items').modal('show');
+	
+	// Get order status first to check if it's settled
 	$.ajax({
-		url: `/orders/${orderId}/items`,
+		url: `/orders/${orderId}`,
 		method: 'GET',
-		success(items) {
-			const tbody = $('#orderItemsTable tbody');
-			if (!items.length) {
-				tbody.append('<tr><td colspan="7" class="text-center">No order items recorded yet.</td></tr>');
-				return;
-			}
-			items.forEach(item => {
-				tbody.append(`
-					<tr>
-						<td>${item.MENU_NAME || 'Menu #' + item.MENU_ID}</td>
-						<td>${item.QTY}</td>
-						<td>${formatCurrency(item.UNIT_PRICE)}</td>
-						<td>${formatCurrency(item.LINE_TOTAL)}</td>
-						<td>${formatItemStatus(item.STATUS)}</td>
-						<td>${item.REMARKS || '-'}</td>
-						<td>
+		success(order) {
+			const orderStatus = Number(order.STATUS);
+			const isSettled = orderStatus === 1; // 1 = SETTLED
+			
+			// Load order items
+			$.ajax({
+				url: `/orders/${orderId}/items`,
+				method: 'GET',
+				success(items) {
+					const tbody = $('#orderItemsTable tbody');
+					if (!items.length) {
+						tbody.append('<tr><td colspan="8" class="text-center">No order items recorded yet.</td></tr>');
+						return;
+					}
+					items.forEach(item => {
+						// Hide action button if order is settled
+						const actionButton = isSettled ? '-' : `
 							<div class="dropdown">
 								<button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}'>
 									Update Status
 								</button>
 								<ul class="dropdown-menu dropdown-menu-end">
-									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 1, ${orderId})">Pending</a></li>
+									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 3, ${orderId})">Pending</a></li>
 									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 2, ${orderId})">Preparing</a></li>
-									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 3, ${orderId})">Ready</a></li>
-									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 4, ${orderId})">Served</a></li>
+									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 1, ${orderId})">Ready</a></li>
 								</ul>
 							</div>
-						</td>
-					</tr>
-				`);
+						`;
+						
+						// Column order: Menu Item, Qty, Unit Price, Line Total, Status, Remarks, Prepared By, Actions
+						tbody.append(`
+							<tr>
+								<td>${item.MENU_NAME || 'Menu #' + item.MENU_ID}</td>
+								<td>${item.QTY}</td>
+								<td>${formatCurrency(item.UNIT_PRICE)}</td>
+								<td>${formatCurrency(item.LINE_TOTAL)}</td>
+								<td>${formatItemStatus(item.STATUS)}</td>
+								<td>${item.REMARKS || '-'}</td>
+								<td>${item.PREPARED_BY || '-'}</td>
+								<td>${actionButton}</td>
+							</tr>
+						`);
+					});
+				},
+				error(xhr) {
+					console.error('Failed to load order items:', xhr.responseText);
+					$('#orderItemsTable tbody').append('<tr><td colspan="8" class="text-center text-danger">Unable to load items.</td></tr>');
+				}
 			});
 		},
 		error(xhr) {
-			console.error('Failed to load order items:', xhr.responseText);
-			$('#orderItemsTable tbody').append('<tr><td colspan="7" class="text-center text-danger">Unable to load items.</td></tr>');
+			console.error('Failed to load order:', xhr.responseText);
+			$('#orderItemsTable tbody').append('<tr><td colspan="7" class="text-center text-danger">Unable to load order details.</td></tr>');
 		}
 	});
 }
@@ -551,15 +592,15 @@ function updateItemStatus(itemId, status, orderId) {
 }
 
 function formatItemStatus(status) {
-	switch (parseInt(status)) {
-		case 1:
-			return '<span class="badge bg-secondary">Pending</span>';
+	// order_items STATUS: 3=PENDING; 2=PREPARING; 1=READY
+	const statusNum = Number(status);
+	switch (statusNum) {
+		case 3:
+			return '<span class="badge bg-warning">Pending</span>';
 		case 2:
 			return '<span class="badge bg-info">Preparing</span>';
-		case 3:
-			return '<span class="badge bg-primary">Ready</span>';
-		case 4:
-			return '<span class="badge bg-success">Served</span>';
+		case 1:
+			return '<span class="badge bg-success">Ready</span>';
 		default:
 			return '<span class="badge bg-secondary">Unknown</span>';
 	}
@@ -570,7 +611,9 @@ function formatOrderType(code) {
 }
 
 function formatOrderStatus(status) {
-	const statusInfo = orderStatusLabels[parseInt(status)];
+	const statusInt = parseInt(status);
+	const statusKey = statusInt === -1 ? '-1' : statusInt.toString();
+	const statusInfo = orderStatusLabels[statusKey];
 	if (!statusInfo) {
 		return '<span class="badge bg-secondary">Unknown</span>';
 	}
@@ -600,6 +643,95 @@ function formatDate(value) {
 		day: 'numeric',
 		hour: '2-digit',
 		minute: '2-digit'
+	});
+}
+
+function confirmOrder(orderId) {
+	Swal.fire({
+		title: 'Confirm Order',
+		text: 'Are you sure you want to confirm this order?',
+		icon: 'question',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		confirmButtonText: 'Yes, confirm it!',
+		cancelButtonText: 'Cancel'
+	}).then((result) => {
+		if (result.isConfirmed) {
+			// Get current order data and items first
+			$.ajax({
+				url: `/orders/${orderId}`,
+				method: 'GET',
+				success(order) {
+					// Get existing order items to preserve them
+					$.ajax({
+						url: `/orders/${orderId}/items`,
+						method: 'GET',
+						success(items) {
+							// Update order status to 2 (CONFIRMED) with existing items
+							const payload = {
+								TABLE_ID: order.TABLE_ID,
+								ORDER_TYPE: order.ORDER_TYPE,
+								STATUS: 2, // CONFIRMED
+								SUBTOTAL: parseFloat(order.SUBTOTAL) || 0,
+								TAX_AMOUNT: parseFloat(order.TAX_AMOUNT) || 0,
+								SERVICE_CHARGE: parseFloat(order.SERVICE_CHARGE) || 0,
+								DISCOUNT_AMOUNT: parseFloat(order.DISCOUNT_AMOUNT) || 0,
+								GRAND_TOTAL: parseFloat(order.GRAND_TOTAL) || 0,
+								ORDER_ITEMS: items.map(item => ({
+									menu_id: item.MENU_ID,
+									qty: item.QTY,
+									unit_price: item.UNIT_PRICE,
+									line_total: item.LINE_TOTAL,
+									status: item.STATUS || 3
+								}))
+							};
+							
+							$.ajax({
+								url: `/orders/${orderId}`,
+								method: 'PUT',
+								contentType: 'application/json',
+								data: JSON.stringify(payload),
+								success() {
+									Swal.fire({
+										icon: 'success',
+										title: 'Confirmed!',
+										text: 'Order has been confirmed successfully.',
+										timer: 1500,
+										showConfirmButton: false
+									});
+									loadOrders();
+								},
+								error(xhr) {
+									console.error('Error confirming order:', xhr.responseText);
+									Swal.fire({
+										icon: 'error',
+										title: 'Error',
+										text: 'Failed to confirm order. Please try again.'
+									});
+								}
+							});
+						},
+						error(xhr) {
+							console.error('Error fetching order items:', xhr.responseText);
+							Swal.fire({
+								icon: 'error',
+								title: 'Error',
+								text: 'Failed to load order items.'
+							});
+						}
+					});
+				},
+				error(xhr) {
+					console.error('Error fetching order:', xhr.responseText);
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'Failed to load order details.'
+					});
+				}
+			});
+		}
 	});
 }
 
