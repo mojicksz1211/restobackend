@@ -87,7 +87,7 @@ class OrderModel {
 			ORDER_NO,
 			TABLE_ID || null,
 			ORDER_TYPE || null,
-			STATUS || 1,
+			STATUS || 3,
 			SUBTOTAL || 0,
 			TAX_AMOUNT || 0,
 			SERVICE_CHARGE || 0,
@@ -131,7 +131,7 @@ class OrderModel {
 		const values = [
 			TABLE_ID || null,
 			ORDER_TYPE || null,
-			STATUS || 1,
+			STATUS || 3,
 			SUBTOTAL || 0,
 			TAX_AMOUNT || 0,
 			SERVICE_CHARGE || 0,

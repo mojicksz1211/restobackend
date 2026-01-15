@@ -105,13 +105,13 @@ class BillingController {
 			const order = await OrderModel.getById(id);
 			if (order) {
 				if (newStatus === 1) {
-					// FULLY PAID: Mark Order as CLOSED (4) and Table as AVAILABLE (1)
-					await OrderModel.updateStatus(id, 4, req.session.user_id);
+					// FULLY PAID: Mark Order as SETTLED (1) and Table as AVAILABLE (1)
+					await OrderModel.updateStatus(id, 1, req.session.user_id);
 					if (order.TABLE_ID) {
 						await TableModel.updateStatus(order.TABLE_ID, 1);
 					}
 				} else if (newStatus === 2) {
-					// PARTIAL PAID: Mark Order as IN PROGRESS (2) para hindi na "Open"
+					// PARTIAL PAID: Mark Order as CONFIRMED (2)
 					await OrderModel.updateStatus(id, 2, req.session.user_id);
 				}
 			}

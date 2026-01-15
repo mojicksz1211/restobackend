@@ -23,6 +23,7 @@ class BillingModel {
 				b.ENCODED_DT
 			FROM billing b
 			LEFT JOIN orders o ON o.IDNo = b.ORDER_ID
+			WHERE o.STATUS IN (2, 1)
 			ORDER BY b.ENCODED_DT DESC
 		`;
 
