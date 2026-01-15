@@ -57,9 +57,40 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-// Serve uploaded images with CORS
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Static file serving with cache headers
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1y', // Cache for 1 year
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Set proper Content-Type for WebP images
+    if (filePath.endsWith('.webp')) {
+      res.setHeader('Content-Type', 'image/webp');
+    }
+    // Cache images aggressively
+    if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
+
+// Serve uploaded images with CORS and cache headers
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
+  maxAge: '1y',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Set proper Content-Type for WebP images
+    if (filePath.endsWith('.webp')) {
+      res.setHeader('Content-Type', 'image/webp');
+    }
+    // Cache images aggressively
+    if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
+  }
+}));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your_secret_key',
