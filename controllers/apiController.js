@@ -411,11 +411,12 @@ class ApiController {
 			}
 
 			// Prepare order data
+			// Status codes: 3=PENDING, 2=CONFIRMED, 1=SETTLED, -1=CANCELLED
 			const orderData = {
 				ORDER_NO: order_no.trim(),
 				TABLE_ID: table_id || null,
 				ORDER_TYPE: order_type || null,
-				STATUS: 1, // Default status: Pending/Active
+				STATUS: 3, // Default status: PENDING (3)
 				SUBTOTAL: parseFloat(subtotal) || 0,
 				TAX_AMOUNT: parseFloat(tax_amount) || 0,
 				SERVICE_CHARGE: parseFloat(service_charge) || 0,
@@ -425,8 +426,9 @@ class ApiController {
 			};
 
 			// Log order creation details
+			// Status codes: 3=PENDING, 2=CONFIRMED, 1=SETTLED, -1=CANCELLED
 			console.log(`[${timestamp}] [CREATE ORDER] Starting order creation - User ID: ${user_id}, IP: ${clientIp}`);
-			console.log(`[${timestamp}] [CREATE ORDER] Order Details: Order No: ${orderData.ORDER_NO}, Table ID: ${orderData.TABLE_ID || 'N/A'}, Order Type: ${orderData.ORDER_TYPE || 'N/A'}`);
+			console.log(`[${timestamp}] [CREATE ORDER] Order Details: Order No: ${orderData.ORDER_NO}, Table ID: ${orderData.TABLE_ID || 'N/A'}, Order Type: ${orderData.ORDER_TYPE || 'N/A'}, Status: PENDING (3)`);
 			console.log(`[${timestamp}] [CREATE ORDER] Order Totals: Subtotal: ${orderData.SUBTOTAL}, Tax: ${orderData.TAX_AMOUNT}, Service Charge: ${orderData.SERVICE_CHARGE}, Discount: ${orderData.DISCOUNT_AMOUNT}, Grand Total: ${orderData.GRAND_TOTAL}`);
 			console.log(`[${timestamp}] [CREATE ORDER] Items Count: ${items.length}`);
 			
