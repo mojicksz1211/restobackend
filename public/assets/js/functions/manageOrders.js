@@ -42,6 +42,16 @@ $(document).ready(function () {
 	loadOrders();
 	loadTables();
 	loadMenus();
+
+	// Handle order type change for new order (use event delegation)
+	$(document).on('change', '#new_order_type', function() {
+		toggleTableField('new', $(this).val());
+	});
+
+	// Handle order type change for edit order
+	$(document).on('change', '#edit_order_type', function() {
+		toggleTableField('edit', $(this).val());
+	});
 });
 
 $(document).on('input', '.order-total-field', function () {
@@ -104,9 +114,13 @@ function loadOrders() {
 		success(data) {
 			ordersDataTable.clear();
 			data.forEach(function (row) {
+				// Show table number only for DINE_IN orders, otherwise show N/A
+				const tableDisplay = (row.ORDER_TYPE === 'DINE_IN' && row.TABLE_NUMBER) 
+					? `#${row.TABLE_NUMBER}` 
+					: 'N/A';
 				ordersDataTable.row.add([
 					row.ORDER_NO || 'N/A',
-					row.TABLE_NUMBER ? `#${row.TABLE_NUMBER}` : 'Unassigned',
+					tableDisplay,
 					formatOrderType(row.ORDER_TYPE),
 					formatOrderStatus(row.STATUS),
 					formatCurrency(row.SUBTOTAL),
@@ -180,6 +194,21 @@ function populateTableSelect(selector, currentTableId = null) {
 	});
 }
 
+function toggleTableField(prefix, orderType) {
+	const tableSelect = $(`#${prefix}_order_table_id`);
+	const tableField = tableSelect.closest('.col-md-4');
+	
+	if (orderType === 'TAKE_OUT' || orderType === 'DELIVERY') {
+		// Hide table field and set to null/unassigned
+		tableField.css('display', 'none');
+		tableSelect.val('').prop('disabled', true);
+	} else {
+		// Show table field for DINE_IN
+		tableField.css('display', 'block');
+		tableSelect.prop('disabled', false);
+	}
+}
+
 function populateMenuSelect(selector) {
 	const select = $(selector);
 	if (!select.length) {
@@ -194,9 +223,15 @@ function populateMenuSelect(selector) {
 }
 
 function gatherOrderPayload(prefix, includeOrderNo) {
+	const orderType = $(`#${prefix}_order_type`).val();
+	const tableId = $(`#${prefix}_order_table_id`).val();
+	
+	// For Take Out or Delivery, set TABLE_ID to null
+	const finalTableId = (orderType === 'TAKE_OUT' || orderType === 'DELIVERY') ? null : (tableId || null);
+	
 	const payload = {
-		TABLE_ID: $(`#${prefix}_order_table_id`).val() || null,
-		ORDER_TYPE: $(`#${prefix}_order_type`).val(),
+		TABLE_ID: finalTableId,
+		ORDER_TYPE: orderType,
 		STATUS: parseInt($(`#${prefix}_order_status`).val()) || 3,
 		SUBTOTAL: parseFloat($(`#${prefix}_order_subtotal`).val()) || 0,
 		TAX_AMOUNT: parseFloat($(`#${prefix}_order_tax`).val()) || 0,
@@ -354,6 +389,9 @@ function openNewOrderModal() {
 	renderOrderItems('new');
 	populateMenuSelect('#new_order_menu_id');
 	
+	// Set default order type to DINE_IN
+	$('#new_order_type').val('DINE_IN');
+	
 	// Reload tables to get latest status before showing dropdown
 	$.ajax({
 		url: '/restaurant_tables',
@@ -362,7 +400,13 @@ function openNewOrderModal() {
 			tablesList = data;
 			populateTableSelect('#new_order_table_id');
 			recalculateGrandTotal('new');
+			// Show modal first
 			$('#modal-new_order').modal('show');
+			// Then toggle table field based on current order type (default is DINE_IN)
+			setTimeout(function() {
+				const currentOrderType = $('#new_order_type').val() || 'DINE_IN';
+				toggleTableField('new', currentOrderType);
+			}, 150);
 		}
 	});
 }
@@ -386,8 +430,11 @@ function openEditOrderModal(orderId) {
 				success(order) {
 					$('#edit_order_id').val(orderId);
 					$('#edit_order_no').val(order.ORDER_NO);
+					const orderType = order.ORDER_TYPE || 'DINE_IN';
+					$('#edit_order_type').val(orderType);
 					populateTableSelect('#edit_order_table_id', order.TABLE_ID);
-					$('#edit_order_type').val(order.ORDER_TYPE || 'DINE_IN');
+					// Toggle table field based on order type
+					toggleTableField('edit', orderType);
 					$('#edit_order_status').val(order.STATUS || 3);
 					$('#edit_order_subtotal').val(order.SUBTOTAL || 0);
 					$('#edit_order_tax').val(order.TAX_AMOUNT || 0);
