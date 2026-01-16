@@ -9,6 +9,7 @@ const OrderModel = require('../models/orderModel');
 const OrderItemsModel = require('../models/orderItemsModel');
 const BillingModel = require('../models/billingModel');
 const TableModel = require('../models/tableModel');
+const socketService = require('../utils/socketService');
 
 class OrderController {
 	static showPage(req, res) {
@@ -150,6 +151,20 @@ class OrderController {
 				}
 			}
 
+			// Get updated order data with items for socket emission
+			const updatedOrder = await OrderModel.getById(id);
+			const orderItems = await OrderItemsModel.getByOrderId(id);
+
+			// Emit socket event for order update
+			socketService.emitOrderUpdate(id, {
+				order_id: id,
+				order_no: updatedOrder.ORDER_NO,
+				table_id: updatedOrder.TABLE_ID,
+				status: updatedOrder.STATUS,
+				grand_total: updatedOrder.GRAND_TOTAL,
+				items: orderItems
+			});
+
 			res.json({ success: true });
 		} catch (error) {
 			console.error('Error updating order:', error);
@@ -174,9 +189,30 @@ class OrderController {
 			const { status } = req.body;
 			const user_id = req.session.user_id;
 
+			// Get order_id before updating
+			const pool = require('../config/db');
+			const [itemRows] = await pool.execute('SELECT ORDER_ID FROM order_items WHERE IDNo = ?', [id]);
+			
 			const updated = await OrderItemsModel.updateStatus(id, status, user_id);
 			if (!updated) {
 				return res.status(404).json({ error: 'Item not found' });
+			}
+
+			// Get order_id from the item to emit socket event
+			if (itemRows.length > 0 && itemRows[0].ORDER_ID) {
+				const orderId = itemRows[0].ORDER_ID;
+				const order = await OrderModel.getById(orderId);
+				const orderItems = await OrderItemsModel.getByOrderId(orderId);
+
+				// Emit socket event for order update (item status changed)
+				socketService.emitOrderUpdate(orderId, {
+					order_id: orderId,
+					order_no: order.ORDER_NO,
+					table_id: order.TABLE_ID,
+					status: order.STATUS,
+					grand_total: order.GRAND_TOTAL,
+					items: orderItems
+				});
 			}
 
 			res.json({ success: true });

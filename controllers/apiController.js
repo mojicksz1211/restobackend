@@ -15,6 +15,7 @@ const pool = require('../config/db');
 const argon2 = require('argon2');
 const crypto = require('crypto');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
+const socketService = require('../utils/socketService');
 
 // Helper function to check if password is Argon2 hash
 function isArgonHash(hash) {
@@ -452,7 +453,7 @@ class ApiController {
 
 			// Prepare order items
 			// Order Item Status codes: 3=PENDING, 2=PREPARING, 1=READY
-			const orderItems = items.map(item => ({
+			const newOrderItems = items.map(item => ({
 				menu_id: parseInt(item.menu_id),
 				qty: parseFloat(item.qty),
 				unit_price: parseFloat(item.unit_price),
@@ -461,8 +462,8 @@ class ApiController {
 			}));
 
 			// Create order items
-			await OrderItemsModel.createForOrder(orderId, orderItems, user_id);
-			console.log(`[${timestamp}] [CREATE ORDER] Order items created - ${orderItems.length} items added`);
+			await OrderItemsModel.createForOrder(orderId, newOrderItems, user_id);
+			console.log(`[${timestamp}] [CREATE ORDER] Order items created - ${newOrderItems.length} items added`);
 
 			// Create billing record
 			await BillingModel.createForOrder({
@@ -482,6 +483,21 @@ class ApiController {
 
 			// Log success summary
 			console.log(`[${timestamp}] [CREATE ORDER SUCCESS] Order ID: ${orderId}, Order No: ${orderData.ORDER_NO}, Items: ${items.length}, Grand Total: ${orderData.GRAND_TOTAL}, User ID: ${user_id}, IP: ${clientIp}`);
+
+			// Get full order data with items for socket emission
+			const fullOrder = await OrderModel.getById(orderId);
+			const orderItems = await OrderItemsModel.getByOrderId(orderId);
+
+			// Emit socket event for order creation
+			socketService.emitOrderCreated(orderId, {
+				order_id: orderId,
+				order_no: orderData.ORDER_NO,
+				table_id: orderData.TABLE_ID,
+				status: orderData.STATUS,
+				grand_total: orderData.GRAND_TOTAL,
+				items: orderItems,
+				items_count: items.length
+			});
 
 			// Return success response
 			return res.json({
@@ -649,6 +665,21 @@ class ApiController {
 
 			// Log success summary
 			console.log(`[${timestamp}] [ADDITIONAL ORDER SUCCESS] Order ID: ${order_id}, Order No: ${existingOrder.ORDER_NO}, Items Added: ${items.length}, Old Total: ${existingGrandTotal}, New Total: ${newGrandTotal}, User ID: ${user_id}, IP: ${clientIp}`);
+
+			// Get updated order data with items for socket emission
+			const updatedOrder = await OrderModel.getById(order_id);
+			const allOrderItems = await OrderItemsModel.getByOrderId(order_id);
+
+			// Emit socket event for items added
+			socketService.emitOrderItemsAdded(order_id, {
+				order_id: parseInt(order_id),
+				order_no: existingOrder.ORDER_NO,
+				table_id: updatedOrder.TABLE_ID,
+				status: updatedOrder.STATUS,
+				grand_total: newGrandTotal,
+				items: allOrderItems,
+				items_added: items.length
+			});
 
 			// Return success response
 			return res.json({

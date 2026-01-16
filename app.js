@@ -148,6 +148,10 @@ app.use('/api', require('./routes/apiRoutes'));
 routes.forEach(router => app.use('/', router));
 
 // Start the server
-app.listen(app.get('port'), function () {
+const server = app.listen(app.get('port'), function () {
   console.log('Server started on port ' + app.get('port'));
 });
+
+// Initialize Socket.io
+const socketService = require('./utils/socketService');
+socketService.initializeSocket(server);
