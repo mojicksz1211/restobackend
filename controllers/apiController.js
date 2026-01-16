@@ -64,6 +64,15 @@ class ApiController {
 				}
 
 				if (isValid) {
+					// Check if user has PERMISSIONS = 2 (Tablet App only) - only allow PERMISSIONS === 2
+					if (user.PERMISSIONS !== 2) {
+						console.log(`[${timestamp}] [LOGIN FAILED] ${username} - Not a tablet app user (PERMISSIONS: ${user.PERMISSIONS})`);
+						return res.status(403).json({
+							success: false,
+							error: 'This account is for web admin only. Please use the web application to login.'
+						});
+					}
+
 					// Optional: auto-upgrade legacy MD5 password to Argon2
 					if (isLegacy) {
 						const newHash = await argon2.hash(password);
