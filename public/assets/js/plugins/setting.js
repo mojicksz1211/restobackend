@@ -301,17 +301,15 @@ Index Of Script
     // For colorChange Mode
     const customizerMode = (custombodyclass, colors, colorInfo) => {
         document.querySelector('html').setAttribute('data-bs-theme-color', `${custombodyclass}`);
-        sessionStorage.setItem('colorcustomchart-mode', getComputedStyle(document.body).getPropertyValue('--bs-primary'))
+        // Force a reflow to ensure CSS is applied before reading computed style
+        document.body.offsetHeight;
+        const computedPrimary = getComputedStyle(document.body).getPropertyValue('--bs-primary').trim();
+        // Use computed value if available, otherwise use the provided colorInfo
+        const primaryColor = (computedPrimary && computedPrimary !== '') ? computedPrimary : colorInfo;
+        sessionStorage.setItem('colorcustomchart-mode', primaryColor);
         document.documentElement.style.setProperty('--bs-secondary', colors);
-        const color = sessionStorage.getItem('colorcustomchart-mode')
-        if (color !== 'null' && color !== undefined && color !== '') {
-            const event = new CustomEvent("ColorChange", { detail: { detail1: color.trim(), detail2: colors.trim() } });
-            document.dispatchEvent(event);
-        }
-        else {
-            const event = new CustomEvent("ColorChange", { detail: { detail1: colorInfo.trim(), detail2: colors.trim() } });
-            document.dispatchEvent(event);
-        }
+        const event = new CustomEvent("ColorChange", { detail: { detail1: primaryColor, detail2: colors.trim() } });
+        document.dispatchEvent(event);
         const elements = document.querySelectorAll('[data-setting="color-mode1"][data-name="color"]')
         Array.from(elements, (mode) => {
             const colorclass = mode.getAttribute('data-value');
@@ -342,10 +340,18 @@ Index Of Script
         })
     })
 
+    // Initialize theme - Theme 3 is now the default
     const custombodyclass = sessionStorage.getItem('colorcustom-mode')
     const colors = sessionStorage.getItem('colorcustominfo-mode')
     const color = sessionStorage.getItem('colorcustomchart-mode')
-    if (custombodyclass !== null && custombodyclass !== undefined && colors !== null && colors !== undefined) {
+    
+    // If old default theme or no saved theme, use Theme 3
+    if (custombodyclass === 'theme-color-default' || !custombodyclass || !colors) {
+        sessionStorage.setItem('colorcustom-mode', 'theme-color-red')
+        sessionStorage.setItem('colorcustominfo-mode', '#366AF0')
+        customizerMode('theme-color-red', '#366AF0', '#DB5363')
+    } else {
+        // Use saved theme
         customizerMode(custombodyclass, colors, color)
     }
 

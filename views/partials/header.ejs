@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr" data-bs-theme="light" data-bs-theme-color="theme-color-default">
+<html lang="en" dir="ltr" data-bs-theme="light" data-bs-theme-color="theme-color-red">
 
 <head>
   <meta charset="utf-8">
@@ -147,7 +147,7 @@
                 <path d="M2,12 a1,1 1 1,0 20,0" fill="#FD8D00" />
               </svg>
             </div>
-            <div class="btn btn-border bg-transparent" data-value="theme-color-red" data-info="#366AF0"
+            <div class="btn btn-border bg-transparent active" data-value="theme-color-red" data-info="#366AF0"
               data-setting="color-mode1" data-name="color" data-bs-toggle="tooltip" data-bs-placement="top" title=""
               data-bs-original-title="Theme-3">
               <svg class="customizer-btn icon-32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32">
@@ -358,44 +358,5 @@
         e.stopPropagation();
       });
 
-      const themeButtons = document.querySelectorAll('[data-setting="color-mode1"]');
-    
-      themeButtons.forEach(btn => {
-        const color = btn.getAttribute('data-info');
-    
-        // Hover preview
-        btn.addEventListener('mouseover', () => {
-          document.documentElement.style.setProperty('--primary-color', color);
-        });
-    
-        // Remove preview on mouse leave if not selected
-        btn.addEventListener('mouseleave', () => {
-          if (!btn.classList.contains('active')) {
-            document.documentElement.style.removeProperty('--primary-color');
-          }
-        });
-    
-        // Apply theme on click
-        btn.addEventListener('click', () => {
-          themeButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-    
-          document.documentElement.style.setProperty('--primary-color', color);
-    
-          // Optional: Save to localStorage
-          localStorage.setItem('selected-theme-color', color);
-        });
-      });
-    
-      // On load: apply saved theme
-      const savedColor = localStorage.getItem('selected-theme-color');
-      if (savedColor) {
-        document.documentElement.style.setProperty('--primary-color', savedColor);
-        themeButtons.forEach(btn => {
-          if (btn.getAttribute('data-info') === savedColor) {
-            btn.classList.add('active');
-          }
-        });
-      }
     });
   </script>
