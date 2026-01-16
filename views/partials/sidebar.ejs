@@ -68,6 +68,38 @@
               </li>
               
               <li><hr class="hr-horizontal"></li>
+                
+              <li class="nav-item static-item">
+                  <a class="nav-link static-item disabled" href="#" tabindex="-1">
+                      <span class="default-icon"><%= __('sidebar.operations') %></span>
+                      <span class="mini-icon">-</span>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>" href="/orders">
+                      <i class="icon">
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg> 
+                      </i>
+                      <span class="item-name"><%= __('sidebar.orders') %></span>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link <%= currentPage === 'billing' ? 'active' : '' %>" href="/billing">
+                      <i class="icon">
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg> 
+                      </i>
+                      <span class="item-name"><%= __('sidebar.billing') %></span>
+                  </a>
+              </li>   
+              <li><hr class="hr-horizontal"></li> 
               <li class="nav-item static-item">
                   <a class="nav-link static-item disabled" href="#" tabindex="-1">
                       <span class="default-icon"><%= __('sidebar.security') %></span>
@@ -77,85 +109,55 @@
               <li class="nav-item">
                   <a class="nav-link <%= currentPage === 'manageUsers' ? 'active' : '' %>" href="/manageUsers">
                       <i class="icon">
-                        <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
-                            <g>
-                            <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
-                            </g>
-                        </svg> 
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg> 
                       </i>
                       <span class="item-name"><%= __('sidebar.manage_user') %></span>
                   </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link <%= currentPage === 'userRoles' ? 'active' : '' %>" href="/userRoles">
-                    <i class="icon">
-                        <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
-                            <g>
-                            <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
-                            </g>
-                        </svg>
-                    </i>
-                    <span class="item-name"><%= __('sidebar.user_role') %></span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <%= currentPage === 'manageMenu' ? 'active' : '' %>" href="/manageMenu">
-                  <i class="icon">
-                    <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
-                        <g>
-                        <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
-                        </g>
-                    </svg> 
-                  </i>
-                    <span class="item-name">Manage Menu</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <%= currentPage === 'manageTable' ? 'active' : '' %>" href="/manageTable">
-          <i class="icon">
-            <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
-                <g>
-                <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
-                </g>
-            </svg> 
-          </i>
-            <span class="item-name">Manage Tables</span>
-    </a>
-</li>       
+                  <a class="nav-link <%= currentPage === 'userRoles' ? 'active' : '' %>" href="/userRoles">
+                      <i class="icon">
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg>
+                      </i>
+                      <span class="item-name"><%= __('sidebar.user_role') %></span>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link <%= currentPage === 'manageMenu' ? 'active' : '' %>" href="/manageMenu">
+                      <i class="icon">
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg> 
+                      </i>
+                      <span class="item-name">Manage Menu</span>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link <%= currentPage === 'manageTable' ? 'active' : '' %>" href="/manageTable">
+                      <i class="icon">
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg> 
+                      </i>
+                      <span class="item-name">Manage Tables</span>
+                  </a>
+              </li>       
 
-            <li><hr class="hr-horizontal"></li>
-            <li class="nav-item static-item">
-                <a class="nav-link static-item disabled" href="#" tabindex="-1">
-                    <span class="default-icon"><%= __('sidebar.operations') %></span>
-                    <span class="mini-icon">-</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>" href="/orders">
-                  <i class="icon">
-                    <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
-                        <g>
-                        <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
-                        </g>
-                    </svg> 
-                  </i>
-                    <span class="item-name"><%= __('sidebar.orders') %></span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link <%= currentPage === 'billing' ? 'active' : '' %>" href="/billing">
-              <i class="icon">
-                <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
-                    <g>
-                    <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
-                    </g>
-                </svg> 
-              </i>
-                <span class="item-name"><%= __('sidebar.billing') %></span>
-        </a>
-    </li>       
-           
-          <!-- Sidebar Menu End -->        </div>
+          <!-- Sidebar Menu End -->
+          </ul>
+      </div>
   </div>
   <div class="sidebar-footer"></div>
   <script src="/assets/js/functions/reset.js"></script>

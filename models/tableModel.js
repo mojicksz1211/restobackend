@@ -19,6 +19,7 @@ class TableModel {
 				ENCODED_BY,
 				ENCODED_DT
 			FROM restaurant_tables
+			WHERE ACTIVE = 1
 			ORDER BY TABLE_NUMBER ASC
 		`;
 		const [rows] = await pool.execute(query);
@@ -35,9 +36,10 @@ class TableModel {
 				TABLE_NUMBER,
 				CAPACITY,
 				STATUS,
+				ACTIVE,
 				ENCODED_BY,
 				ENCODED_DT
-			) VALUES (?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, 1, ?, ?)
 		`;
 
 		const [result] = await pool.execute(query, [
@@ -73,10 +75,11 @@ class TableModel {
 		return result.affectedRows > 0;
 	}
 
-	// Delete restaurant table
+	// Delete restaurant table (soft delete - set ACTIVE = 0)
 	static async delete(id) {
 		const query = `
-			DELETE FROM restaurant_tables
+			UPDATE restaurant_tables SET
+				ACTIVE = 0
 			WHERE IDNo = ?
 		`;
 

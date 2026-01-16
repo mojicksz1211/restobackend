@@ -71,6 +71,12 @@ router.post('/login', async (req, res) => {
         }
   
         if (isValid) {
+          // Check if user has PERMISSIONS = 2 (Tablet App only) - block web login
+          if (user.PERMISSIONS === 2) {
+            req.flash('error', 'This account is for tablet app only. Please use the tablet application to login.');
+            return res.redirect('/login');
+          }
+
           // Optional: auto-upgrade legacy MD5 password to Argon2
           if (isLegacy) {
             const newHash = await argon2.hash(password);
