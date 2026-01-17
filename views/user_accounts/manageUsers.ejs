@@ -50,8 +50,24 @@
 
 					<%- include ('../partials/footer'); -%>
 
-
-						<script src="/assets/js/functions/manageUsers.js"></script>
+					<!-- Translations passed via data attribute to avoid linter issues -->
+					<div id="manageUsersTranslations" 
+						data-active="<%- __('manage_users.active') %>" 
+						data-inactive="<%- __('manage_users.inactive') %>"
+						data-delete="<%- __('manage_users.delete') %>"
+						data-edit="<%- __('manage_users.edit') %>"
+						data-error="<%- __('manage_users.error') %>"
+						data-failed-to-load-users="<%- __('manage_users.failed_to_load_users') %>"
+						data-pagination-showing="<%- __('manage_users.pagination.showing') %>"
+						data-pagination-to="<%- __('manage_users.pagination.to') %>"
+						data-pagination-of="<%- __('manage_users.pagination.of') %>"
+						data-pagination-entries="<%- __('manage_users.pagination.entries') %>"
+						data-pagination-previous="<%- __('manage_users.pagination.previous') %>"
+						data-pagination-next="<%- __('manage_users.pagination.next') %>"
+						data-pagination-search="<%- __('manage_users.pagination.search') %>"
+						data-pagination-search-placeholder="<%- __('manage_users.pagination.search_placeholder') %>"
+						style="display: none;"></div>
+					<script src="/assets/js/functions/manageUsers.js"></script>
 						
 
 						<script>

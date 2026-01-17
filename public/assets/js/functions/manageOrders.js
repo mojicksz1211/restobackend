@@ -5,13 +5,19 @@
 // Description: Loads orders data, handles modals for order operations
 // ============================================
 
-const orderTypeLabels = {
+// Use translations from server if available, otherwise fallback to English
+const orderTypeLabels = window.orderTranslations?.orderTypes || {
 	DINE_IN: 'Dine In',
 	TAKE_OUT: 'Take Out',
 	DELIVERY: 'Delivery'
 };
 
-const orderStatusLabels = {
+const orderStatusLabels = window.orderTranslations?.orderStatuses ? {
+	3: { text: window.orderTranslations.orderStatuses[3], className: 'bg-warning' },
+	2: { text: window.orderTranslations.orderStatuses[2], className: 'bg-info' },
+	1: { text: window.orderTranslations.orderStatuses[1], className: 'bg-success' },
+	'-1': { text: window.orderTranslations.orderStatuses['-1'], className: 'bg-danger' }
+} : {
 	3: { text: 'Pending', className: 'bg-warning' },
 	2: { text: 'Confirmed', className: 'bg-info' },
 	1: { text: 'Settled', className: 'bg-success' },
@@ -30,13 +36,59 @@ $(document).ready(function () {
 		$('#ordersTable').DataTable().destroy();
 	}
 
+	// Load pagination translations from data attributes
+	var $paginationEl = $('#ordersPaginationTranslations');
+	var paginationTrans = {};
+	if ($paginationEl.length) {
+		paginationTrans = {
+			showing: $paginationEl.data('pagination-showing') || 'Showing',
+			to: $paginationEl.data('pagination-to') || 'to',
+			of: $paginationEl.data('pagination-of') || 'of',
+			entries: $paginationEl.data('pagination-entries') || 'entries',
+			previous: $paginationEl.data('pagination-previous') || 'Previous',
+			next: $paginationEl.data('pagination-next') || 'Next',
+			search: $paginationEl.data('pagination-search') || 'Search',
+			search_placeholder: $paginationEl.data('pagination-search-placeholder') || 'Search...'
+		};
+	} else {
+		// Fallback if data attributes are not available
+		paginationTrans = {
+			showing: 'Showing',
+			to: 'to',
+			of: 'of',
+			entries: 'entries',
+			previous: 'Previous',
+			next: 'Next',
+			search: 'Search',
+			search_placeholder: 'Search...'
+		};
+	}
+
+	const showingText = paginationTrans.showing;
+	const toText = paginationTrans.to;
+	const ofText = paginationTrans.of;
+	const entriesText = paginationTrans.entries;
+	const searchText = paginationTrans.search;
+
 	ordersDataTable = $('#ordersTable').DataTable({
 		order: [[9, 'desc']],
 		columnDefs: [
 			{ targets: [3, 9, 11], className: 'text-center' },
 			{ targets: 11, orderable: false }
 		],
-		pageLength: 10
+		pageLength: 10,
+		language: {
+			lengthMenu: showingText + " _MENU_ " + entriesText,
+			info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+			infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+			infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+			search: searchText + ":",
+			searchPlaceholder: paginationTrans.search_placeholder,
+			paginate: {
+				previous: paginationTrans.previous,
+				next: paginationTrans.next
+			}
+		}
 	});
 
 	loadOrders();
@@ -115,11 +167,12 @@ function loadOrders() {
 			ordersDataTable.clear();
 			data.forEach(function (row) {
 				// Show table number only for DINE_IN orders, otherwise show N/A
+				const n_a = window.orderTranslations?.n_a || 'N/A';
 				const tableDisplay = (row.ORDER_TYPE === 'DINE_IN' && row.TABLE_NUMBER) 
 					? `#${row.TABLE_NUMBER}` 
-					: 'N/A';
+					: n_a;
 				ordersDataTable.row.add([
-					row.ORDER_NO || 'N/A',
+					row.ORDER_NO || n_a,
 					tableDisplay,
 					formatOrderType(row.ORDER_TYPE),
 					formatOrderStatus(row.STATUS),
@@ -183,7 +236,8 @@ function populateTableSelect(selector, currentTableId = null) {
 	}
 
 	select.empty();
-	select.append('<option value="">Select table</option>');
+	const selectTableText = window.orderTranslations?.select_table || 'Select table';
+	select.append(`<option value="">${selectTableText}</option>`);
 	tablesList.forEach(table => {
 		// Show table if AVAILABLE (1) or if it's the table currently assigned to the order
 		if (parseInt(table.STATUS) === 1 || table.IDNo == currentTableId) {
@@ -216,7 +270,8 @@ function populateMenuSelect(selector) {
 	}
 
 	select.empty();
-	select.append('<option value="">Select menu item</option>');
+	const selectMenuItemText = window.orderTranslations?.select_menu_item || 'Select menu item';
+	select.append(`<option value="">${selectMenuItemText}</option>`);
 	menusList.forEach(menu => {
 		select.append(`<option value="${menu.IDNo}" data-price="${menu.MENU_PRICE || 0}">${menu.MENU_NAME} (${formatCurrency(menu.MENU_PRICE)})</option>`);
 	});
@@ -680,7 +735,7 @@ function formatCurrency(value) {
 
 function formatDate(value) {
 	if (!value) {
-		return 'N/A';
+		return window.orderTranslations?.n_a || 'N/A';
 	}
 
 	const date = new Date(value);

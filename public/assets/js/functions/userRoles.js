@@ -9,17 +9,57 @@
 var role_id;
 var dataTable;
 
+// Load translations from data attributes
+var userRolesTranslations = {};
 $(document).ready(function () {
+	var $transEl = $('#userRolesTranslations');
+	if ($transEl.length) {
+		userRolesTranslations = {
+			active: $transEl.data('active') || 'ACTIVE',
+			inactive: $transEl.data('inactive') || 'INACTIVE',
+			pagination: {
+				showing: $transEl.data('pagination-showing') || 'Showing',
+				to: $transEl.data('pagination-to') || 'to',
+				of: $transEl.data('pagination-of') || 'of',
+				entries: $transEl.data('pagination-entries') || 'entries',
+				previous: $transEl.data('pagination-previous') || 'Previous',
+				next: $transEl.data('pagination-next') || 'Next',
+				search: $transEl.data('pagination-search') || 'Search',
+				search_placeholder: $transEl.data('pagination-search-placeholder') || 'Search...'
+			}
+		};
+	}
 	if ($.fn.DataTable.isDataTable('#userRoleTable')) {
 		$('#userRoleTable').DataTable().destroy();
 	}
+
+	// Get pagination translations
+	const paginationTrans = userRolesTranslations.pagination || {};
+	const showingText = paginationTrans.showing || 'Showing';
+	const toText = paginationTrans.to || 'to';
+	const ofText = paginationTrans.of || 'of';
+	const entriesText = paginationTrans.entries || 'entries';
+	const searchText = paginationTrans.search || 'Search';
 
 	dataTable = $('#userRoleTable').DataTable({
 		columnDefs: [{
 			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
 				$(cell).addClass('text-center');
 			}
-		}]
+		}],
+		pageLength: 10,
+		language: {
+			lengthMenu: showingText + " _MENU_ " + entriesText,
+			info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+			infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+			infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+			search: searchText + ":",
+			searchPlaceholder: paginationTrans.search_placeholder || "Search...",
+			paginate: {
+				previous: paginationTrans.previous || 'Previous',
+				next: paginationTrans.next || 'Next'
+			}
+		}
 	});
 
 	// Initial load
@@ -75,10 +115,14 @@ function reloadUserRoleData() {
 			}
 			data.forEach(function (row) {
 				var status = '';
-				if (row.ACTIVE.data[0] == 1) {
-					status = '<span class="css-blue">ACTIVE</span>';
+				const isActive = row.ACTIVE && row.ACTIVE.data
+					? parseInt(row.ACTIVE.data[0]) === 1
+					: parseInt(row.ACTIVE) === 1;
+				
+				if (isActive) {
+					status = `<span class="css-blue">${userRolesTranslations.active || 'ACTIVE'}</span>`;
 				} else {
-					status = '<span class="css-red">INACTIVE</span>';
+					status = `<span class="css-red">${userRolesTranslations.inactive || 'INACTIVE'}</span>`;
 				}
 
 				// Escape single quotes for JavaScript

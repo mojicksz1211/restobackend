@@ -5,7 +5,9 @@
 // Description: Loads billing records into DataTable with statuses
 // ============================================
 
-const paymentStatusLabels = {
+// Load translations from data attributes
+var billingTranslations = {};
+var paymentStatusLabels = {
 	1: { text: 'Paid', className: 'bg-success' },
 	2: { text: 'Partial', className: 'bg-warning' },
 	3: { text: 'Unpaid', className: 'bg-danger' }
@@ -14,16 +16,77 @@ const paymentStatusLabels = {
 let billingDataTable;
 
 $(document).ready(function () {
+	// Load translations from data attributes
+	var $transEl = $('#billingTranslations');
+	if ($transEl.length) {
+		billingTranslations = {
+			paid: $transEl.data('paid') || 'Paid',
+			partial: $transEl.data('partial') || 'Partial',
+			unpaid: $transEl.data('unpaid') || 'Unpaid',
+			settled: $transEl.data('settled') || 'Settled',
+			view: $transEl.data('view') || 'View',
+			pay: $transEl.data('pay') || 'Pay',
+			loading: $transEl.data('loading') || 'Loading...',
+			no_payments_found: $transEl.data('no-payments-found') || 'No payments found',
+			failed_to_load_payments: $transEl.data('failed-to-load-payments') || 'Failed to load payments',
+			success: $transEl.data('success') || 'Success',
+			payment_processed_successfully: $transEl.data('payment-processed-successfully') || 'Payment processed successfully',
+			error: $transEl.data('error') || 'Error',
+			failed_to_process_payment: $transEl.data('failed-to-process-payment') || 'Failed to process payment',
+			unable_to_load_billing_records: $transEl.data('unable-to-load-billing-records') || 'Unable to load billing records. Please refresh.',
+			unknown: $transEl.data('unknown') || 'Unknown',
+			n_a: $transEl.data('n-a') || 'N/A',
+			pagination: {
+				showing: $transEl.data('pagination-showing') || 'Showing',
+				to: $transEl.data('pagination-to') || 'to',
+				of: $transEl.data('pagination-of') || 'of',
+				entries: $transEl.data('pagination-entries') || 'entries',
+				previous: $transEl.data('pagination-previous') || 'Previous',
+				next: $transEl.data('pagination-next') || 'Next',
+				search: $transEl.data('pagination-search') || 'Search',
+				search_placeholder: $transEl.data('pagination-search-placeholder') || 'Search...'
+			}
+		};
+		
+		// Update payment status labels
+		paymentStatusLabels = {
+			1: { text: billingTranslations.paid, className: 'bg-success' },
+			2: { text: billingTranslations.partial, className: 'bg-warning' },
+			3: { text: billingTranslations.unpaid, className: 'bg-danger' }
+		};
+	}
+
 	if ($.fn.DataTable.isDataTable('#billingTable')) {
 		$('#billingTable').DataTable().destroy();
 	}
 
+	// Get pagination translations
+	const paginationTrans = billingTranslations.pagination || {};
+	const showingText = paginationTrans.showing || 'Showing';
+	const toText = paginationTrans.to || 'to';
+	const ofText = paginationTrans.of || 'of';
+	const entriesText = paginationTrans.entries || 'entries';
+	const searchText = paginationTrans.search || 'Search';
+	
 	billingDataTable = $('#billingTable').DataTable({
 		order: [[6, 'desc']],
 		columnDefs: [
 			{ targets: [5, 6, 8, 9], className: 'text-center' },
 			{ targets: [8, 9], orderable: false }
-		]
+		],
+		pageLength: 10,
+		language: {
+			lengthMenu: showingText + " _MENU_ " + entriesText,
+			info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+			infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+			infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+			search: searchText + ":",
+			searchPlaceholder: paginationTrans.search_placeholder || "Search...",
+			paginate: {
+				previous: paginationTrans.previous || 'Previous',
+				next: paginationTrans.next || 'Next'
+			}
+		}
 	});
 
 	loadBillingData();
@@ -44,12 +107,20 @@ $(document).ready(function () {
 			data: payload,
 			success: function () {
 				$('#modal-payment').modal('hide');
-				Swal.fire({ icon: 'success', title: 'Success', text: 'Payment processed successfully' });
+				Swal.fire({ 
+					icon: 'success', 
+					title: billingTranslations.success || 'Success', 
+					text: billingTranslations.payment_processed_successfully || 'Payment processed successfully' 
+				});
 				loadBillingData();
 			},
 			error: function (xhr) {
 				console.error('Error updating billing:', xhr.responseText);
-				Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to process payment' });
+				Swal.fire({ 
+					icon: 'error', 
+					title: billingTranslations.error || 'Error', 
+					text: billingTranslations.failed_to_process_payment || 'Failed to process payment' 
+				});
 			}
 		});
 	});
@@ -65,21 +136,21 @@ function loadBillingData() {
 			data.forEach(function (row) {
 				const paymentsBtn = `
 					<button class="btn btn-sm btn-outline-secondary" onclick="openPaymentHistoryModal(${row.ORDER_ID}, '${row.ORDER_NO}')">
-						<i class="fa fa-list"></i> View
+						<i class="fa fa-list"></i> ${billingTranslations.view || 'View'}
 					</button>
 				`;
 
 				const actions = parseInt(row.STATUS) === 1
-					? `<button class="btn btn-sm btn-success" disabled><i class="fa fa-check"></i> Settled</button>`
+					? `<button class="btn btn-sm btn-success" disabled><i class="fa fa-check"></i> ${billingTranslations.settled || 'Settled'}</button>`
 					: `
 						<button class="btn btn-sm btn-primary" onclick="openPaymentModal(${row.ORDER_ID}, '${row.ORDER_NO}', ${row.AMOUNT_DUE}, ${row.AMOUNT_PAID}, '${row.PAYMENT_METHOD}', ${row.STATUS}, '${row.PAYMENT_REF || ''}')">
-							<i class="fa fa-cash-register"></i> Pay
+							<i class="fa fa-cash-register"></i> ${billingTranslations.pay || 'Pay'}
 						</button>
 					`;
 
 				billingDataTable.row.add([
-					row.ORDER_NO || 'N/A',
-					row.PAYMENT_METHOD || 'N/A',
+					row.ORDER_NO || (billingTranslations.n_a || 'N/A'),
+					row.PAYMENT_METHOD || (billingTranslations.n_a || 'N/A'),
 					formatCurrency(row.AMOUNT_DUE),
 					formatCurrency(row.AMOUNT_PAID),
 					row.PAYMENT_REF || '-',
@@ -97,8 +168,8 @@ function loadBillingData() {
 			console.error('Failed to load billing records:', error);
 			Swal.fire({
 				icon: 'error',
-				title: 'Error!',
-				text: 'Unable to load billing records. Please refresh.'
+				title: billingTranslations.error || 'Error!',
+				text: billingTranslations.unable_to_load_billing_records || 'Unable to load billing records. Please refresh.'
 			});
 		}
 	});
@@ -107,7 +178,7 @@ function loadBillingData() {
 function formatBillingStatus(status) {
 	const label = paymentStatusLabels[parseInt(status)];
 	if (!label) {
-		return '<span class="badge bg-secondary">Unknown</span>';
+		return `<span class="badge bg-secondary">${billingTranslations.unknown || 'Unknown'}</span>`;
 	}
 	return `<span class="badge ${label.className}">${label.text}</span>`;
 }
@@ -125,7 +196,7 @@ function formatCurrency(value) {
 
 function formatDate(value) {
 	if (!value) {
-		return 'N/A';
+		return billingTranslations.n_a || 'N/A';
 	}
 	const date = new Date(value);
 	return date.toLocaleString('en-US', {
@@ -155,7 +226,7 @@ function openPaymentModal(orderId, orderNo, amountDue, amountPaid, method, statu
 function openPaymentHistoryModal(orderId, orderNo) {
 	$('#payment_history_order_no').text(orderNo || '');
 	const $tbody = $('#paymentHistoryTable tbody');
-	$tbody.html('<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>');
+	$tbody.html(`<tr><td colspan="5" class="text-center text-muted">${billingTranslations.loading || 'Loading...'}</td></tr>`);
 
 	$.ajax({
 		url: `/billing/${orderId}/payments`,
@@ -163,7 +234,7 @@ function openPaymentHistoryModal(orderId, orderNo) {
 		dataType: 'json',
 		success: function (rows) {
 			if (!rows || rows.length === 0) {
-				$tbody.html('<tr><td colspan="5" class="text-center text-muted">No payments found</td></tr>');
+				$tbody.html(`<tr><td colspan="5" class="text-center text-muted">${billingTranslations.no_payments_found || 'No payments found'}</td></tr>`);
 				return;
 			}
 
@@ -182,7 +253,7 @@ function openPaymentHistoryModal(orderId, orderNo) {
 		},
 		error: function (xhr) {
 			console.error('Failed to load payment history:', xhr.responseText);
-			$tbody.html('<tr><td colspan="5" class="text-center text-danger">Failed to load payments</td></tr>');
+			$tbody.html(`<tr><td colspan="5" class="text-center text-danger">${billingTranslations.failed_to_load_payments || 'Failed to load payments'}</td></tr>`);
 		}
 	});
 

@@ -13,17 +13,63 @@ var edit_user_table_id = null;
 const TABLE_ROLE_ID = 2; // IDNo = 2 (Table-TabletMenu)
 var assignedTableIds = new Set(); // active users' assigned TABLE_IDs (1-to-1)
 
+// Load translations from data attributes
+var manageUsersTranslations = {};
 $(document).ready(function () {
+	// Load translations from data attributes
+	var $transEl = $('#manageUsersTranslations');
+	if ($transEl.length) {
+		manageUsersTranslations = {
+			active: $transEl.data('active') || 'ACTIVE',
+			inactive: $transEl.data('inactive') || 'INACTIVE',
+			delete: $transEl.data('delete') || 'Delete',
+			edit: $transEl.data('edit') || 'Edit',
+			error: $transEl.data('error') || 'Error!',
+			failed_to_load_users: $transEl.data('failed-to-load-users') || 'Failed to load users. Please refresh the page.',
+			pagination: {
+				showing: $transEl.data('pagination-showing') || 'Showing',
+				to: $transEl.data('pagination-to') || 'to',
+				of: $transEl.data('pagination-of') || 'of',
+				entries: $transEl.data('pagination-entries') || 'entries',
+				previous: $transEl.data('pagination-previous') || 'Previous',
+				next: $transEl.data('pagination-next') || 'Next',
+				search: $transEl.data('pagination-search') || 'Search',
+				search_placeholder: $transEl.data('pagination-search-placeholder') || 'Search...'
+			}
+		};
+	}
+
 	if ($.fn.DataTable.isDataTable('#usersTable')) {
 		$('#usersTable').DataTable().destroy();
 	}
+
+	// Get pagination translations
+	const paginationTrans = manageUsersTranslations.pagination || {};
+	const showingText = paginationTrans.showing || 'Showing';
+	const toText = paginationTrans.to || 'to';
+	const ofText = paginationTrans.of || 'of';
+	const entriesText = paginationTrans.entries || 'entries';
+	const searchText = paginationTrans.search || 'Search';
 
 	dataTable = $('#usersTable').DataTable({
 		columnDefs: [{
 			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
 				$(cell).addClass('text-center');
 			}
-		}]
+		}],
+		pageLength: 10,
+		language: {
+			lengthMenu: showingText + " _MENU_ " + entriesText,
+			info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+			infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+			infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+			search: searchText + ":",
+			searchPlaceholder: paginationTrans.search_placeholder || "Search...",
+			paginate: {
+				previous: paginationTrans.previous || 'Previous',
+				next: paginationTrans.next || 'Next'
+			}
+		}
 	});
 
 	// Initial load
@@ -217,9 +263,9 @@ function reloadUserData() {
 						: parseInt(row.ACTIVE) === 1;
 
 				if (isActive) {
-					status = '<span class="css-blue">ACTIVE</span>';
+					status = `<span class="css-blue">${manageUsersTranslations.active || 'ACTIVE'}</span>`;
 				} else {
-					status = '<span class="css-red">INACTIVE</span>';
+					status = `<span class="css-red">${manageUsersTranslations.inactive || 'INACTIVE'}</span>`;
 				}
 
 				// Escape single quotes for JavaScript
@@ -227,13 +273,16 @@ function reloadUserData() {
 				var lastname = (row.LASTNAME || '').replace(/'/g, "\\'");
 				var username = (row.USERNAME || '').replace(/'/g, "\\'");
 
+				const deleteLabel = manageUsersTranslations.delete || 'Delete';
+				const editLabel = manageUsersTranslations.edit || 'Edit';
+
 				var btn = `<div class="btn-group">
 					<button type="button" class="btn btn-sm bg-danger-subtle js-bs-tooltip-enabled" onclick="archive_user(${row.user_id})"
-						data-bs-toggle="tooltip" aria-label="Delete" data-bs-original-title="Delete">
+						data-bs-toggle="tooltip" aria-label="${deleteLabel}" data-bs-original-title="${deleteLabel}">
 						<i class="fa fa-trash"></i>
 					</button>
 					<button type="button" class="btn btn-sm bg-info-subtle js-bs-tooltip-enabled" onclick="edit_user(${row.user_id}, '${firstname}', '${lastname}', '${username}', ${row.PERMISSIONS}, ${row.TABLE_ID || 'null'})"
-						data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
+						data-bs-toggle="tooltip" aria-label="${editLabel}" data-bs-original-title="${editLabel}">
 						<i class="fa fa-pencil-alt"></i>
 					</button>
 				</div>`;
@@ -245,8 +294,8 @@ function reloadUserData() {
 			console.error('Error fetching users:', error);
 			Swal.fire({
 				icon: "error",
-				title: "Error!",
-				text: "Failed to load users. Please refresh the page.",
+				title: manageUsersTranslations.error || "Error!",
+				text: manageUsersTranslations.failed_to_load_users || "Failed to load users. Please refresh the page.",
 			});
 		}
 	});

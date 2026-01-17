@@ -17,10 +17,10 @@
 							<div class="card-header d-flex justify-content-between align-items-center">
 								<h3 class="card-title"><div class="breadcrumb1 flat">
 									<a href="/dashboard" ><span class="fa fa-home"></span></a>
-									<a href="/manageTable"class="active">Manage Restaurant Tables</a>
+									<a href="/manageTable"class="active"><%= __('table.manage_restaurant_tables') %></a>
 								</div></h3>
 									<button type="button" class="btn btn-primary" onclick="add_restaurant_table_modal()">
-										<i class="fa fa-plus" aria-hidden="true"></i> New Table
+										<i class="fa fa-plus" aria-hidden="true"></i> <%= __('table.new_table') %>
 									</button>
 							</div>
 
@@ -30,13 +30,13 @@
 							<div class="card-body border-bottom bg-light py-2">
 								<div class="row g-2 align-items-center">
 									<div class="col-auto">
-										<label class="form-label fw-bold mb-0" style="font-size: 12px;">Status:</label>
+										<label class="form-label fw-bold mb-0" style="font-size: 12px;"><%= __('table.status') %>:</label>
 										<select class="form-control form-select form-select-sm" id="filter_status" style="width: 150px; font-size: 12px;">
-											<option value="">All</option>
-											<option value="1">Available</option>
-											<option value="2">Occupied</option>
-											<option value="4">Reserved</option>
-											<option value="3">Not Available</option>
+											<option value=""><%= __('table.all') %></option>
+											<option value="1"><%= __('table.available') %></option>
+											<option value="2"><%= __('table.occupied') %></option>
+											<option value="4"><%= __('table.reserved') %></option>
+											<option value="3"><%= __('table.not_available') %></option>
 										</select>
 									</div>
 								</div>
@@ -46,11 +46,11 @@
 								<table id="restaurantTableTable" class="table  nowrap small-text" style="width:100%">
 									<thead>
 										<tr>
-											<th class="d-none d-sm-table-cell">Table Number</th>
-											<th class="d-none d-sm-table-cell">Capacity</th>
-											<th class="d-none d-sm-table-cell">Status</th>
-											<th class="d-none d-sm-table-cell">Date Created</th>
-											<th class="d-none d-sm-table-cell">Action</th>
+											<th class="d-none d-sm-table-cell"><%= __('table.table_number') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('table.capacity') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('table.status') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('table.date_created') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('table.action') %></th>
 										</tr>
 									</thead>
 									<tbody>
@@ -74,6 +74,36 @@
 			<!-- FOOTER -->
 			<!-- ============================================ -->
 			<%- include ('../partials/footer'); -%>
+
+			<!-- Translations passed via data attribute to avoid linter issues -->
+			<div id="manageTableTranslations" 
+				data-success="<%- __('table.success') %>"
+				data-error="<%- __('table.error') %>"
+				data-table-created-successfully="<%- __('table.table_created_successfully') %>"
+				data-table-updated-successfully="<%- __('table.table_updated_successfully') %>"
+				data-table-deleted-successfully="<%- __('table.table_deleted_successfully') %>"
+				data-failed-to-create-table="<%- __('table.failed_to_create_table') %>"
+				data-failed-to-update-table="<%- __('table.failed_to_update_table') %>"
+				data-failed-to-delete-table="<%- __('table.failed_to_delete_table') %>"
+				data-failed-to-load-tables="<%- __('table.failed_to_load_tables') %>"
+				data-delete-confirmation-title="<%- __('table.delete_confirmation_title') %>"
+				data-delete-confirmation-text="<%- __('table.delete_confirmation_text') %>"
+				data-delete-confirm-button="<%- __('table.delete_confirm_button') %>"
+				data-all="<%- __('table.all') %>"
+				data-available="<%- __('table.available') %>"
+				data-occupied="<%- __('table.occupied') %>"
+				data-reserved="<%- __('table.reserved') %>"
+				data-not-available="<%- __('table.not_available') %>"
+				data-unknown="<%- __('table.unknown') %>"
+				data-pagination-showing="<%- __('table.pagination.showing') %>"
+				data-pagination-to="<%- __('table.pagination.to') %>"
+				data-pagination-of="<%- __('table.pagination.of') %>"
+				data-pagination-entries="<%- __('table.pagination.entries') %>"
+				data-pagination-previous="<%- __('table.pagination.previous') %>"
+				data-pagination-next="<%- __('table.pagination.next') %>"
+				data-pagination-search="<%- __('table.pagination.search') %>"
+				data-pagination-search-placeholder="<%- __('table.pagination.search_placeholder') %>"
+				style="display: none;"></div>
 
 			<!-- ============================================ -->
 			<!-- SCRIPTS -->

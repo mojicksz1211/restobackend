@@ -21,7 +21,7 @@
 						</div>
 					</h3>
 					<button type="button" class="btn btn-primary btn-sm" onclick="openNewOrderModal()">
-						<i class="fa fa-plus me-1" aria-hidden="true"></i> New Order
+						<i class="fa fa-plus me-1" aria-hidden="true"></i> <%= __('orders.new_order') %>
 					</button>
 				</div>
 				<div class="card-body">
@@ -29,18 +29,18 @@
 						<table id="ordersTable" class="table table-hover small-text" style="width:100%">
 							<thead>
 								<tr>
-									<th>Order #</th>
-									<th>Table</th>
-									<th>Type</th>
-									<th>Status</th>
-									<th>Subtotal</th>
-									<th>Tax</th>
-									<th>Service</th>
-									<th>Discount</th>
-									<th>Grand Total</th>
-									<th>Date</th>
-									<th>Encoded By</th>
-									<th>Actions</th>
+									<th><%= __('orders.order_no') %></th>
+									<th><%= __('orders.table') %></th>
+									<th><%= __('orders.type') %></th>
+									<th><%= __('orders.status') %></th>
+									<th><%= __('orders.subtotal') %></th>
+									<th><%= __('orders.tax') %></th>
+									<th><%= __('orders.service') %></th>
+									<th><%= __('orders.discount') %></th>
+									<th><%= __('orders.grand_total') %></th>
+									<th><%= __('orders.date') %></th>
+									<th><%= __('orders.encoded_by') %></th>
+									<th><%= __('orders.actions') %></th>
 								</tr>
 							</thead>
 							<tbody></tbody>
@@ -58,64 +58,64 @@
 		<div class="modal-content">
 			<form id="new_order_form">
 				<div class="modal-header">
-					<h5 class="modal-title" id="newOrderLabel">New Order</h5>
+					<h5 class="modal-title" id="newOrderLabel"><%= __('orders.new_order') %></h5>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<div class="row g-3">
 						<div class="col-md-4">
-							<label class="form-label">Order #</label>
+							<label class="form-label"><%= __('orders.order_no') %></label>
 							<input type="text" class="form-control" id="new_order_no" required>
 						</div>
 						<div class="col-md-4">
-							<label class="form-label">Table</label>
+							<label class="form-label"><%= __('orders.table') %></label>
 							<select class="form-control" id="new_order_table_id">
-								<option value="">Select table</option>
+								<option value=""><%= __('orders.select_table') %></option>
 							</select>
 						</div>
 						<div class="col-md-4">
-							<label class="form-label">Order Type</label>
+							<label class="form-label"><%= __('orders.order_type') %></label>
 							<select class="form-control" id="new_order_type">
-								<option value="DINE_IN">Dine In</option>
-								<option value="TAKE_OUT">Take Out</option>
-								<option value="DELIVERY">Delivery</option>
+								<option value="DINE_IN"><%= __('orders.dine_in') %></option>
+								<option value="TAKE_OUT"><%= __('orders.take_out') %></option>
+								<option value="DELIVERY"><%= __('orders.delivery') %></option>
 							</select>
 						</div>
 						
 						<div class="col-md-2">
-							<label class="form-label">Subtotal</label>
+							<label class="form-label"><%= __('orders.subtotal') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="new_order_subtotal" data-prefix="new" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Tax</label>
+							<label class="form-label"><%= __('orders.tax') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="new_order_tax" data-prefix="new" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Service</label>
+							<label class="form-label"><%= __('orders.service') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="new_order_service" data-prefix="new" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Discount</label>
+							<label class="form-label"><%= __('orders.discount') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="new_order_discount" data-prefix="new" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Grand Total</label>
+							<label class="form-label"><%= __('orders.grand_total') %></label>
 							<input type="number" step="0.01" class="form-control" id="new_order_grand_total" value="0.00" readonly>
 						</div>
 						<div class="col-12">
-							<label class="form-label mt-2">Add Menu Item</label>
+							<label class="form-label mt-2"><%= __('orders.add_menu_item') %></label>
 							<div class="d-flex gap-2 align-items-end">
 								<div class="flex-grow-1">
 									<select class="form-control" id="new_order_menu_id">
-										<option value="">Select menu item</option>
+										<option value=""><%= __('orders.select_menu_item') %></option>
 									</select>
 								</div>
 								<div class="col-2">
-									<label class="form-label d-none">Qty</label>
+									<label class="form-label d-none"><%= __('orders.qty') %></label>
 									<input type="number" min="1" class="form-control" id="new_order_menu_qty" value="1">
 								</div>
 								<div class="col-3">
-									<label class="form-label d-none">Unit Price</label>
+									<label class="form-label d-none"><%= __('orders.unit_price') %></label>
 									<input type="text" class="form-control" id="new_order_menu_price" readonly>
 								</div>
 								<button type="button" class="btn btn-outline-primary h-100" onclick="addOrderItem('new')">
@@ -128,10 +128,10 @@
 								<table class="table table-sm table-bordered small-text" id="new_order_items_table">
 									<thead>
 										<tr>
-											<th>Item</th>
-											<th>Qty</th>
-											<th>Unit</th>
-											<th>Line Total</th>
+											<th><%= __('orders.item') %></th>
+											<th><%= __('orders.qty') %></th>
+											<th><%= __('orders.unit') %></th>
+											<th><%= __('orders.line_total') %></th>
 											<th></th>
 										</tr>
 									</thead>
@@ -142,8 +142,8 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-					<button type="submit" class="btn btn-primary">Save Order</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= __('orders.cancel') %></button>
+					<button type="submit" class="btn btn-primary"><%= __('orders.save_order') %></button>
 				</div>
 			</form>
 		</div>
@@ -157,72 +157,72 @@
 			<form id="edit_order_form">
 				<input type="hidden" id="edit_order_id">
 				<div class="modal-header">
-					<h5 class="modal-title" id="editOrderLabel">Edit Order</h5>
+					<h5 class="modal-title" id="editOrderLabel"><%= __('orders.edit_order') %></h5>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<div class="row g-3">
 						<div class="col-md-4">
-							<label class="form-label">Order #</label>
+							<label class="form-label"><%= __('orders.order_no') %></label>
 							<input type="text" class="form-control" id="edit_order_no" disabled>
 						</div>
 						<div class="col-md-4">
-							<label class="form-label">Table</label>
+							<label class="form-label"><%= __('orders.table') %></label>
 							<select class="form-control" id="edit_order_table_id">
-								<option value="">Select table</option>
+								<option value=""><%= __('orders.select_table') %></option>
 							</select>
 						</div>
 						<div class="col-md-4">
-							<label class="form-label">Order Type</label>
+							<label class="form-label"><%= __('orders.order_type') %></label>
 							<select class="form-control" id="edit_order_type">
-								<option value="DINE_IN">Dine In</option>
-								<option value="TAKE_OUT">Take Out</option>
-								<option value="DELIVERY">Delivery</option>
+								<option value="DINE_IN"><%= __('orders.dine_in') %></option>
+								<option value="TAKE_OUT"><%= __('orders.take_out') %></option>
+								<option value="DELIVERY"><%= __('orders.delivery') %></option>
 							</select>
 						</div>
 						<div class="col-md-4">
-							<label class="form-label">Status</label>
+							<label class="form-label"><%= __('orders.status') %></label>
 							<select class="form-control" id="edit_order_status">
-								<option value="3">Pending</option>
-								<option value="2">Confirmed</option>
-								<option value="1">Settled</option>
-								<option value="-1">Cancelled</option>
+								<option value="3"><%= __('orders.pending') %></option>
+								<option value="2"><%= __('orders.confirmed') %></option>
+								<option value="1"><%= __('orders.settled') %></option>
+								<option value="-1"><%= __('orders.cancelled') %></option>
 							</select>
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Subtotal</label>
+							<label class="form-label"><%= __('orders.subtotal') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="edit_order_subtotal" data-prefix="edit" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Tax</label>
+							<label class="form-label"><%= __('orders.tax') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="edit_order_tax" data-prefix="edit" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Service</label>
+							<label class="form-label"><%= __('orders.service') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="edit_order_service" data-prefix="edit" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Discount</label>
+							<label class="form-label"><%= __('orders.discount') %></label>
 							<input type="number" step="0.01" class="form-control order-total-field" id="edit_order_discount" data-prefix="edit" value="0.00">
 						</div>
 						<div class="col-md-2">
-							<label class="form-label">Grand Total</label>
+							<label class="form-label"><%= __('orders.grand_total') %></label>
 							<input type="number" step="0.01" class="form-control" id="edit_order_grand_total" value="0.00" readonly>
 						</div>
 						<div class="col-12">
-							<label class="form-label mt-2">Add Menu Item</label>
+							<label class="form-label mt-2"><%= __('orders.add_menu_item') %></label>
 							<div class="d-flex gap-2 align-items-end">
 								<div class="flex-grow-1">
 									<select class="form-control" id="edit_order_menu_id">
-										<option value="">Select menu item</option>
+										<option value=""><%= __('orders.select_menu_item') %></option>
 									</select>
 								</div>
 								<div class="col-2">
-									<label class="form-label d-none">Qty</label>
+									<label class="form-label d-none"><%= __('orders.qty') %></label>
 									<input type="number" min="1" class="form-control" id="edit_order_menu_qty" value="1">
 								</div>
 								<div class="col-3">
-									<label class="form-label d-none">Unit Price</label>
+									<label class="form-label d-none"><%= __('orders.unit_price') %></label>
 									<input type="text" class="form-control" id="edit_order_menu_price" readonly>
 								</div>
 								<button type="button" class="btn btn-outline-primary h-100" onclick="addOrderItem('edit')">
@@ -235,10 +235,10 @@
 								<table class="table table-sm table-bordered small-text" id="edit_order_items_table">
 									<thead>
 										<tr>
-											<th>Item</th>
-											<th>Qty</th>
-											<th>Unit</th>
-											<th>Line Total</th>
+											<th><%= __('orders.item') %></th>
+											<th><%= __('orders.qty') %></th>
+											<th><%= __('orders.unit') %></th>
+											<th><%= __('orders.line_total') %></th>
 											<th></th>
 										</tr>
 									</thead>
@@ -249,8 +249,8 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-					<button type="submit" class="btn btn-primary">Save Changes</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= __('orders.cancel') %></button>
+					<button type="submit" class="btn btn-primary"><%= __('orders.save_changes') %></button>
 				</div>
 			</form>
 		</div>
@@ -262,21 +262,21 @@
 	<div class="modal-dialog modal-xl">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h5 class="modal-title" id="orderItemsLabel">Order Items</h5>
+				<h5 class="modal-title" id="orderItemsLabel"><%= __('orders.order_items') %></h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
 					<table class="table table-bordered small-text" id="orderItemsTable">
 						<thead>
 							<tr>
-								<th>Menu Item</th>
-								<th>Qty</th>
-								<th>Unit Price</th>
-								<th>Line Total</th>
-								<th>Status</th>
-								<th>Remarks</th>
-								<th>Prepared By</th>
-								<th>Actions</th>
+								<th><%= __('orders.menu_item') %></th>
+								<th><%= __('orders.qty') %></th>
+								<th><%= __('orders.unit_price') %></th>
+								<th><%= __('orders.line_total') %></th>
+								<th><%= __('orders.status') %></th>
+								<th><%= __('orders.remarks') %></th>
+								<th><%= __('orders.prepared_by') %></th>
+								<th><%= __('orders.actions') %></th>
 							</tr>
 						</thead>
 						<tbody></tbody>
@@ -293,50 +293,50 @@
 			<form id="additional_order_form">
 				<input type="hidden" id="additional_order_id">
 				<div class="modal-header bg-success text-white">
-					<h5 class="modal-title" id="additionalOrderLabel">Additional Order for <span id="additional_order_no_display"></span></h5>
+					<h5 class="modal-title" id="additionalOrderLabel"><%= __('orders.additional_order_for') %> <span id="additional_order_no_display"></span></h5>
 					<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<div class="row g-3 mb-4">
 						<div class="col-12">
-							<label class="form-label fw-bold">Add New Menu Item</label>
+							<label class="form-label fw-bold"><%= __('orders.add_new_menu_item') %></label>
 							<div class="d-flex gap-2 align-items-end">
 								<div class="flex-grow-1">
 									<select class="form-control" id="additional_order_menu_id">
-										<option value="">Select menu item</option>
+										<option value=""><%= __('orders.select_menu_item') %></option>
 									</select>
 								</div>
 								<div class="col-2">
-									<label class="form-label d-none">Qty</label>
+									<label class="form-label d-none"><%= __('orders.qty') %></label>
 									<input type="number" min="1" class="form-control" id="additional_order_menu_qty" value="1">
 								</div>
 								<div class="col-2">
-									<label class="form-label d-none">Unit Price</label>
+									<label class="form-label d-none"><%= __('orders.unit_price') %></label>
 									<input type="text" class="form-control" id="additional_order_menu_price" readonly>
 								</div>
 								<button type="button" class="btn btn-success" onclick="addOrderItem('additional')">
-									<i class="fa fa-plus me-1"></i> Add
+									<i class="fa fa-plus me-1"></i> <%= __('orders.add') %>
 								</button>
 							</div>
 						</div>
 					</div>
 
-					<h6 class="border-bottom pb-2">Current & New Items</h6>
+					<h6 class="border-bottom pb-2"><%= __('orders.current_and_new_items') %></h6>
 					<div class="table-responsive">
 						<table class="table table-sm table-hover" id="additional_order_items_table">
 							<thead class="table-light">
 								<tr>
-									<th>Item Name</th>
-									<th class="text-center">Qty</th>
-									<th class="text-end">Unit Price</th>
-									<th class="text-end">Line Total</th>
-									<th class="text-center">Action</th>
+									<th><%= __('orders.item_name') %></th>
+									<th class="text-center"><%= __('orders.qty') %></th>
+									<th class="text-end"><%= __('orders.unit_price') %></th>
+									<th class="text-end"><%= __('orders.line_total') %></th>
+									<th class="text-center"><%= __('orders.actions') %></th>
 								</tr>
 							</thead>
 							<tbody></tbody>
 							<tfoot class="table-light fw-bold">
 								<tr>
-									<td colspan="3" class="text-end">Items Total:</td>
+									<td colspan="3" class="text-end"><%= __('orders.items_total') %></td>
 									<td class="text-end text-primary" id="additional_order_items_total_display">0.00</td>
 									<td></td>
 								</tr>
@@ -345,8 +345,8 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-					<button type="submit" class="btn btn-success">Save Additional Order</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= __('orders.cancel') %></button>
+					<button type="submit" class="btn btn-success"><%= __('orders.save_additional_order') %></button>
 				</div>
 			</form>
 		</div>
@@ -354,6 +354,56 @@
 </div>
 
 <%- include('../partials/footer') %>
+<!-- Translations passed via data attribute to avoid linter issues -->
+<div id="ordersPaginationTranslations" 
+	data-pagination-showing="<%- __('orders.pagination.showing') %>"
+	data-pagination-to="<%- __('orders.pagination.to') %>"
+	data-pagination-of="<%- __('orders.pagination.of') %>"
+	data-pagination-entries="<%- __('orders.pagination.entries') %>"
+	data-pagination-previous="<%- __('orders.pagination.previous') %>"
+	data-pagination-next="<%- __('orders.pagination.next') %>"
+	data-pagination-search="<%- __('orders.pagination.search') %>"
+	data-pagination-search-placeholder="<%- __('orders.pagination.search_placeholder') %>"
+	style="display: none;"></div>
+
+<!-- Order translations passed via data attributes to avoid linter issues -->
+<div id="orderTranslationsData" 
+	data-order-type-dine-in="<%- __('orders.dine_in') %>"
+	data-order-type-take-out="<%- __('orders.take_out') %>"
+	data-order-type-delivery="<%- __('orders.delivery') %>"
+	data-order-status-pending="<%- __('orders.pending') %>"
+	data-order-status-confirmed="<%- __('orders.confirmed') %>"
+	data-order-status-settled="<%- __('orders.settled') %>"
+	data-order-status-cancelled="<%- __('orders.cancelled') %>"
+	data-n-a="<%- __('orders.n_a') %>"
+	data-select-table="<%- __('orders.select_table') %>"
+	data-select-menu-item="<%- __('orders.select_menu_item') %>"
+	style="display: none;"></div>
+
+<script>
+	// Load translations from data attributes
+	(function() {
+		var transEl = document.getElementById('orderTranslationsData');
+		if (transEl) {
+			window.orderTranslations = {
+				orderTypes: {
+					DINE_IN: transEl.getAttribute('data-order-type-dine-in') || 'Dine In',
+					TAKE_OUT: transEl.getAttribute('data-order-type-take-out') || 'Take Out',
+					DELIVERY: transEl.getAttribute('data-order-type-delivery') || 'Delivery'
+				},
+				orderStatuses: {
+					3: transEl.getAttribute('data-order-status-pending') || 'Pending',
+					2: transEl.getAttribute('data-order-status-confirmed') || 'Confirmed',
+					1: transEl.getAttribute('data-order-status-settled') || 'Settled',
+					'-1': transEl.getAttribute('data-order-status-cancelled') || 'Cancelled'
+				},
+				n_a: transEl.getAttribute('data-n-a') || 'N/A',
+				select_table: transEl.getAttribute('data-select-table') || 'Select table',
+				select_menu_item: transEl.getAttribute('data-select-menu-item') || 'Select menu item'
+			};
+		}
+	})();
+</script>
 <script src="/assets/js/functions/manageOrders.js"></script>
 <style>
 	.card-body {

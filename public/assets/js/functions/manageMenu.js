@@ -10,17 +10,70 @@ var menu_id;
 var dataTable;
 var allMenuData = []; // Store all menu data for filtering
 
+// Load translations from data attributes
+var manageMenuTranslations = {};
 $(document).ready(function () {
+	// Load translations from data attributes
+	var $transEl = $('#manageMenuTranslations');
+	if ($transEl.length) {
+		manageMenuTranslations = {
+			available: $transEl.data('available') || 'Available',
+			not_available: $transEl.data('not-available') || 'Not Available',
+			all: $transEl.data('all') || 'All',
+			all_categories: $transEl.data('all-categories') || 'All Categories',
+			pagination: {
+				showing: $transEl.data('pagination-showing') || 'Showing',
+				to: $transEl.data('pagination-to') || 'to',
+				of: $transEl.data('pagination-of') || 'of',
+				entries: $transEl.data('pagination-entries') || 'entries',
+				previous: $transEl.data('pagination-previous') || 'Previous',
+				next: $transEl.data('pagination-next') || 'Next',
+				search: $transEl.data('pagination-search') || 'Search',
+				search_placeholder: $transEl.data('pagination-search-placeholder') || 'Search...'
+			}
+		};
+		
+		// Update filter dropdown options with translations
+		var $filterAvailability = $('#filter_availability');
+		if ($filterAvailability.length) {
+			$filterAvailability.html(`
+				<option value="">${manageMenuTranslations.all}</option>
+				<option value="1">${manageMenuTranslations.available}</option>
+				<option value="0">${manageMenuTranslations.not_available}</option>
+			`);
+		}
+	}
 	if ($.fn.DataTable.isDataTable('#menuTable')) {
 		$('#menuTable').DataTable().destroy();
 	}
+
+	// Get pagination translations
+	const paginationTrans = manageMenuTranslations.pagination || {};
+	const showingText = paginationTrans.showing || 'Showing';
+	const toText = paginationTrans.to || 'to';
+	const ofText = paginationTrans.of || 'of';
+	const entriesText = paginationTrans.entries || 'entries';
+	const searchText = paginationTrans.search || 'Search';
 
 	dataTable = $('#menuTable').DataTable({
 		columnDefs: [{
 			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
 				$(cell).addClass('text-center');
 			}
-		}]
+		}],
+		pageLength: 10,
+		language: {
+			lengthMenu: showingText + " _MENU_ " + entriesText,
+			info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+			infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+			infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+			search: searchText + ":",
+			searchPlaceholder: paginationTrans.search_placeholder || "Search...",
+			paginate: {
+				previous: paginationTrans.previous || 'Previous',
+				next: paginationTrans.next || 'Next'
+			}
+		}
 	});
 
 	// Load categories for dropdown
@@ -118,7 +171,7 @@ $(document).ready(function () {
 			method: 'GET',
 			success: function (data) {
 				var options = '<option></option>';
-				var filterOptions = '<option value="">All Categories</option>';
+				var filterOptions = `<option value="">${manageMenuTranslations.all_categories || 'All Categories'}</option>`;
 				data.forEach(function (category) {
 					options += `<option value="${category.IDNo}">${category.CATEGORY_NAME}</option>`;
 					filterOptions += `<option value="${category.IDNo}">${category.CATEGORY_NAME}</option>`;
@@ -273,9 +326,9 @@ function applyFilters() {
 
 		var available = '';
 		if (row.IS_AVAILABLE == 1) {
-			available = '<span class="css-blue">Available</span>';
+			available = `<span class="css-blue">${manageMenuTranslations.available || 'Available'}</span>`;
 		} else {
-			available = '<span class="css-red">Not Available</span>';
+			available = `<span class="css-red">${manageMenuTranslations.not_available || 'Not Available'}</span>`;
 		}
 
 		var price = parseFloat(row.MENU_PRICE || 0).toFixed(2);

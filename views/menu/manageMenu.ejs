@@ -18,14 +18,14 @@
 								
 								<h3 class="card-title"><div class="breadcrumb1 flat">
 									<a href="/dashboard" ><span class="fa fa-home"></span></a>
-									<a href="/manageMenu"class="active">Manage Menu</a>
+									<a href="/manageMenu"class="active"><%= __('menu.manage_menu') %></a>
 								</div></h3>
 									<div class="d-flex gap-2">
 										<a href="/manageCategory" class="btn btn-primary">
-											<i class="fa fa-tags" aria-hidden="true"></i> Manage Category
+											<i class="fa fa-tags" aria-hidden="true"></i> <%= __('menu.manage_category') %>
 										</a>
 										<button type="button" class="btn btn-primary" onclick="add_menu_modal()">
-											<i class="fa fa-plus" aria-hidden="true"></i> New Menu
+											<i class="fa fa-plus" aria-hidden="true"></i> <%= __('menu.new_menu') %>
 										</button>
 									</div>
 								
@@ -37,17 +37,17 @@
 							<div class="card-body border-bottom bg-light py-2">
 								<div class="row g-2 align-items-center">
 									<div class="col-auto">
-										<label class="form-label fw-bold mb-0" style="font-size: 12px;">Category:</label>
+										<label class="form-label fw-bold mb-0" style="font-size: 12px;"><%= __('menu.category') %>:</label>
 										<select class="form-control form-select form-select-sm" id="filter_category" style="width: 150px; font-size: 12px;">
-											<option value="">All Categories</option>
+											<option value=""><%= __('menu.all_categories') %></option>
 										</select>
 									</div>
 									<div class="col-auto">
-										<label class="form-label fw-bold mb-0" style="font-size: 12px;">Availability:</label>
+										<label class="form-label fw-bold mb-0" style="font-size: 12px;"><%= __('menu.availability') %>:</label>
 										<select class="form-control form-select form-select-sm" id="filter_availability" style="width: 120px; font-size: 12px;">
-											<option value="">All</option>
-											<option value="1">Available</option>
-											<option value="0">Not Available</option>
+											<option value=""><%= __('menu.all') %></option>
+											<option value="1"><%= __('menu.available') %></option>
+											<option value="0"><%= __('menu.not_available') %></option>
 										</select>
 									</div>
 								</div>
@@ -57,13 +57,13 @@
 								<table id="menuTable" class="table  nowrap small-text" style="width:100%">
 									<thead>
 										<tr>
-											<th class="d-none d-sm-table-cell">Image</th>
-											<th class="d-none d-sm-table-cell">Menu Name</th>
-											<th class="d-none d-sm-table-cell">Category</th>
-											<th class="d-none d-sm-table-cell">Description</th>
-											<th class="d-none d-sm-table-cell">Price</th>
-											<th class="d-none d-sm-table-cell">Available</th>
-											<th class="d-none d-sm-table-cell">Action</th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.image') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.menu_name') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.category') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.description') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.price') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.availability') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('menu.action') %></th>
 										</tr>
 									</thead>
 									<tbody>
@@ -88,6 +88,23 @@
 			<!-- ============================================ -->
 			<%- include ('../partials/footer'); -%>
 
+			<!-- Translations passed via data attribute to avoid linter issues -->
+			<div id="manageMenuTranslations" 
+				data-available="<%- __('menu.available') %>" 
+				data-not-available="<%- __('menu.not_available') %>"
+				data-all="<%- __('menu.all') %>"
+				data-all-categories="<%- __('menu.all_categories') %>"
+				data-select-option="<%- __('menu.select_option') %>"
+				data-pagination-showing="<%- __('menu.pagination.showing') %>"
+				data-pagination-to="<%- __('menu.pagination.to') %>"
+				data-pagination-of="<%- __('menu.pagination.of') %>"
+				data-pagination-entries="<%- __('menu.pagination.entries') %>"
+				data-pagination-previous="<%- __('menu.pagination.previous') %>"
+				data-pagination-next="<%- __('menu.pagination.next') %>"
+				data-pagination-search="<%- __('menu.pagination.search') %>"
+				data-pagination-search-placeholder="<%- __('menu.pagination.search_placeholder') %>"
+				style="display: none;"></div>
+
 			<!-- ============================================ -->
 			<!-- SCRIPTS -->
 			<!-- ============================================ -->
@@ -95,8 +112,9 @@
 						
 
 						<script>
+							var selectOptionPlaceholder = $('#manageMenuTranslations').data('select-option') || 'Select an option';
 							$('.js-select2').select2({
-								placeholder: 'Select an option',
+								placeholder: selectOptionPlaceholder,
 								dropdownParent: '#modal-new_menu'
 							});
 						</script>

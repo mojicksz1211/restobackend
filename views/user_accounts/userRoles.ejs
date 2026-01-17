@@ -48,8 +48,20 @@
 
 							<%- include ('../partials/footer'); -%>
 
-
-								<script src="/assets/js/functions/userRoles.js"></script>
+					<!-- Translations passed via data attribute to avoid linter issues -->
+					<div id="userRolesTranslations" 
+						data-active="<%- __('user_roles.active') %>" 
+						data-inactive="<%- __('user_roles.inactive') %>"
+						data-pagination-showing="<%- __('user_roles.pagination.showing') %>"
+						data-pagination-to="<%- __('user_roles.pagination.to') %>"
+						data-pagination-of="<%- __('user_roles.pagination.of') %>"
+						data-pagination-entries="<%- __('user_roles.pagination.entries') %>"
+						data-pagination-previous="<%- __('user_roles.pagination.previous') %>"
+						data-pagination-next="<%- __('user_roles.pagination.next') %>"
+						data-pagination-search="<%- __('user_roles.pagination.search') %>"
+						data-pagination-search-placeholder="<%- __('user_roles.pagination.search_placeholder') %>"
+						style="display: none;"></div>
+					<script src="/assets/js/functions/userRoles.js"></script>
 								<style>
 									.card-body {
   overflow-x: auto;
