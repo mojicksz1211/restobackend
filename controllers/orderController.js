@@ -160,6 +160,7 @@ class OrderController {
 				order_id: id,
 				order_no: updatedOrder.ORDER_NO,
 				table_id: updatedOrder.TABLE_ID,
+				order_type: updatedOrder.ORDER_TYPE,
 				status: updatedOrder.STATUS,
 				grand_total: updatedOrder.GRAND_TOTAL,
 				items: orderItems

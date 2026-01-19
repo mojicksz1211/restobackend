@@ -8,6 +8,8 @@
 const BillingModel = require('../models/billingModel');
 const OrderModel = require('../models/orderModel');
 const TableModel = require('../models/tableModel');
+const OrderItemsModel = require('../models/orderItemsModel');
+const socketService = require('../utils/socketService');
 
 class BillingController {
 	static showPage(req, res) {
@@ -114,6 +116,19 @@ class BillingController {
 					// PARTIAL PAID: Mark Order as CONFIRMED (2)
 					await OrderModel.updateStatus(id, 2, req.session.user_id);
 				}
+
+				// Emit socket event for order status update
+				const updatedOrder = await OrderModel.getById(id);
+				const orderItems = await OrderItemsModel.getByOrderId(id);
+				socketService.emitOrderUpdate(id, {
+					order_id: id,
+					order_no: updatedOrder.ORDER_NO,
+					table_id: updatedOrder.TABLE_ID,
+					order_type: updatedOrder.ORDER_TYPE,
+					status: updatedOrder.STATUS,
+					grand_total: updatedOrder.GRAND_TOTAL,
+					items: orderItems
+				});
 			}
 
 			res.json({ success: true, status: newStatus });
