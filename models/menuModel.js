@@ -28,7 +28,7 @@ class MenuModel {
 			FROM menu m
 			LEFT JOIN categories c ON m.CATEGORY_ID = c.IDNo
 			WHERE m.ACTIVE = 1
-			ORDER BY m.IDNo DESC
+			ORDER BY m.IDNo ASC
 		`;
 		const [rows] = await pool.execute(query);
 		return rows;
@@ -177,7 +177,7 @@ class MenuModel {
 			params.push(categoryId);
 		}
 		
-		query += ` ORDER BY m.IDNo DESC`;
+		query += ` ORDER BY m.IDNo ASC`;
 		
 		const [rows] = await pool.execute(query, params);
 		return rows;

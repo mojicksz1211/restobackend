@@ -22,7 +22,7 @@ class CategoryModel {
 				EDITED_DT
 			FROM categories
 			WHERE ACTIVE = 1
-			ORDER BY IDNo DESC
+			ORDER BY IDNo ASC
 		`;
 		const [rows] = await pool.execute(query);
 		return rows;
