@@ -292,7 +292,7 @@
 		<div class="modal-content">
 			<form id="additional_order_form">
 				<input type="hidden" id="additional_order_id">
-				<div class="modal-header bg-success text-white">
+				<div class="modal-header bg-primary text-white">
 					<h5 class="modal-title" id="additionalOrderLabel"><%= __('orders.additional_order_for') %> <span id="additional_order_no_display"></span></h5>
 					<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
@@ -314,7 +314,7 @@
 									<label class="form-label d-none"><%= __('orders.unit_price') %></label>
 									<input type="text" class="form-control" id="additional_order_menu_price" readonly>
 								</div>
-								<button type="button" class="btn btn-success" onclick="addOrderItem('additional')">
+								<button type="button" class="btn btn-primary" onclick="addOrderItem('additional')">
 									<i class="fa fa-plus me-1"></i> <%= __('orders.add') %>
 								</button>
 							</div>
@@ -323,7 +323,7 @@
 
 					<h6 class="border-bottom pb-2"><%= __('orders.current_and_new_items') %></h6>
 					<div class="table-responsive">
-						<table class="table table-sm table-hover" id="additional_order_items_table">
+						<table class="table table-sm table-hover table-bordered small-text" id="additional_order_items_table">
 							<thead class="table-light">
 								<tr>
 									<th><%= __('orders.item_name') %></th>
@@ -346,7 +346,7 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= __('orders.cancel') %></button>
-					<button type="submit" class="btn btn-success"><%= __('orders.save_additional_order') %></button>
+					<button type="submit" class="btn btn-primary"><%= __('orders.save_additional_order') %></button>
 				</div>
 			</form>
 		</div>

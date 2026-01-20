@@ -124,6 +124,11 @@ $(document).ready(function () {
 			}
 		});
 	});
+
+	// Reset readonly state when modal closes
+	$('#modal-payment').on('hidden.bs.modal', function () {
+		$('#amount_paid').prop('readonly', false);
+	});
 });
 
 function loadBillingData() {
@@ -217,7 +222,8 @@ function openPaymentModal(orderId, orderNo, amountDue, amountPaid, method, statu
 	$('#display_balance').text(formatCurrency(balance));
 	
 	$('#payment_method').val(method || 'CASH');
-	$('#amount_paid').val(''); // I-reset para input ng bayad NGAYON
+	$('#amount_paid').val(balance.toFixed(2)); // Auto-fill with balance amount
+	$('#amount_paid').prop('readonly', true); // Make it read-only since it's automatic
 	$('#payment_ref').val('');
 	
 	$('#modal-payment').modal('show');

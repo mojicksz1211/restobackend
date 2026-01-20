@@ -377,17 +377,30 @@ function renderOrderItems(prefix) {
 	}
 
 	data.forEach((item, index) => {
+		// For additional order items with status = 1 (READY), show "Served" badge instead of delete button
+		let actionCell = '';
+		if (prefix === 'additional' && item.status === 1) {
+			actionCell = '<span class="badge bg-success">Served</span>';
+		} else {
+			actionCell = `
+				<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem('${prefix}', ${index})">
+					<i class="fa fa-trash"></i>
+				</button>
+			`;
+		}
+		
+		// Apply alignment classes to match table headers
+		const qtyAlign = prefix === 'additional' ? 'text-center' : '';
+		const priceAlign = prefix === 'additional' ? 'text-end' : '';
+		const actionAlign = prefix === 'additional' ? 'text-center' : '';
+		
 		tbody.append(`
 			<tr>
 				<td>${item.menu_name}</td>
-				<td>${item.qty}</td>
-				<td>${formatCurrency(item.unit_price)}</td>
-				<td>${formatCurrency(item.line_total)}</td>
-				<td>
-					<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem('${prefix}', ${index})">
-						<i class="fa fa-trash"></i>
-					</button>
-				</td>
+				<td class="${qtyAlign}">${item.qty}</td>
+				<td class="${priceAlign}">${formatCurrency(item.unit_price)}</td>
+				<td class="${priceAlign}">${formatCurrency(item.line_total)}</td>
+				<td class="${actionAlign}">${actionCell}</td>
 			</tr>
 		`);
 	});
@@ -407,29 +420,29 @@ function renderActionButtons(order) {
 	let buttons = '';
 	
 	if (status === 3) {
-		// PENDING: Show Confirmation and Edit buttons
+		// PENDING: Show Confirmation and Edit buttons (theme primary)
 		buttons = `
-			<button type="button" class="btn btn-sm btn-success" onclick="confirmOrder(${order.IDNo})" title="Confirm Order">
+			<button type="button" class="btn btn-sm btn-primary" onclick="confirmOrder(${order.IDNo})" title="Confirm Order">
 				<i class="fa fa-check"></i> Confirmation
 			</button>
-			<button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditOrderModal(${order.IDNo})" title="Edit Order">
+			<button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditOrderModal(${order.IDNo})" title="Edit Order">
 				<i class="fa fa-pencil-alt"></i>
 			</button>
 		`;
 	} else if (status === 2) {
-		// CONFIRMED: Show View Items and Additional Order buttons
+		// CONFIRMED: Show View Items and Additional Order buttons (theme primary)
 		buttons = `
-			<button type="button" class="btn btn-sm btn-info" onclick="openOrderItemsModal(${order.IDNo})" title="View Items">
+			<button type="button" class="btn btn-sm btn-primary" onclick="openOrderItemsModal(${order.IDNo})" title="View Items">
 				<i class="fa fa-list"></i>
 			</button>
-			<button type="button" class="btn btn-sm btn-success" onclick="openAdditionalOrderModal(${order.IDNo}, '${order.ORDER_NO}')" title="Additional Order">
+			<button type="button" class="btn btn-sm btn-outline-primary" onclick="openAdditionalOrderModal(${order.IDNo}, '${order.ORDER_NO}')" title="Additional Order">
 				<i class="fa fa-plus-circle"></i>
 			</button>
 		`;
 	} else {
 		// Other statuses (1=SETTLED, -1=CANCELLED): Show View Items only
 		buttons = `
-			<button type="button" class="btn btn-sm btn-info" onclick="openOrderItemsModal(${order.IDNo})" title="View Items">
+			<button type="button" class="btn btn-sm btn-primary" onclick="openOrderItemsModal(${order.IDNo})" title="View Items">
 				<i class="fa fa-list"></i>
 			</button>
 		`;
@@ -644,7 +657,6 @@ function openOrderItemsModal(orderId) {
 								</button>
 								<ul class="dropdown-menu dropdown-menu-end">
 									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 3, ${orderId})">Pending</a></li>
-									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 2, ${orderId})">Preparing</a></li>
 									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 1, ${orderId})">Ready</a></li>
 								</ul>
 							</div>
