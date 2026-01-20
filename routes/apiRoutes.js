@@ -49,6 +49,12 @@ router.get("/menu", authenticateJWT, ApiController.getMenuItems);
 // Response: { success: true, data: [{ order_id, order_no, items: [...] }] }
 router.get("/orders", authenticateJWT, ApiController.getUserOrders);
 
+// GET - Get kitchen orders (all PENDING and CONFIRMED orders)
+// URL: /api/kitchen/orders
+// Headers: Authorization: Bearer <accessToken>
+// Response: { success: true, data: [{ order_id, order_no, table_id, table_number, status, items: [...] }] }
+router.get("/kitchen/orders", authenticateJWT, ApiController.getKitchenOrders);
+
 // POST - Create new order
 // URL: /api/orders
 // Headers: Authorization: Bearer <accessToken>

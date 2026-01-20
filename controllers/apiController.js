@@ -388,6 +388,74 @@ class ApiController {
 		}
 	}
 
+	// Get kitchen orders - all PENDING (3) and CONFIRMED (2) orders
+	static async getKitchenOrders(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+
+		try {
+			// Log request
+			console.log(`[${timestamp}] [API REQUEST] GET /api/kitchen/orders - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+
+			if (!user_id) {
+				return res.status(400).json({
+					success: false,
+					error: 'User ID is required'
+				});
+			}
+
+			// Get all PENDING (3) and CONFIRMED (2) orders for kitchen
+			const orders = await OrderModel.getKitchenOrders();
+
+			// Get order items for each order
+			const ordersWithItems = await Promise.all(
+				orders.map(async (order) => {
+					const items = await OrderItemsModel.getByOrderId(order.IDNo);
+					return {
+						order_id: order.IDNo,
+						order_no: order.ORDER_NO,
+						table_id: order.TABLE_ID,
+						table_number: order.TABLE_NUMBER || null,
+						order_type: order.ORDER_TYPE,
+						status: order.STATUS,
+						subtotal: parseFloat(order.SUBTOTAL || 0),
+						tax_amount: parseFloat(order.TAX_AMOUNT || 0),
+						service_charge: parseFloat(order.SERVICE_CHARGE || 0),
+						discount_amount: parseFloat(order.DISCOUNT_AMOUNT || 0),
+						grand_total: parseFloat(order.GRAND_TOTAL || 0),
+						encoded_dt: order.ENCODED_DT,
+						items: items.map(item => ({
+							menu_id: item.MENU_ID,
+							menu_name: item.MENU_NAME,
+							qty: parseFloat(item.QTY || 0),
+							unit_price: parseFloat(item.UNIT_PRICE || 0),
+							line_total: parseFloat(item.LINE_TOTAL || 0),
+							status: item.STATUS
+						}))
+					};
+				})
+			);
+
+			// Log success
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/kitchen/orders - User ID: ${user_id}, Orders returned: ${ordersWithItems.length} - IP: ${clientIp}`);
+
+			return res.json({
+				success: true,
+				data: ordersWithItems
+			});
+		} catch (error) {
+			// Log error
+			console.error(`[${timestamp}] [API ERROR] GET /api/kitchen/orders - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to fetch kitchen orders',
+				message: error.message
+			});
+		}
+	}
+
 	// Create order endpoint for mobile app
 	static async createOrder(req, res) {
 		const timestamp = new Date().toISOString();
