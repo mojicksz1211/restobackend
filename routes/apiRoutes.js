@@ -55,6 +55,11 @@ router.get("/orders", authenticateJWT, ApiController.getUserOrders);
 // Response: { success: true, data: [{ order_id, order_no, table_id, table_number, status, items: [...] }] }
 router.get("/kitchen/orders", authenticateJWT, ApiController.getKitchenOrders);
 
+// PATCH - Update kitchen order status
+// URL: /api/kitchen/orders/:order_id/status
+// Body: { status: number } (allowed: 3=PENDING, 2=PREPARING, 1=READY, -1=CANCELLED)
+router.patch("/kitchen/orders/:order_id/status", authenticateJWT, ApiController.updateKitchenOrderStatus);
+
 // POST - Create new order
 // URL: /api/orders
 // Headers: Authorization: Bearer <accessToken>

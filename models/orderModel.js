@@ -286,6 +286,19 @@ class OrderModel {
 		const [rows] = await pool.execute(query);
 		return rows;
 	}
+
+	// Update order status (used by kitchen to advance order)
+	static async updateStatus(orderId, status) {
+		const query = `
+			UPDATE orders 
+			SET STATUS = ? 
+			WHERE IDNo = ?
+			LIMIT 1
+		`;
+
+		const [result] = await pool.execute(query, [status, orderId]);
+		return result;
+	}
 }
 
 module.exports = OrderModel;

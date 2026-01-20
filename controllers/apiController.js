@@ -456,6 +456,63 @@ class ApiController {
 		}
 	}
 
+	// Update order status (Kitchen actions)
+	static async updateKitchenOrderStatus(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+		const { order_id } = req.params;
+		const { status } = req.body || {};
+
+		const allowedStatuses = [3, 2, 1, -1]; // Pending, Preparing, Ready, Cancelled
+
+		try {
+			console.log(`[${timestamp}] [API REQUEST] PATCH /api/kitchen/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
+
+			if (!user_id) {
+				return res.status(400).json({
+					success: false,
+					error: 'User ID is required'
+				});
+			}
+
+			const targetStatus = parseInt(status, 10);
+			if (!allowedStatuses.includes(targetStatus)) {
+				return res.status(400).json({
+					success: false,
+					error: 'Invalid status'
+				});
+			}
+
+			if (!order_id) {
+				return res.status(400).json({
+					success: false,
+					error: 'Order ID is required'
+				});
+			}
+
+			await OrderModel.updateStatus(order_id, targetStatus);
+
+			console.log(`[${timestamp}] [API SUCCESS] PATCH /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, New Status: ${targetStatus}, IP: ${clientIp}`);
+
+			return res.json({
+				success: true,
+				data: {
+					order_id: parseInt(order_id, 10),
+					status: targetStatus
+				}
+			});
+		} catch (error) {
+			console.error(`[${timestamp}] [API ERROR] PATCH /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to update order status',
+				message: error.message
+			});
+		}
+	}
+
 	// Create order endpoint for mobile app
 	static async createOrder(req, res) {
 		const timestamp = new Date().toISOString();
