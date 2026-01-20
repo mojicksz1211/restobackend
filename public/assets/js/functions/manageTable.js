@@ -107,6 +107,17 @@ var manageTableTranslations = {};
 	console.log('Calling reloadRestaurantTableData...');
 	reloadRestaurantTableData();
 
+	// Hide all tooltips when any modal opens to prevent overlap
+	$(document).on('show.bs.modal', '.modal', function() {
+		$('[data-bs-toggle="tooltip"]').tooltip('hide');
+		$('.tooltip').remove();
+	});
+
+	// Also hide tooltips on modal shown event
+	$(document).on('shown.bs.modal', '.modal', function() {
+		$('.tooltip').remove();
+	});
+
 	// Filter and search event listeners
 	$('#filter_status').on('change', function() {
 		currentPage = 1;
@@ -365,6 +376,10 @@ function renderTableCards() {
 							</div>
 						</div>
 						<div class="table-card-actions">
+							<button type="button" class="btn btn-sm btn-success" onclick="view_transaction_history(${row.IDNo}, '${tableNumber}')"
+								data-bs-toggle="tooltip" aria-label="Transaction History" data-bs-original-title="Transaction History">
+								<i class="fa fa-history"></i>
+							</button>
 							<button type="button" class="btn btn-sm btn-danger" onclick="delete_restaurant_table(${row.IDNo})"
 								data-bs-toggle="tooltip" aria-label="Delete" data-bs-original-title="Delete">
 								<i class="fa fa-trash"></i>
@@ -381,8 +396,11 @@ function renderTableCards() {
 			container.append(cardHtml);
 		});
 		
-		// Initialize tooltips
-		$('[data-bs-toggle="tooltip"]').tooltip();
+		// Initialize tooltips with proper disposal on hide
+		$('[data-bs-toggle="tooltip"]').tooltip({
+			trigger: 'hover',
+			boundary: 'viewport'
+		});
 	}
 }
 
@@ -477,11 +495,19 @@ function changePage(page) {
 
 // Open new restaurant table modal
 function add_restaurant_table_modal() {
+	// Hide all tooltips before opening modal
+	$('[data-bs-toggle="tooltip"]').tooltip('hide');
+	$('.tooltip').remove();
+	
 	$('#modal-new_restaurant_table').modal('show');
 }
 
 // Open edit restaurant table modal with data
 function edit_restaurant_table(id, tableNumber, capacity, status) {
+	// Hide all tooltips before opening modal
+	$('[data-bs-toggle="tooltip"]').tooltip('hide');
+	$('.tooltip').remove();
+	
 	restaurant_table_id = id;
 	$('#edit_restaurant_table_id').val(id);
 	$('#edit_table_number').val(tableNumber || '');
@@ -525,6 +551,141 @@ function delete_restaurant_table(id) {
 						text: errorMsg,
 					});
 				}
+			});
+		}
+	});
+}
+
+// View transaction history for a table
+function view_transaction_history(tableId, tableNumber) {
+	// Hide all tooltips before opening modal to prevent overlap
+	$('[data-bs-toggle="tooltip"]').tooltip('hide');
+	$('.tooltip').remove(); // Remove any lingering tooltip elements
+	
+	// Set table number in modal header
+	$('#transaction_history_table_number').text(tableNumber || 'N/A');
+	
+	// Show modal - tooltips will be hidden by global event listener
+	$('#modal-transaction_history').modal('show');
+	
+	// Additional cleanup after a short delay to ensure tooltips are gone
+	setTimeout(function() {
+		$('.tooltip').remove();
+	}, 100);
+	
+	// Show loading state
+	$('#transaction_history_loading').show();
+	$('#transaction_history_empty').hide();
+	$('#transaction_history_content').hide();
+	
+	// Fetch transaction history
+	$.ajax({
+		url: '/restaurant_table/' + tableId + '/transactions',
+		method: 'GET',
+		success: function (transactions) {
+			$('#transaction_history_loading').hide();
+			
+			if (!transactions || transactions.length === 0) {
+				$('#transaction_history_empty').show();
+				return;
+			}
+			
+			// Display transactions
+			$('#transaction_history_content').show();
+			var tbody = $('#transaction_history_tbody');
+			tbody.empty();
+			
+			// Order status mapping
+			var orderStatuses = {
+				3: '<span class="badge bg-warning">Pending</span>',
+				2: '<span class="badge bg-info">Confirmed</span>',
+				1: '<span class="badge bg-success">Settled</span>',
+				'-1': '<span class="badge bg-danger">Cancelled</span>'
+			};
+			
+			// Order type mapping
+			var orderTypes = {
+				'DINE_IN': '<span class="badge bg-primary">Dine In</span>',
+				'TAKE_OUT': '<span class="badge bg-secondary">Take Out</span>',
+				'DELIVERY': '<span class="badge bg-info">Delivery</span>'
+			};
+			
+			// Calculate totals
+			var totalSubtotal = 0;
+			var totalTax = 0;
+			var totalService = 0;
+			var totalDiscount = 0;
+			var totalGrandTotal = 0;
+			
+			transactions.forEach(function (transaction) {
+				// Format date
+				var dateStr = 'N/A';
+				if (transaction.ENCODED_DT) {
+					var date = new Date(transaction.ENCODED_DT);
+					dateStr = date.toLocaleDateString('en-US', {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit'
+					});
+				}
+				
+				// Format amounts
+				var subtotal = parseFloat(transaction.SUBTOTAL || 0);
+				var tax = parseFloat(transaction.TAX_AMOUNT || 0);
+				var service = parseFloat(transaction.SERVICE_CHARGE || 0);
+				var discount = parseFloat(transaction.DISCOUNT_AMOUNT || 0);
+				var grandTotal = parseFloat(transaction.GRAND_TOTAL || 0);
+				
+				// Add to totals
+				totalSubtotal += subtotal;
+				totalTax += tax;
+				totalService += service;
+				totalDiscount += discount;
+				totalGrandTotal += grandTotal;
+				
+				// Get status badge
+				var statusBadge = orderStatuses[transaction.STATUS] || '<span class="badge bg-secondary">Unknown</span>';
+				
+				// Get order type badge
+				var orderTypeBadge = orderTypes[transaction.ORDER_TYPE] || transaction.ORDER_TYPE || 'N/A';
+				
+				// Get created by username
+				var createdBy = transaction.ENCODED_BY_USERNAME || 'N/A';
+				
+				var row = `
+					<tr>
+						<td><strong>${transaction.ORDER_NO || 'N/A'}</strong></td>
+						<td>${orderTypeBadge}</td>
+						<td>${statusBadge}</td>
+						<td>₱${subtotal.toFixed(2)}</td>
+						<td>₱${tax.toFixed(2)}</td>
+						<td>₱${service.toFixed(2)}</td>
+						<td>₱${discount.toFixed(2)}</td>
+						<td><strong>₱${grandTotal.toFixed(2)}</strong></td>
+						<td>${dateStr}</td>
+						<td>${createdBy}</td>
+					</tr>
+				`;
+				
+				tbody.append(row);
+			});
+			
+			// Update totals in footer
+			$('#total_subtotal').text('₱' + totalSubtotal.toFixed(2));
+			$('#total_tax').text('₱' + totalTax.toFixed(2));
+			$('#total_service').text('₱' + totalService.toFixed(2));
+			$('#total_discount').text('₱' + totalDiscount.toFixed(2));
+			$('#total_grand_total').text('₱' + totalGrandTotal.toFixed(2));
+		},
+		error: function (xhr, status, error) {
+			console.error('Error fetching transaction history:', error);
+			$('#transaction_history_loading').hide();
+			Swal.fire({
+				icon: "error",
+				title: "Error",
+				text: "Failed to load transaction history. Please try again.",
 			});
 		}
 	});

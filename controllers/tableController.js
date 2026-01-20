@@ -111,6 +111,18 @@ class TableController {
 			res.status(500).json({ error: 'Failed to delete restaurant table' });
 		}
 	}
+
+	// Get transaction history for a specific table
+	static async getTransactionHistory(req, res) {
+		try {
+			const { id } = req.params;
+			const transactions = await TableModel.getTransactionHistory(id);
+			res.json(transactions);
+		} catch (error) {
+			console.error('Error fetching transaction history:', error);
+			res.status(500).json({ error: 'Failed to fetch transaction history' });
+		}
+	}
 }
 
 module.exports = TableController;

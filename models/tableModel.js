@@ -96,6 +96,38 @@ class TableModel {
 		const [result] = await pool.execute(query, [status, id]);
 		return result.affectedRows > 0;
 	}
+
+	// Get transaction history for a specific table
+	static async getTransactionHistory(tableId) {
+		const query = `
+			SELECT 
+				o.IDNo,
+				o.ORDER_NO,
+				o.TABLE_ID,
+				o.ORDER_TYPE,
+				o.STATUS,
+				o.SUBTOTAL,
+				o.TAX_AMOUNT,
+				o.SERVICE_CHARGE,
+				o.DISCOUNT_AMOUNT,
+				o.GRAND_TOTAL,
+				o.ENCODED_DT,
+				o.ENCODED_BY,
+				o.EDITED_DT,
+				o.EDITED_BY,
+				t.TABLE_NUMBER,
+				u.USERNAME as ENCODED_BY_USERNAME,
+				u2.USERNAME as EDITED_BY_USERNAME
+			FROM orders o
+			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
+			LEFT JOIN user_info u ON u.IDNo = o.ENCODED_BY
+			LEFT JOIN user_info u2 ON u2.IDNo = o.EDITED_BY
+			WHERE o.TABLE_ID = ?
+			ORDER BY o.ENCODED_DT DESC
+		`;
+		const [rows] = await pool.execute(query, [tableId]);
+		return rows;
+	}
 }
 
 module.exports = TableModel;

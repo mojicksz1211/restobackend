@@ -79,6 +79,8 @@
 			<!-- ============================================ -->
 			<%- include ('../modals/table/newTable'); %>
 			<%- include ('../modals/table/editTable'); %>
+			<%- include ('../modals/table/transactionHistory'); %>
+			<%- include ('../modals/table/transactionHistory'); %>
 
 			<!-- ============================================ -->
 			<!-- FOOTER -->
@@ -345,6 +347,11 @@
 					border: none;
 				}
 
+				.table-card-actions .btn-success {
+					background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+					border: none;
+				}
+
 				.table-number-badge {
 					font-size: 20px;
 					font-weight: 700;
@@ -502,6 +509,75 @@
 					.table-card-body {
 						padding: 20px 16px;
 					}
+				}
+
+				/* Transaction History Modal Scroll Fix */
+				#modal-transaction_history .modal-body {
+					overflow-x: auto;
+					max-height: 70vh;
+				}
+
+				#modal-transaction_history .table-responsive {
+					overflow-x: auto;
+					-webkit-overflow-scrolling: touch;
+					display: block;
+					width: 100%;
+				}
+
+				#modal-transaction_history table {
+					min-width: 800px;
+					width: 100%;
+				}
+
+				/* Custom Scrollbar Styling - #DB5363 */
+				#modal-transaction_history .modal-body::-webkit-scrollbar,
+				#modal-transaction_history .table-responsive::-webkit-scrollbar {
+					width: 12px;
+					height: 12px;
+				}
+
+				#modal-transaction_history .modal-body::-webkit-scrollbar-track,
+				#modal-transaction_history .table-responsive::-webkit-scrollbar-track {
+					background: #f1f1f1;
+					border-radius: 10px;
+				}
+
+				#modal-transaction_history .modal-body::-webkit-scrollbar-thumb,
+				#modal-transaction_history .table-responsive::-webkit-scrollbar-thumb {
+					background: #DB5363;
+					border-radius: 10px;
+				}
+
+				#modal-transaction_history .modal-body::-webkit-scrollbar-thumb:hover,
+				#modal-transaction_history .table-responsive::-webkit-scrollbar-thumb:hover {
+					background: #C94454;
+				}
+
+				/* Firefox Scrollbar */
+				#modal-transaction_history .modal-body,
+				#modal-transaction_history .table-responsive {
+					scrollbar-width: thin;
+					scrollbar-color: #DB5363 #f1f1f1;
+				}
+
+				/* Fix tooltip overlap with modal */
+				.modal.show ~ .tooltip,
+				.modal.show .tooltip {
+					display: none !important;
+					visibility: hidden !important;
+					opacity: 0 !important;
+				}
+
+				.tooltip {
+					z-index: 9999;
+				}
+
+				.modal {
+					z-index: 1050;
+				}
+
+				.modal-backdrop {
+					z-index: 1040;
 				}
 			</style>
 

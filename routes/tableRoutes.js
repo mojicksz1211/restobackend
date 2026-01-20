@@ -20,6 +20,9 @@ router.get("/manageTable", checkSession, TableController.showPage);
 // GET - Fetch all restaurant tables (for DataTables)
 router.get("/restaurant_tables", checkSession, TableController.getAll);
 
+// GET - Get transaction history for a table
+router.get("/restaurant_table/:id/transactions", checkSession, TableController.getTransactionHistory);
+
 // ============================================
 // POST ROUTES
 // ============================================
