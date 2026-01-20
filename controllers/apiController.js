@@ -43,13 +43,22 @@ class ApiController {
 				});
 			}
 
-			const query = 'SELECT * FROM user_info WHERE USERNAME = ? AND ACTIVE = 1';
+			// Join with user_role table to get role name
+			const query = `
+				SELECT 
+					user_info.*,
+					user_role.ROLE AS role
+				FROM user_info 
+				LEFT JOIN user_role ON user_role.IDno = user_info.PERMISSIONS
+				WHERE user_info.USERNAME = ? AND user_info.ACTIVE = 1
+			`;
 			const [results] = await pool.execute(query, [username]);
 
 			if (results.length > 0) {
 				const user = results[0];
 				const storedPassword = user.PASSWORD;
 				const salt = user.SALT;
+				const userRole = user.role || null; // Get role name from joined table
 
 				let isValid = false;
 				let isLegacy = false;
@@ -65,14 +74,23 @@ class ApiController {
 				}
 
 				if (isValid) {
-					// Check if user has PERMISSIONS = 2 (Tablet App only) - only allow PERMISSIONS === 2
-					if (user.PERMISSIONS !== 2) {
-						console.log(`[${timestamp}] [LOGIN FAILED] ${username} - Not a tablet app user (PERMISSIONS: ${user.PERMISSIONS})`);
+					// Check if user has PERMISSIONS = 2 (Tablet App) or PERMISSIONS = 16 (Kitchen)
+					// Allow both tablet app users and kitchen users to login via API
+					const allowedPermissions = [2, 16]; // 2 = Tablet App, 16 = Kitchen
+					const userPermissions = parseInt(user.PERMISSIONS, 10); // Convert to integer for comparison
+					
+					// Debug logging
+					console.log(`[${timestamp}] [LOGIN CHECK] ${username} - PERMISSIONS: ${user.PERMISSIONS} (type: ${typeof user.PERMISSIONS}), parsed: ${userPermissions}, allowed: [${allowedPermissions.join(', ')}]`);
+					
+					if (!allowedPermissions.includes(userPermissions)) {
+						console.log(`[${timestamp}] [LOGIN FAILED] ${username} - Not a tablet app user (PERMISSIONS: ${user.PERMISSIONS}, parsed: ${userPermissions}, allowed: [${allowedPermissions.join(', ')}])`);
 						return res.status(403).json({
 							success: false,
 							error: 'This account is for web admin only. Please use the web application to login.'
 						});
 					}
+					
+					console.log(`[${timestamp}] [LOGIN PERMISSION CHECK PASSED] ${username} - PERMISSIONS: ${userPermissions}`);
 
 					// Optional: auto-upgrade legacy MD5 password to Argon2
 					if (isLegacy) {
@@ -103,6 +121,7 @@ class ApiController {
 							firstname: user.FIRSTNAME,
 							lastname: user.LASTNAME,
 							permissions: user.PERMISSIONS,
+							role: userRole, // Include role name from user_role table
 							table_id: user.TABLE_ID || null
 						},
 						tokens: {
