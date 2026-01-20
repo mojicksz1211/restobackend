@@ -181,6 +181,83 @@ class OrderModel {
 		const [rows] = await pool.execute(query, [userId]);
 		return rows;
 	}
+
+	// Get orders by table ID (for mobile app sync after login/restart)
+	static async getByTableId(tableId) {
+		const query = `
+			SELECT 
+				o.IDNo,
+				o.ORDER_NO,
+				o.TABLE_ID,
+				o.ORDER_TYPE,
+				o.STATUS,
+				o.SUBTOTAL,
+				o.TAX_AMOUNT,
+				o.SERVICE_CHARGE,
+				o.DISCOUNT_AMOUNT,
+				o.GRAND_TOTAL,
+				o.ENCODED_DT,
+				o.ENCODED_BY
+			FROM orders o
+			WHERE o.TABLE_ID = ? AND o.STATUS != 1
+			ORDER BY o.ENCODED_DT DESC
+		`;
+
+		const [rows] = await pool.execute(query, [tableId]);
+		return rows;
+	}
+
+	// Get orders by user ID or table ID (for mobile app sync)
+	static async getByUserIdOrTableId(userId, tableId) {
+		let query, params;
+		
+		if (tableId != null) {
+			// Get orders by table_id (priority) or user_id, exclude SETTLED orders (STATUS = 1)
+			query = `
+				SELECT 
+					o.IDNo,
+					o.ORDER_NO,
+					o.TABLE_ID,
+					o.ORDER_TYPE,
+					o.STATUS,
+					o.SUBTOTAL,
+					o.TAX_AMOUNT,
+					o.SERVICE_CHARGE,
+					o.DISCOUNT_AMOUNT,
+					o.GRAND_TOTAL,
+					o.ENCODED_DT,
+					o.ENCODED_BY
+				FROM orders o
+				WHERE (o.TABLE_ID = ? OR o.ENCODED_BY = ?) AND o.STATUS != 1
+				ORDER BY o.ENCODED_DT DESC
+			`;
+			params = [tableId, userId];
+		} else {
+			// Get orders by user_id only, exclude SETTLED orders
+			query = `
+				SELECT 
+					o.IDNo,
+					o.ORDER_NO,
+					o.TABLE_ID,
+					o.ORDER_TYPE,
+					o.STATUS,
+					o.SUBTOTAL,
+					o.TAX_AMOUNT,
+					o.SERVICE_CHARGE,
+					o.DISCOUNT_AMOUNT,
+					o.GRAND_TOTAL,
+					o.ENCODED_DT,
+					o.ENCODED_BY
+				FROM orders o
+				WHERE o.ENCODED_BY = ? AND o.STATUS != 1
+				ORDER BY o.ENCODED_DT DESC
+			`;
+			params = [userId];
+		}
+
+		const [rows] = await pool.execute(query, params);
+		return rows;
+	}
 }
 
 module.exports = OrderModel;

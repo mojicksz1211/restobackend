@@ -325,10 +325,11 @@ class ApiController {
 		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
 		const userAgent = req.headers['user-agent'] || 'Unknown';
 		const user_id = req.user?.user_id;
+		const table_id = req.query.table_id ? parseInt(req.query.table_id) : null;
 
 		try {
 			// Log request
-			console.log(`[${timestamp}] [API REQUEST] GET /api/orders - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+			console.log(`[${timestamp}] [API REQUEST] GET /api/orders - IP: ${clientIp}, User ID: ${user_id}, Table ID: ${table_id || 'N/A'}, User-Agent: ${userAgent}`);
 
 			if (!user_id) {
 				return res.status(400).json({
@@ -337,8 +338,9 @@ class ApiController {
 				});
 			}
 
-			// Get orders by user ID
-			const orders = await OrderModel.getByUserId(user_id);
+			// Get orders by user ID or table ID (prioritize table_id if provided)
+			// This allows syncing orders after login/restart based on table assignment
+			const orders = await OrderModel.getByUserIdOrTableId(user_id, table_id);
 
 			// Get order items for each order
 			const ordersWithItems = await Promise.all(
@@ -369,7 +371,7 @@ class ApiController {
 			);
 
 			// Log success
-			console.log(`[${timestamp}] [API SUCCESS] GET /api/orders - User ID: ${user_id}, Orders returned: ${ordersWithItems.length} - IP: ${clientIp}`);
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/orders - User ID: ${user_id}, Table ID: ${table_id || 'N/A'}, Orders returned: ${ordersWithItems.length} - IP: ${clientIp}`);
 
 			return res.json({
 				success: true,
