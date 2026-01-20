@@ -409,17 +409,35 @@ class ApiController {
 			// Get all PENDING (3) and CONFIRMED (2) orders for kitchen
 			const orders = await OrderModel.getKitchenOrders();
 
-			// Get order items for each order
+			// Get order items for each order and calculate overall status from items
 			const ordersWithItems = await Promise.all(
 				orders.map(async (order) => {
 					const items = await OrderItemsModel.getByOrderId(order.IDNo);
+					
+					// Calculate overall order status from order_items
+					// Priority: If any item is PENDING (3), show PENDING
+					// If all items are READY (1), show READY
+					// Otherwise, show PREPARING (2)
+					let overallStatus = 1; // Default to READY
+					const hasPending = items.some(item => item.STATUS === 3);
+					const hasPreparing = items.some(item => item.STATUS === 2);
+					const allReady = items.every(item => item.STATUS === 1);
+					
+					if (hasPending) {
+						overallStatus = 3; // PENDING
+					} else if (hasPreparing) {
+						overallStatus = 2; // PREPARING
+					} else if (allReady) {
+						overallStatus = 1; // READY
+					}
+					
 					return {
 						order_id: order.IDNo,
 						order_no: order.ORDER_NO,
 						table_id: order.TABLE_ID,
 						table_number: order.TABLE_NUMBER || null,
 						order_type: order.ORDER_TYPE,
-						status: order.STATUS,
+						status: overallStatus, // Status calculated from order_items
 						subtotal: parseFloat(order.SUBTOTAL || 0),
 						tax_amount: parseFloat(order.TAX_AMOUNT || 0),
 						service_charge: parseFloat(order.SERVICE_CHARGE || 0),
@@ -427,6 +445,7 @@ class ApiController {
 						grand_total: parseFloat(order.GRAND_TOTAL || 0),
 						encoded_dt: order.ENCODED_DT,
 						items: items.map(item => ({
+							item_id: item.IDNo,
 							menu_id: item.MENU_ID,
 							menu_name: item.MENU_NAME,
 							qty: parseFloat(item.QTY || 0),
@@ -456,7 +475,7 @@ class ApiController {
 		}
 	}
 
-	// Update order status (Kitchen actions)
+	// Update order status (Kitchen actions) - updates all order_items status
 	static async updateKitchenOrderStatus(req, res) {
 		const timestamp = new Date().toISOString();
 		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
@@ -465,7 +484,7 @@ class ApiController {
 		const { order_id } = req.params;
 		const { status } = req.body || {};
 
-		const allowedStatuses = [3, 2, 1, -1]; // Pending, Preparing, Ready, Cancelled
+		const allowedStatuses = [3, 2, 1]; // Pending (3), Preparing (2), Ready (1)
 
 		try {
 			console.log(`[${timestamp}] [API REQUEST] PATCH /api/kitchen/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
@@ -481,7 +500,7 @@ class ApiController {
 			if (!allowedStatuses.includes(targetStatus)) {
 				return res.status(400).json({
 					success: false,
-					error: 'Invalid status'
+					error: 'Invalid status. Allowed: 3 (Pending), 2 (Preparing), 1 (Ready)'
 				});
 			}
 
@@ -492,15 +511,31 @@ class ApiController {
 				});
 			}
 
-			await OrderModel.updateStatus(order_id, targetStatus);
+			// Get all order items for this order
+			const items = await OrderItemsModel.getByOrderId(order_id);
+			
+			if (items.length === 0) {
+				return res.status(404).json({
+					success: false,
+					error: 'Order items not found'
+				});
+			}
 
-			console.log(`[${timestamp}] [API SUCCESS] PATCH /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, New Status: ${targetStatus}, IP: ${clientIp}`);
+			// Update status for all order items
+			await Promise.all(
+				items.map(item => 
+					OrderItemsModel.updateStatus(item.IDNo, targetStatus, user_id)
+				)
+			);
+
+			console.log(`[${timestamp}] [API SUCCESS] PATCH /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, New Status: ${targetStatus}, Items Updated: ${items.length}, IP: ${clientIp}`);
 
 			return res.json({
 				success: true,
 				data: {
 					order_id: parseInt(order_id, 10),
-					status: targetStatus
+					status: targetStatus,
+					items_updated: items.length
 				}
 			});
 		} catch (error) {

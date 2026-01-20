@@ -259,11 +259,11 @@ class OrderModel {
 		return rows;
 	}
 
-	// Get kitchen orders - all PENDING (3) and CONFIRMED (2) orders
-	// Kitchen needs to see all active orders, not filtered by user/table
+	// Get kitchen orders - orders that have items with PENDING (3) or PREPARING (2) status
+	// Kitchen needs to see all active orders based on order_items status, not orders.status
 	static async getKitchenOrders() {
 		const query = `
-			SELECT 
+			SELECT DISTINCT
 				o.IDNo,
 				o.ORDER_NO,
 				o.TABLE_ID,
@@ -279,7 +279,8 @@ class OrderModel {
 				o.ENCODED_BY
 			FROM orders o
 			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
-			WHERE o.STATUS IN (3, 2)  -- PENDING (3) and CONFIRMED (2)
+			INNER JOIN order_items oi ON oi.ORDER_ID = o.IDNo
+			WHERE oi.STATUS IN (3, 2)  -- PENDING (3) or PREPARING (2) items
 			ORDER BY o.ENCODED_DT ASC  -- Oldest first (FIFO)
 		`;
 
