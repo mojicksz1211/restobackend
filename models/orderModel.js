@@ -258,6 +258,47 @@ class OrderModel {
 		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
+
+	// Get kitchen orders - all PENDING (3) and CONFIRMED (2) orders
+	// Kitchen needs to see all active orders, not filtered by user/table
+	static async getKitchenOrders() {
+		const query = `
+			SELECT 
+				o.IDNo,
+				o.ORDER_NO,
+				o.TABLE_ID,
+				t.TABLE_NUMBER,
+				o.ORDER_TYPE,
+				o.STATUS,
+				o.SUBTOTAL,
+				o.TAX_AMOUNT,
+				o.SERVICE_CHARGE,
+				o.DISCOUNT_AMOUNT,
+				o.GRAND_TOTAL,
+				o.ENCODED_DT,
+				o.ENCODED_BY
+			FROM orders o
+			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
+			WHERE o.STATUS IN (3, 2)  -- PENDING (3) and CONFIRMED (2)
+			ORDER BY o.ENCODED_DT ASC  -- Oldest first (FIFO)
+		`;
+
+		const [rows] = await pool.execute(query);
+		return rows;
+	}
+
+	// Update order status (used by kitchen to advance order)
+	static async updateStatus(orderId, status) {
+		const query = `
+			UPDATE orders 
+			SET STATUS = ? 
+			WHERE IDNo = ?
+			LIMIT 1
+		`;
+
+		const [result] = await pool.execute(query, [status, orderId]);
+		return result;
+	}
 }
 
 module.exports = OrderModel;
