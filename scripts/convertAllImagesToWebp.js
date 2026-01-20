@@ -62,6 +62,14 @@ async function convertAllImagesToWebp() {
 				const webpFile = imageFile.replace(new RegExp(ext + '$', 'i'), '.webp');
 				const webpPath = path.join(uploadDir, webpFile);
 
+				// Check if file exists
+				try {
+					await fs.access(imagePath);
+				} catch {
+					console.log(`⚠️  File not found: ${imageFile}, skipping...`);
+					continue;
+				}
+
 				// Check if WebP already exists
 				const webpExists = await fs.access(webpPath).then(() => true).catch(() => false);
 
@@ -77,23 +85,49 @@ async function convertAllImagesToWebp() {
 					console.log(`⚠️  WebP already exists for ${imageFile}, skipping conversion but will update DB and delete original...`);
 				}
 
-				// Update database if this file is referenced (even if WebP already exists)
+				// Update database - check both exact filename and path-based matching
 				const menuIds = menuMap.get(imageFile);
 				if (menuIds && menuIds.length > 0) {
 					const newPath = `/uploads/menu/${webpFile}`;
 					for (const menuId of menuIds) {
 						await pool.execute(
-							'UPDATE menu SET MENU_IMG = ? WHERE IDNo = ? AND MENU_IMG LIKE ?',
-							[newPath, menuId, `%${imageFile}`]
+							'UPDATE menu SET MENU_IMG = ? WHERE IDNo = ? AND (MENU_IMG LIKE ? OR MENU_IMG = ?)',
+							[newPath, menuId, `%${imageFile}`, `/uploads/menu/${imageFile}`]
 						);
 						updatedDbCount++;
 					}
 					console.log(`  ✓ Updated ${menuIds.length} database record(s) to use WebP`);
+				} else {
+					// Also check if database has this file referenced with full path
+					const [menusWithPath] = await pool.execute(
+						'SELECT IDNo FROM menu WHERE MENU_IMG = ? OR MENU_IMG LIKE ?',
+						[`/uploads/menu/${imageFile}`, `%${imageFile}`]
+					);
+					if (menusWithPath.length > 0) {
+						const newPath = `/uploads/menu/${webpFile}`;
+						for (const menu of menusWithPath) {
+							await pool.execute(
+								'UPDATE menu SET MENU_IMG = ? WHERE IDNo = ?',
+								[newPath, menu.IDNo]
+							);
+							updatedDbCount++;
+						}
+						console.log(`  ✓ Updated ${menusWithPath.length} database record(s) to use WebP (found via path search)`);
+					}
 				}
 
-				// Delete original image file
-				await fs.unlink(imagePath);
-				console.log(`  ✓ Deleted original ${ext.toUpperCase()} file\n`);
+				// Delete original image file only if WebP exists (either converted or already existed)
+				const finalWebpExists = await fs.access(webpPath).then(() => true).catch(() => false);
+				if (finalWebpExists) {
+					try {
+						await fs.unlink(imagePath);
+						console.log(`  ✓ Deleted original ${ext.toUpperCase()} file\n`);
+					} catch (unlinkError) {
+						console.log(`  ⚠️  Could not delete original file: ${unlinkError.message}\n`);
+					}
+				} else {
+					console.log(`  ⚠️  WebP file not found after conversion, keeping original file\n`);
+				}
 
 			} catch (error) {
 				console.error(`  ✗ Error processing ${imageFile}:`, error.message);

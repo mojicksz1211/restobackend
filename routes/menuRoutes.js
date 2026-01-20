@@ -9,7 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { checkSession } = require('./authRoutes');
 const MenuController = require('../controllers/menuController');
-const upload = require('../middleware/upload');
+const { upload, convertToWebp } = require('../middleware/upload');
 
 // ============================================
 // GET ROUTES
@@ -28,15 +28,15 @@ router.get("/categories", checkSession, MenuController.getCategories);
 // POST ROUTES
 // ============================================
 
-// POST - Create new menu (with file upload)
-router.post("/menu", checkSession, upload.single('MENU_IMG'), MenuController.create);
+// POST - Create new menu (with file upload and WebP conversion)
+router.post("/menu", checkSession, upload.single('MENU_IMG'), convertToWebp, MenuController.create);
 
 // ============================================
 // PUT ROUTES
 // ============================================
 
-// PUT - Update menu (with optional file upload)
-router.put("/menu/:id", checkSession, upload.single('MENU_IMG'), MenuController.update);
+// PUT - Update menu (with optional file upload and WebP conversion)
+router.put("/menu/:id", checkSession, upload.single('MENU_IMG'), convertToWebp, MenuController.update);
 
 // ============================================
 // DELETE ROUTES
