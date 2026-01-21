@@ -9,10 +9,14 @@ const pool = require('../config/db');
 
 class MenuModel {
 	// Get all active menus with category name
-	static async getAll() {
-		const query = `
+	static async getAll(branchId = null) {
+		let query = `
 			SELECT 
 				m.IDNo,
+				m.BRANCH_ID,
+				b.BRANCH_NAME,
+				b.BRANCH_CODE,
+				b.BRANCH_NAME AS BRANCH_LABEL,
 				m.CATEGORY_ID,
 				c.CAT_NAME AS CATEGORY_NAME,
 				m.MENU_NAME,
@@ -27,10 +31,19 @@ class MenuModel {
 				m.EDITED_DT
 			FROM menu m
 			LEFT JOIN categories c ON m.CATEGORY_ID = c.IDNo
+			LEFT JOIN branches b ON b.IDNo = m.BRANCH_ID
 			WHERE m.ACTIVE = 1
-			ORDER BY m.IDNo ASC
 		`;
-		const [rows] = await pool.execute(query);
+
+		const params = [];
+		if (branchId) {
+			query += ` AND m.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY m.IDNo ASC`;
+
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 
@@ -47,6 +60,7 @@ class MenuModel {
 	// Create new menu
 	static async create(data) {
 		const {
+			BRANCH_ID,
 			CATEGORY_ID,
 			MENU_NAME,
 			MENU_DESCRIPTION,
@@ -59,6 +73,7 @@ class MenuModel {
 
 		const query = `
 			INSERT INTO menu (
+				BRANCH_ID,
 				CATEGORY_ID,
 				MENU_NAME,
 				MENU_DESCRIPTION,
@@ -68,10 +83,11 @@ class MenuModel {
 				ACTIVE,
 				ENCODED_BY,
 				ENCODED_DT
-			) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
 		`;
 
 		const [result] = await pool.execute(query, [
+			BRANCH_ID,
 			CATEGORY_ID || null,
 			MENU_NAME,
 			MENU_DESCRIPTION || null,
@@ -144,21 +160,24 @@ class MenuModel {
 
 	// Get all categories for dropdown
 	static async getCategories() {
-		const query = `
+		let query = `
 			SELECT IDNo, CAT_NAME AS CATEGORY_NAME 
 			FROM categories 
 			WHERE ACTIVE = 1 
-			ORDER BY CAT_NAME
 		`;
+
+		query += ` ORDER BY CAT_NAME`;
+
 		const [rows] = await pool.execute(query);
 		return rows;
 	}
 
 	// Get menus filtered by category (for API)
-	static async getByCategory(categoryId = null) {
+	static async getByCategory(categoryId = null, branchId = null) {
 		let query = `
 			SELECT 
 				m.IDNo,
+				m.BRANCH_ID,
 				m.CATEGORY_ID,
 				c.CAT_NAME AS CATEGORY_NAME,
 				m.MENU_NAME,
@@ -175,6 +194,11 @@ class MenuModel {
 		if (categoryId) {
 			query += ` AND m.CATEGORY_ID = ?`;
 			params.push(categoryId);
+		}
+
+		if (branchId) {
+			query += ` AND m.BRANCH_ID = ?`;
+			params.push(branchId);
 		}
 		
 		query += ` ORDER BY m.IDNo ASC`;

@@ -7,6 +7,12 @@
 </style>
 
 <aside class="sidebar sidebar-default sidebar-white sidebar-base navs-rounded-all " >
+  <%
+    // Some pages don't pass `permissions` to the view; guard against undefined
+    const __perm = (typeof permissions !== 'undefined' && permissions !== null)
+      ? parseInt(permissions)
+      : 0;
+  %>
   <div class="sidebar-header d-flex align-items-center justify-content-start">
       <a href="/dashboard" class="navbar-brand">
           
@@ -154,6 +160,21 @@
                       <span class="item-name"><%= __('sidebar.manage_table') %></span>
                   </a>
               </li>       
+
+              <% if (__perm === 1) { %>
+              <li class="nav-item">
+                  <a class="nav-link <%= currentPage === 'manageBranch' ? 'active' : '' %>" href="/branch/manage">
+                      <i class="icon">
+                          <svg class="icon-10" xmlns="http://www.w3.org/2000/svg" width="10" viewBox="0 0 24 24" fill="currentColor">
+                              <g>
+                                  <circle cx="12" cy="12" r="8" fill="currentColor"></circle>
+                              </g>
+                          </svg> 
+                      </i>
+                      <span class="item-name">Manage Branches</span>
+                  </a>
+              </li>
+              <% } %>
 
           <!-- Sidebar Menu End -->
           </ul>

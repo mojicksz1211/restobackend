@@ -59,6 +59,9 @@
 										<tr>
 											<th class="d-none d-sm-table-cell"><%= __('menu.image') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('menu.menu_name') %></th>
+											<% if (parseInt(permissions) === 1 && !branch_id) { %>
+											<th class="d-none d-sm-table-cell">Branch</th>
+											<% } %>
 											<th class="d-none d-sm-table-cell"><%= __('menu.category') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('menu.description') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('menu.price') %></th>
@@ -105,17 +108,27 @@
 				data-pagination-search-placeholder="<%- __('menu.pagination.search_placeholder') %>"
 				style="display: none;"></div>
 
+			<!-- Menu context for admin branch checks -->
+			<div id="menuContextData"
+				data-permissions="<%= (typeof permissions !== 'undefined' && permissions !== null) ? permissions : 0 %>"
+				data-branch-id="<%= (typeof branch_id !== 'undefined' && branch_id !== null) ? branch_id : '' %>"
+				style="display: none;"></div>
+
 			<!-- ============================================ -->
 			<!-- SCRIPTS -->
 			<!-- ============================================ -->
-			<script src="/assets/js/functions/manageMenu.js"></script>
+			<script src="/assets/js/functions/manageMenu.js?v=2026-01-21-branch"></script>
 						
 
 						<script>
 							var selectOptionPlaceholder = $('#manageMenuTranslations').data('select-option') || 'Select an option';
-							$('.js-select2').select2({
+							$('#category_id').select2({
 								placeholder: selectOptionPlaceholder,
 								dropdownParent: '#modal-new_menu'
+							});
+							$('#edit_category_id').select2({
+								placeholder: selectOptionPlaceholder,
+								dropdownParent: '#modal-edit_menu'
 							});
 						</script>
 

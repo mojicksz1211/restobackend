@@ -9,9 +9,42 @@
 var menu_id;
 var dataTable;
 var allMenuData = []; // Store all menu data for filtering
+var showBranchColumn = false;
 
 // Load translations from data attributes
 var manageMenuTranslations = {};
+
+function getMenuContext() {
+	const el = document.getElementById('menuContextData');
+	if (!el) {
+		return { permissions: 0, branchId: null };
+	}
+	const permissions = parseInt(el.getAttribute('data-permissions') || '0');
+	const branchId = el.getAttribute('data-branch-id') || null;
+	return { permissions, branchId };
+}
+
+function adminNeedsBranchSelection() {
+	const ctx = getMenuContext();
+	return ctx.permissions === 1 && !ctx.branchId;
+}
+
+function requireBranchSelection(message) {
+	if (!adminNeedsBranchSelection()) {
+		return false;
+	}
+	const text = message || 'Please select a specific branch in the top bar first.';
+	if (typeof Swal !== 'undefined') {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text
+		});
+	} else {
+		alert(text);
+	}
+	return true;
+}
 $(document).ready(function () {
 	// Load translations from data attributes
 	var $transEl = $('#manageMenuTranslations');
@@ -45,6 +78,13 @@ $(document).ready(function () {
 	}
 	if ($.fn.DataTable.isDataTable('#menuTable')) {
 		$('#menuTable').DataTable().destroy();
+	}
+
+	showBranchColumn = adminNeedsBranchSelection();
+	// Safety: if header already has Branch column, honor it even if context missing
+	const headerCount = $('#menuTable thead th').length;
+	if (headerCount >= 8) {
+		showBranchColumn = true;
 	}
 
 	// Get pagination translations
@@ -179,6 +219,8 @@ $(document).ready(function () {
 				$('#category_id').html(options);
 				$('#edit_category_id').html(options);
 				$('#filter_category').html(filterOptions);
+				$('#category_id').trigger('change.select2');
+				$('#edit_category_id').trigger('change.select2');
 			},
 			error: function (xhr, status, error) {
 				console.error('Error fetching categories:', error);
@@ -190,6 +232,9 @@ $(document).ready(function () {
 	// Edit menu form submit
 	$('#edit_menu').submit(function (event) {
 		event.preventDefault();
+		if (requireBranchSelection('Please select a specific branch in the top bar before updating a menu.')) {
+			return;
+		}
 
 		var formData = new FormData(this);
 		
@@ -227,6 +272,9 @@ $(document).ready(function () {
 	// Add new menu form submit
 	$('#add_new_menu').submit(function (event) {
 		event.preventDefault();
+		if (requireBranchSelection('Please select a specific branch in the top bar before creating a menu.')) {
+			return;
+		}
 
 		var formData = new FormData(this);
 		
@@ -353,25 +401,35 @@ function applyFilters() {
 			</button>
 		</div>`;
 
-		dataTable.row.add([
+		var branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || 'N/A';
+		var baseRow = [
 			image,
 			row.MENU_NAME,
+			showBranchColumn ? branchLabel : null,
 			row.CATEGORY_NAME || 'No Category',
 			description,
 			'₱' + price,
 			available,
 			btn
-		]).draw();
+		];
+		var rowData = showBranchColumn ? baseRow : baseRow.filter((_, idx) => idx !== 2);
+		dataTable.row.add(rowData).draw();
 	});
 }
 
 // Open new menu modal
 function add_menu_modal() {
+	if (requireBranchSelection('Please select a specific branch in the top bar before adding a menu.')) {
+		return;
+	}
 	$('#modal-new_menu').modal('show');
 }
 
 // Open edit menu modal with data
 function edit_menu(id, name, description, img, price, isAvailable, categoryId) {
+	if (requireBranchSelection('Please select a specific branch in the top bar before editing a menu.')) {
+		return;
+	}
 	menu_id = id;
 	$('#edit_menu_id').val(id);
 	$('#edit_menu_name').val(name || '');
@@ -417,6 +475,9 @@ function previewImage(input, previewId) {
 
 // Delete menu with confirmation
 function delete_menu(id) {
+	if (requireBranchSelection('Please select a specific branch in the top bar before deleting a menu.')) {
+		return;
+	}
 	Swal.fire({
 		title: 'Are you sure?',
 		text: "You won't be able to revert this!",

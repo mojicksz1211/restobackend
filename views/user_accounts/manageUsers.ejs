@@ -29,6 +29,9 @@
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.last_name') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.first_name') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.username') %></th>
+											<% if (permissions === 1) { %>
+											<th class="d-none d-sm-table-cell">Branch</th>
+											<% } %>
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.permission') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.status') %></th>
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.action') %></th>
@@ -52,6 +55,7 @@
 
 					<!-- Translations passed via data attribute to avoid linter issues -->
 					<div id="manageUsersTranslations" 
+						data-permissions="<%= (typeof permissions !== 'undefined' && permissions !== null) ? permissions : 0 %>"
 						data-active="<%- __('manage_users.active') %>" 
 						data-inactive="<%- __('manage_users.inactive') %>"
 						data-delete="<%- __('manage_users.delete') %>"
@@ -67,7 +71,7 @@
 						data-pagination-search="<%- __('manage_users.pagination.search') %>"
 						data-pagination-search-placeholder="<%- __('manage_users.pagination.search_placeholder') %>"
 						style="display: none;"></div>
-					<script src="/assets/js/functions/manageUsers.js"></script>
+					<script src="/assets/js/functions/manageUsers.js?v=2026-01-21-users-branch"></script>
 						
 
 						<script>

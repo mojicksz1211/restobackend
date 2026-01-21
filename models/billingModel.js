@@ -8,10 +8,14 @@
 const pool = require('../config/db');
 
 class BillingModel {
-	static async getAll() {
-		const query = `
+	static async getAll(branchId = null) {
+		let query = `
 			SELECT 
 				b.IDNo,
+				b.BRANCH_ID,
+				br.BRANCH_NAME,
+				br.BRANCH_CODE,
+				br.BRANCH_NAME AS BRANCH_LABEL,
 				b.ORDER_ID,
 				o.ORDER_NO,
 				b.PAYMENT_METHOD,
@@ -23,11 +27,19 @@ class BillingModel {
 				b.ENCODED_DT
 			FROM billing b
 			LEFT JOIN orders o ON o.IDNo = b.ORDER_ID
+			LEFT JOIN branches br ON br.IDNo = b.BRANCH_ID
 			WHERE o.STATUS IN (2, 1)
-			ORDER BY b.ENCODED_DT DESC
 		`;
 
-		const [rows] = await pool.execute(query);
+		const params = [];
+		if (branchId) {
+			query += ` AND b.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY b.ENCODED_DT DESC`;
+
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 
@@ -56,6 +68,7 @@ class BillingModel {
 
 	static async createForOrder(data) {
 		const {
+			branch_id,
 			order_id,
 			payment_method,
 			amount_due,
@@ -67,6 +80,7 @@ class BillingModel {
 
 		const query = `
 			INSERT INTO billing (
+				BRANCH_ID,
 				ORDER_ID,
 				PAYMENT_METHOD,
 				AMOUNT_DUE,
@@ -75,10 +89,11 @@ class BillingModel {
 				STATUS,
 				ENCODED_BY,
 				ENCODED_DT
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		await pool.execute(query, [
+			branch_id,
 			order_id,
 			payment_method || 'CASH',
 			amount_due || 0,

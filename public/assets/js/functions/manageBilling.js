@@ -14,6 +14,22 @@ var paymentStatusLabels = {
 };
 
 let billingDataTable;
+let showBranchColumn = false;
+
+function getBillingContext() {
+	const el = document.getElementById('billingContextData');
+	if (!el) {
+		return { permissions: 0, branchId: null };
+	}
+	const permissions = parseInt(el.getAttribute('data-permissions') || '0');
+	const branchId = el.getAttribute('data-branch-id') || null;
+	return { permissions, branchId };
+}
+
+function adminNeedsBranchSelection() {
+	const ctx = getBillingContext();
+	return ctx.permissions === 1 && !ctx.branchId;
+}
 
 $(document).ready(function () {
 	// Load translations from data attributes
@@ -60,6 +76,13 @@ $(document).ready(function () {
 		$('#billingTable').DataTable().destroy();
 	}
 
+	showBranchColumn = adminNeedsBranchSelection();
+	// Safety: if header already has Branch column, honor it even if context missing
+	const headerCount = $('#billingTable thead th').length;
+	if (headerCount >= 11) {
+		showBranchColumn = true;
+	}
+
 	// Get pagination translations
 	const paginationTrans = billingTranslations.pagination || {};
 	const showingText = paginationTrans.showing || 'Showing';
@@ -68,11 +91,16 @@ $(document).ready(function () {
 	const entriesText = paginationTrans.entries || 'entries';
 	const searchText = paginationTrans.search || 'Search';
 	
+	const statusIdx = showBranchColumn ? 6 : 5;
+	const dateIdx = showBranchColumn ? 7 : 6;
+	const paymentsIdx = showBranchColumn ? 9 : 8;
+	const actionsIdx = showBranchColumn ? 10 : 9;
+
 	billingDataTable = $('#billingTable').DataTable({
-		order: [[6, 'desc']],
+		order: [[dateIdx, 'desc']],
 		columnDefs: [
-			{ targets: [5, 6, 8, 9], className: 'text-center' },
-			{ targets: [8, 9], orderable: false }
+			{ targets: [statusIdx, dateIdx, paymentsIdx, actionsIdx], className: 'text-center' },
+			{ targets: [paymentsIdx, actionsIdx], orderable: false }
 		],
 		pageLength: 10,
 		language: {
@@ -94,6 +122,14 @@ $(document).ready(function () {
 	// Payment form submit
 	$('#payment_form').submit(function (event) {
 		event.preventDefault();
+		if (adminNeedsBranchSelection()) {
+			Swal.fire({
+				icon: 'warning',
+				title: 'Select a branch',
+				text: 'Please select a specific branch in the top bar before processing payment.'
+			});
+			return;
+		}
 		const orderId = $('#payment_order_id').val();
 		const payload = {
 			payment_method: $('#payment_method').val(),
@@ -153,18 +189,23 @@ function loadBillingData() {
 						</button>
 					`;
 
-				billingDataTable.row.add([
-					row.ORDER_NO || (billingTranslations.n_a || 'N/A'),
-					row.PAYMENT_METHOD || (billingTranslations.n_a || 'N/A'),
-					formatCurrency(row.AMOUNT_DUE),
-					formatCurrency(row.AMOUNT_PAID),
-					row.PAYMENT_REF || '-',
-					formatBillingStatus(row.STATUS),
-					formatDate(row.ENCODED_DT),
-					row.ENCODED_BY || '-',
-					paymentsBtn,
-					actions
-				]);
+			const n_a = billingTranslations.n_a || 'N/A';
+			const branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || n_a;
+			const baseRow = [
+				row.ORDER_NO || n_a,
+				showBranchColumn ? branchLabel : null,
+				row.PAYMENT_METHOD || n_a,
+				formatCurrency(row.AMOUNT_DUE),
+				formatCurrency(row.AMOUNT_PAID),
+				row.PAYMENT_REF || '-',
+				formatBillingStatus(row.STATUS),
+				formatDate(row.ENCODED_DT),
+				row.ENCODED_BY || '-',
+				paymentsBtn,
+				actions
+			];
+			const rowData = showBranchColumn ? baseRow : baseRow.filter((_, idx) => idx !== 1);
+			billingDataTable.row.add(rowData);
 			});
 
 			billingDataTable.draw();
@@ -214,6 +255,14 @@ function formatDate(value) {
 }
 
 function openPaymentModal(orderId, orderNo, amountDue, amountPaid, method, status, ref) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before opening payment.'
+		});
+		return;
+	}
 	$('#payment_order_id').val(orderId);
 	$('#payment_order_no').text(orderNo);
 	$('#display_amount_due').text(formatCurrency(amountDue));
@@ -230,6 +279,14 @@ function openPaymentModal(orderId, orderNo, amountDue, amountPaid, method, statu
 }
 
 function openPaymentHistoryModal(orderId, orderNo) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before viewing payments.'
+		});
+		return;
+	}
 	$('#payment_history_order_no').text(orderNo || '');
 	const $tbody = $('#paymentHistoryTable tbody');
 	$tbody.html(`<tr><td colspan="5" class="text-center text-muted">${billingTranslations.loading || 'Loading...'}</td></tr>`);

@@ -26,7 +26,9 @@ class BillingController {
 
 	static async getAll(req, res) {
 		try {
-			const billings = await BillingModel.getAll();
+			// Prioritize session branch_id
+			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
+			const billings = await BillingModel.getAll(branchId);
 			res.json(billings);
 		} catch (error) {
 			console.error('Error fetching billing records:', error);

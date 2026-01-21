@@ -30,6 +30,9 @@
 							<thead>
 								<tr>
 									<th><%= __('orders.order_no') %></th>
+											<% if (parseInt(permissions) === 1 && !branch_id) { %>
+											<th>Branch</th>
+											<% } %>
 									<th><%= __('orders.table') %></th>
 									<th><%= __('orders.type') %></th>
 									<th><%= __('orders.status') %></th>
@@ -378,6 +381,12 @@
 	data-n-a="<%- __('orders.n_a') %>"
 	data-select-table="<%- __('orders.select_table') %>"
 	data-select-menu-item="<%- __('orders.select_menu_item') %>"
+	style="display: none;"></div>
+
+<!-- Order context for admin branch checks -->
+<div id="orderContextData"
+	data-permissions="<%= (typeof permissions !== 'undefined' && permissions !== null) ? permissions : 0 %>"
+	data-branch-id="<%= (typeof branch_id !== 'undefined' && branch_id !== null) ? branch_id : '' %>"
 	style="display: none;"></div>
 
 <script>

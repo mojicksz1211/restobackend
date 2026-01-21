@@ -56,6 +56,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="mb-2 navbar-nav ms-auto align-items-center navbar-list mb-lg-0">
+
+            <!-- Branch Switcher (Dashboard) -->
+            <li class="nav-item d-none d-md-flex align-items-center me-2">
+              <select id="branchSwitcher" class="form-select form-select-sm" style="min-width: 190px; border-radius: 999px;">
+                <option value="" selected disabled>Loading branches...</option>
+              </select>
+            </li>
             
             <li class="nav-item dropdown">
               <!-- This anchor shows the current language flag -->
@@ -186,6 +193,85 @@
                 </div>
               </div>
             </li>
+
+            <script>
+              (function () {
+                const el = document.getElementById('branchSwitcher');
+                if (!el) return;
+
+                function loadOptions() {
+                  fetch('/branch/options', { credentials: 'include' })
+                    .then(r => {
+                      if (r.status === 401) {
+                        window.location.href = '/login';
+                        throw new Error('Unauthorized');
+                      }
+                      return r.json();
+                    })
+                    .then(data => {
+                      if (!data || !data.success) throw new Error((data && data.error) || 'Failed');
+
+                      const opts = data.options || [];
+                      el.innerHTML = '';
+
+                      if (!opts.length) {
+                        const o = document.createElement('option');
+                        o.value = '';
+                        o.textContent = 'No branches';
+                        el.appendChild(o);
+                        el.disabled = true;
+                        return;
+                      }
+
+                      opts.forEach(o => {
+                        const opt = document.createElement('option');
+                        opt.value = o.value;
+                        opt.textContent = o.label;
+                        el.appendChild(opt);
+                      });
+
+                      // current: 'ALL' or branch id string
+                      const current = data.current || opts[0].value;
+                      el.value = current;
+
+                      // Non-admin cannot switch (only one option anyway)
+                      if (parseInt(data.permissions) !== 1) {
+                        el.disabled = true;
+                      }
+                    })
+                    .catch(() => {
+                      el.innerHTML = '<option value=\"\" selected>Branch</option>';
+                      el.disabled = true;
+                    });
+                }
+
+                el.addEventListener('change', function () {
+                  const val = el.value;
+                  fetch('/branch/set-current', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ branch_id: val })
+                  })
+                    .then(r => {
+                      if (r.status === 401) {
+                        window.location.href = '/login';
+                        throw new Error('Unauthorized');
+                      }
+                      return r.json();
+                    })
+                    .then(data => {
+                      if (!data || !data.success) throw new Error();
+                      window.location.reload();
+                    })
+                    .catch(() => {
+                      // ignore
+                    });
+                });
+
+                loadOptions();
+              })();
+            </script>
             
             <li class="nav-item dropdown">
               <a href="#"  class="nav-link" id="notification-drop" data-bs-toggle="dropdown" >

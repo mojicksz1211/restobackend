@@ -49,6 +49,15 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const query = 'SELECT * FROM user_info WHERE USERNAME = ? AND ACTIVE = 1';
   
+    const safeRedirectWithError = (msg) => {
+      // connect-flash requires sessions; if session is missing, fallback to query param
+      if (req.session) {
+        req.flash('error', msg);
+        return res.redirect('/login');
+      }
+      return res.redirect('/login?error=' + encodeURIComponent(msg));
+    };
+  
     try {
       const [results] = await pool.execute(query, [username]);
   
@@ -73,8 +82,7 @@ router.post('/login', async (req, res) => {
         if (isValid) {
           // Check if user has PERMISSIONS = 2 (Tablet App only) - block web login
           if (user.PERMISSIONS === 2) {
-            req.flash('error', 'This account is for tablet app only. Please use the tablet application to login.');
-            return res.redirect('/login');
+            return safeRedirectWithError('This account is for tablet app only. Please use the tablet application to login.');
           }
 
           // Optional: auto-upgrade legacy MD5 password to Argon2
@@ -88,26 +96,71 @@ router.post('/login', async (req, res) => {
           req.session.lastname = user.LASTNAME;
           req.session.user_id = user.IDNo;
           req.session.permissions = user.PERMISSIONS;
+          // IMPORTANT:
+          // - Admin (PERMISSIONS = 1) should default to ALL branches (no branch filter)
+          // - Non-admin users must be assigned EXACTLY ONE branch
+          
+          // Get user's accessible branches
+          const UserBranchModel = require('../models/userBranchModel');
+          let userBranches = [];
+          try {
+            if (user.PERMISSIONS === 1) {
+              // Admin can access all branches
+              const [allBranches] = await pool.execute(
+                'SELECT IDNo, BRANCH_CODE, BRANCH_NAME FROM branches WHERE ACTIVE = 1'
+              );
+              userBranches = allBranches;
+            } else {
+              // Regular users get their assigned branches
+              userBranches = await UserBranchModel.getBranchesByUserId(user.IDNo);
+            }
+            
+            if (user.PERMISSIONS === 1) {
+              // Admin: default to ALL branches (no branch_id in session)
+              req.session.branch_id = null;
+              req.session.branch_name = null;
+              req.session.branch_code = null;
+              // Still store list for optional switching UI
+              req.session.available_branches = userBranches;
+            } else {
+              // Non-admin: MUST have exactly one branch
+              if (userBranches.length !== 1) {
+                const msg = 'This account is not assigned to a branch yet (or has multiple branches). Please contact admin.';
+                // Use query param so message still shows even if we destroy session
+                if (req.session) {
+                  return req.session.destroy(() => res.redirect('/login?error=' + encodeURIComponent(msg)));
+                }
+                return res.redirect('/login?error=' + encodeURIComponent(msg));
+              }
+              req.session.branch_id = userBranches[0].IDNo;
+              req.session.branch_name = userBranches[0].BRANCH_NAME;
+              req.session.branch_code = userBranches[0].BRANCH_CODE;
+            }
+          } catch (branchError) {
+            console.error('Error getting user branches during login:', branchError);
+            // Continue without branch selection - user can select later
+          }
+
+          if (!req.session) {
+            return res.redirect('/login?error=' + encodeURIComponent('Session error, please try again.'));
+          }
   
           req.session.save(err => {
             if (err) {
-              req.flash('error', 'Session error, please try again.');
-              return res.redirect('/login');
+              return safeRedirectWithError('Session error, please try again.');
             }
+            
             return res.redirect('/dashboard');
           });
         } else {
-          req.flash('error', 'Incorrect password');
-          return res.redirect('/login');
+          return safeRedirectWithError('Incorrect password');
         }
       } else {
-        req.flash('error', 'User not found or inactive');
-        return res.redirect('/login');
+        return safeRedirectWithError('User not found or inactive');
       }
     } catch (error) {
       console.error('Login error:', error);
-      req.flash('error', 'Internal server error');
-      return res.redirect('/login');
+      return safeRedirectWithError('Internal server error');
     }
   });
   
@@ -115,7 +168,7 @@ router.post('/login', async (req, res) => {
 router.post('/verify-password', async (req, res) => {
     try {
       const { password } = req.body;
-      const query = 'SELECT * FROM user_info WHERE PERMISSIONS = 11 AND ACTIVE = 1';
+      const query = 'SELECT * FROM user_info WHERE PERMISSIONS = 1 AND ACTIVE = 1';
       const [results] = await pool.execute(query);
       
       if (results.length > 0) {
@@ -143,8 +196,8 @@ router.post('/check-permission', (req, res) => {
     if (!req.session.permissions) {
         return res.status(401).json({ message: 'Not logged in' });
     }
-    if (req.session.permissions === 11) {
-        return res.json({ permissions: 11 });
+    if (req.session.permissions === 1) {
+        return res.json({ permissions: 1 });
     } else {
         return res.json({ permissions: req.session.permissions });
     }
@@ -174,7 +227,17 @@ router.post('/add_user_role', async (req, res) => {
 // GET USER ROLE
 router.get('/user_role_data', async (req, res) => {
 	try {
-		const [results] = await pool.execute('SELECT * FROM user_role WHERE ACTIVE = 1');
+		const perm = parseInt(req.session?.permissions);
+
+		let sql = 'SELECT * FROM user_role WHERE ACTIVE = 1';
+		const params = [];
+
+		// Non-admin users should NOT see the Administrator role in dropdowns
+		if (perm !== 1) {
+			sql += ' AND IDNo <> 1';
+		}
+
+		const [results] = await pool.execute(sql, params);
 		res.json(results);
 	} catch (error) {
 		console.error('Error fetching data:', error);
@@ -217,18 +280,72 @@ router.put('/user_role/remove/:id', async (req, res) => {
 // GET USERS
 router.get('/users', async (req, res) => {
 	try {
+		const perm = parseInt(req.session?.permissions);
+		const currentBranchId = req.session?.branch_id;
+
+		// Admin: see ALL users (or filter by selected branch if set)
+		if (perm === 1) {
+			let query = `
+				SELECT 
+					u.*,
+					ur.ROLE AS role,
+					u.IDNo AS user_id,
+					rt.TABLE_NUMBER AS TABLE_NUMBER,
+					CASE 
+						WHEN u.PERMISSIONS = 1 THEN 'ALL'
+						ELSE COALESCE(
+						NULLIF(GROUP_CONCAT(DISTINCT b.BRANCH_NAME ORDER BY b.BRANCH_NAME SEPARATOR ', '), ''),
+							'—'
+						)
+					END AS BRANCH_LABEL
+				FROM user_info u
+				JOIN user_role ur ON ur.IDno = u.PERMISSIONS
+				LEFT JOIN restaurant_tables rt ON rt.IDNo = u.TABLE_ID
+				LEFT JOIN user_branches ub ON ub.USER_ID = u.IDNo
+				LEFT JOIN branches b ON b.IDNo = ub.BRANCH_ID
+				WHERE u.ACTIVE = 1
+			`;
+
+			const params = [];
+			if (currentBranchId) {
+				query += ` AND ub.BRANCH_ID = ?`;
+				params.push(parseInt(currentBranchId));
+			}
+
+			query += `
+				GROUP BY u.IDNo
+				ORDER BY u.LASTNAME ASC, u.FIRSTNAME ASC
+			`;
+
+			const [results] = await pool.execute(query, params);
+			return res.json(results);
+		}
+
+		// Non-admin: see ONLY users within current branch
+		if (!currentBranchId) {
+			return res.json([]); // no branch selected/assigned -> show none
+		}
+
 		const query = `
 			SELECT 
-				user_info.*,
-				user_role.ROLE AS role, 
-				user_info.IDNo AS user_id,
-				rt.TABLE_NUMBER AS TABLE_NUMBER
-			FROM user_info 
-			JOIN user_role ON user_role.IDno = user_info.PERMISSIONS 
-			LEFT JOIN restaurant_tables rt ON rt.IDNo = user_info.TABLE_ID
-			WHERE user_info.ACTIVE = 1
+				u.*,
+				ur.ROLE AS role,
+				u.IDNo AS user_id,
+				rt.TABLE_NUMBER AS TABLE_NUMBER,
+				MAX(b.BRANCH_CODE) AS BRANCH_CODE,
+				MAX(b.BRANCH_NAME) AS BRANCH_NAME
+			FROM user_info u
+			JOIN user_role ur ON ur.IDno = u.PERMISSIONS
+			LEFT JOIN restaurant_tables rt ON rt.IDNo = u.TABLE_ID
+			INNER JOIN user_branches ub ON ub.USER_ID = u.IDNo
+			INNER JOIN branches b ON b.IDNo = ub.BRANCH_ID
+			WHERE u.ACTIVE = 1 
+			  AND u.PERMISSIONS <> 1
+			  AND ub.BRANCH_ID = ?
+			GROUP BY u.IDNo
+			ORDER BY u.LASTNAME ASC, u.FIRSTNAME ASC
 		`;
-		const [results] = await pool.execute(query);
+		const [results] = await pool.execute(query, [parseInt(currentBranchId)]);
 		res.json(results);
 	} catch (error) {
 		console.error('Error fetching data:', error);
@@ -247,7 +364,8 @@ router.post('/add_user', async (req, res) => {
 			txtPassword2,
 			user_role,
 			table_id,
-			salt
+			salt,
+			branch_id
 		} = req.body;
 
 		let date_now = new Date();
@@ -259,6 +377,12 @@ router.post('/add_user', async (req, res) => {
 		// 1-to-1 validation: if role=2 (Table-TabletMenu), TABLE_ID is required and must be unique among ACTIVE users
 		const roleId = parseInt(user_role);
 		let tableIdToSave = null;
+
+		// Only admins (PERMISSIONS = 1) are allowed to create Administrator accounts
+		const creatorPermForNewUser = parseInt(req.session.permissions);
+		if (roleId === 1 && creatorPermForNewUser !== 1) {
+			return res.status(403).json({ error: 'Only admin can create Administrator accounts.' });
+		}
 		if (roleId === 2) {
 			if (!table_id) {
 				return res.status(400).json({ error: 'Table is required for this role.' });
@@ -280,7 +404,7 @@ router.post('/add_user', async (req, res) => {
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
-		await pool.execute(query, [
+		const [result] = await pool.execute(query, [
 			txtFirstName,
 			txtLastName,
 			txtUserName,
@@ -292,6 +416,60 @@ router.post('/add_user', async (req, res) => {
 			req.session.user_id,
 			date_now
 		]);
+
+		const newUserId = result.insertId;
+
+		// ================================
+		// BRANCH ASSIGNMENT LOGIC
+		// ================================
+		const creatorPerm = parseInt(req.session.permissions);
+		const creatorId = req.session.user_id;
+
+		if (roleId === 1) {
+			// New ADMIN user: automatically give access to ALL existing active branches
+			const [branches] = await pool.execute(
+				'SELECT IDNo AS BRANCH_ID FROM branches WHERE ACTIVE = 1'
+			);
+			if (branches.length > 0) {
+				const values = branches.map(b => [newUserId, b.BRANCH_ID]);
+				// Idempotent: if some rows already exist (e.g. admin already assigned), skip duplicates
+				await pool.query(
+					'INSERT IGNORE INTO user_branches (USER_ID, BRANCH_ID) VALUES ?',
+					[values]
+				);
+			}
+		} else {
+			// Non-admin user: exactly ONE branch
+			let targetBranchId = null;
+
+			if (creatorPerm === 1 && branch_id) {
+				// Admin creating user: use selected branch from form
+				targetBranchId = parseInt(branch_id);
+			} else {
+				// Non-admin creator: new user gets same branch as creator
+				if (req.session.branch_id) {
+					targetBranchId = parseInt(req.session.branch_id);
+				} else {
+					// Fallback: look up creator's branch from user_branches
+					const [ub] = await pool.execute(
+						'SELECT BRANCH_ID FROM user_branches WHERE USER_ID = ? LIMIT 1',
+						[creatorId]
+					);
+					if (ub.length > 0) {
+						targetBranchId = parseInt(ub[0].BRANCH_ID);
+					}
+				}
+			}
+
+			if (targetBranchId && !isNaN(targetBranchId)) {
+				await pool.execute(
+					`INSERT INTO user_branches (USER_ID, BRANCH_ID)
+           VALUES (?, ?)
+           ON DUPLICATE KEY UPDATE BRANCH_ID = VALUES(BRANCH_ID)`,
+					[newUserId, targetBranchId]
+				);
+			}
+		}
 
 		res.redirect('/manageUsers');
 	} catch (err) {

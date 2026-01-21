@@ -8,10 +8,14 @@
 const pool = require('../config/db');
 
 class OrderModel {
-	static async getAll() {
-		const query = `
+	static async getAll(branchId = null) {
+		let query = `
 			SELECT 
 				o.IDNo,
+				o.BRANCH_ID,
+				b.BRANCH_NAME,
+				b.BRANCH_CODE,
+				b.BRANCH_NAME AS BRANCH_LABEL,
 				o.ORDER_NO,
 				o.TABLE_ID,
 				t.TABLE_NUMBER,
@@ -26,10 +30,19 @@ class OrderModel {
 				o.ENCODED_BY
 			FROM orders o
 			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
-			ORDER BY o.ENCODED_DT DESC
+			LEFT JOIN branches b ON b.IDNo = o.BRANCH_ID
+			WHERE 1=1
 		`;
 
-		const [rows] = await pool.execute(query);
+		const params = [];
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY o.ENCODED_DT DESC`;
+
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 
@@ -37,6 +50,7 @@ class OrderModel {
 		const query = `
 			SELECT 
 				IDNo,
+				BRANCH_ID,
 				ORDER_NO,
 				TABLE_ID,
 				ORDER_TYPE,
@@ -56,6 +70,7 @@ class OrderModel {
 
 	static async create(data) {
 		const {
+			BRANCH_ID,
 			ORDER_NO,
 			TABLE_ID,
 			ORDER_TYPE,
@@ -70,6 +85,7 @@ class OrderModel {
 
 		const query = `
 			INSERT INTO orders (
+				BRANCH_ID,
 				ORDER_NO,
 				TABLE_ID,
 				ORDER_TYPE,
@@ -80,10 +96,11 @@ class OrderModel {
 				DISCOUNT_AMOUNT,
 				GRAND_TOTAL,
 				ENCODED_BY
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 
 		const values = [
+			BRANCH_ID,
 			ORDER_NO,
 			TABLE_ID || null,
 			ORDER_TYPE || null,
@@ -158,10 +175,11 @@ class OrderModel {
 	}
 
 	// Get orders by user ID (for mobile app sync)
-	static async getByUserId(userId) {
-		const query = `
+	static async getByUserId(userId, branchId = null) {
+		let query = `
 			SELECT 
 				o.IDNo,
+				o.BRANCH_ID,
 				o.ORDER_NO,
 				o.TABLE_ID,
 				o.ORDER_TYPE,
@@ -175,18 +193,26 @@ class OrderModel {
 				o.ENCODED_BY
 			FROM orders o
 			WHERE o.ENCODED_BY = ?
-			ORDER BY o.ENCODED_DT DESC
 		`;
 
-		const [rows] = await pool.execute(query, [userId]);
+		const params = [userId];
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY o.ENCODED_DT DESC`;
+
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 
 	// Get orders by table ID (for mobile app sync after login/restart)
-	static async getByTableId(tableId) {
-		const query = `
+	static async getByTableId(tableId, branchId = null) {
+		let query = `
 			SELECT 
 				o.IDNo,
+				o.BRANCH_ID,
 				o.ORDER_NO,
 				o.TABLE_ID,
 				o.ORDER_TYPE,
@@ -200,15 +226,22 @@ class OrderModel {
 				o.ENCODED_BY
 			FROM orders o
 			WHERE o.TABLE_ID = ? AND o.STATUS != 1
-			ORDER BY o.ENCODED_DT DESC
 		`;
 
-		const [rows] = await pool.execute(query, [tableId]);
+		const params = [tableId];
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY o.ENCODED_DT DESC`;
+
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 
 	// Get orders by user ID or table ID (for mobile app sync)
-	static async getByUserIdOrTableId(userId, tableId) {
+	static async getByUserIdOrTableId(userId, tableId, branchId = null) {
 		let query, params;
 		
 		if (tableId != null) {
@@ -216,6 +249,7 @@ class OrderModel {
 			query = `
 				SELECT 
 					o.IDNo,
+					o.BRANCH_ID,
 					o.ORDER_NO,
 					o.TABLE_ID,
 					o.ORDER_TYPE,
@@ -229,7 +263,6 @@ class OrderModel {
 					o.ENCODED_BY
 				FROM orders o
 				WHERE (o.TABLE_ID = ? OR o.ENCODED_BY = ?) AND o.STATUS != 1
-				ORDER BY o.ENCODED_DT DESC
 			`;
 			params = [tableId, userId];
 		} else {
@@ -237,6 +270,7 @@ class OrderModel {
 			query = `
 				SELECT 
 					o.IDNo,
+					o.BRANCH_ID,
 					o.ORDER_NO,
 					o.TABLE_ID,
 					o.ORDER_TYPE,
@@ -250,10 +284,16 @@ class OrderModel {
 					o.ENCODED_BY
 				FROM orders o
 				WHERE o.ENCODED_BY = ? AND o.STATUS != 1
-				ORDER BY o.ENCODED_DT DESC
 			`;
 			params = [userId];
 		}
+
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY o.ENCODED_DT DESC`;
 
 		const [rows] = await pool.execute(query, params);
 		return rows;

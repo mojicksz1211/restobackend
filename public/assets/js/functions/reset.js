@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             type: 'POST',
                             data: { password: password },
                             success: function(response) {
-                                if (response.permissions === 11) {
-                                    resolve(); // Magpatuloy kung permission = 11
+                                if (response.permissions === 1) {
+                                    resolve(); // Magpatuloy kung permission = 1 (Admin)
                                 } else {
                                     Swal.showValidationMessage('Incorrect password.');
                                     reject();

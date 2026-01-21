@@ -10,7 +10,7 @@ const pool = require('../config/db');
 class CategoryModel {
 	// Get all active categories
 	static async getAll() {
-		const query = `
+		let query = `
 			SELECT 
 				IDNo,
 				CAT_NAME,
@@ -22,8 +22,10 @@ class CategoryModel {
 				EDITED_DT
 			FROM categories
 			WHERE ACTIVE = 1
-			ORDER BY IDNo ASC
 		`;
+
+		query += ` ORDER BY IDNo ASC`;
+
 		const [rows] = await pool.execute(query);
 		return rows;
 	}
@@ -41,19 +43,22 @@ class CategoryModel {
 	// Create new category
 	static async create(data) {
 		const { CAT_NAME, CAT_DESC, user_id } = data;
+		const branchId = data.BRANCH_ID ?? null;
 		const currentDate = new Date();
 
 		const query = `
 			INSERT INTO categories (
+				BRANCH_ID,
 				CAT_NAME,
 				CAT_DESC,
 				ACTIVE,
 				ENCODED_BY,
 				ENCODED_DT
-			) VALUES (?, ?, 1, ?, ?)
+			) VALUES (?, ?, ?, 1, ?, ?)
 		`;
 
 		const [result] = await pool.execute(query, [
+			branchId,
 			CAT_NAME.trim(),
 			CAT_DESC || null,
 			user_id,

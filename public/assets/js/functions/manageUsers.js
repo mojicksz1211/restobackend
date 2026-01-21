@@ -10,12 +10,16 @@ var user_id;
 var dataTable;
 var tablesList = [];
 var edit_user_table_id = null;
+const ADMIN_ROLE_ID = 1; // IDNo = 1 (Administrator)
 const TABLE_ROLE_ID = 2; // IDNo = 2 (Table-TabletMenu)
 var assignedTableIds = new Set(); // active users' assigned TABLE_IDs (1-to-1)
 
 // Load translations from data attributes
 var manageUsersTranslations = {};
 $(document).ready(function () {
+	// Determine if current viewer is admin (PERMISSIONS=1) from data attribute (safe for EJS linting)
+	const permFromDom = Number($('#manageUsersTranslations').data('permissions') || 0);
+	const IS_ADMIN_VIEW = permFromDom === 1;
 	// Load translations from data attributes
 	var $transEl = $('#manageUsersTranslations');
 	if ($transEl.length) {
@@ -52,11 +56,24 @@ $(document).ready(function () {
 	const searchText = paginationTrans.search || 'Search';
 
 	dataTable = $('#usersTable').DataTable({
-		columnDefs: [{
-			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
-				$(cell).addClass('text-center');
-			}
-		}],
+		columnDefs: [
+			{
+				createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+					$(cell).addClass('text-center');
+				}
+			},
+			// If admin view has Branch column, keep that column left-aligned for readability
+			...(IS_ADMIN_VIEW
+				? [
+						{
+							targets: 3,
+							createdCell: function (cell) {
+								$(cell).removeClass('text-center');
+							}
+						}
+				  ]
+				: [])
+		],
 		pageLength: 10,
 		language: {
 			lengthMenu: showingText + " _MENU_ " + entriesText,
@@ -76,9 +93,10 @@ $(document).ready(function () {
 	reloadUserData();
 	loadRestaurantTables();
 
-	// Toggle table select when role changes (new user)
+	// Toggle table / branch select when role changes (new user)
 	$(document).on('change', '#user_role', function () {
 		toggleTableFieldForNew();
+		toggleBranchFieldForNew();
 	});
 
 	// Toggle table select when role changes (edit user)
@@ -158,6 +176,14 @@ $(document).ready(function () {
 			}
 		});
 	});
+
+	// Load branches for new user (admin creator only; non-admin sees auto-branch)
+	loadBranchesForNewUser();
+
+	// Also load when the modal opens (handles cases where the modal HTML is injected/lazy-loaded)
+	$('#modal-new_user').on('shown.bs.modal', function () {
+		loadBranchesForNewUser();
+	});
 });
 
 function loadRestaurantTables() {
@@ -210,6 +236,24 @@ function toggleTableFieldForNew() {
 	}
 }
 
+function toggleBranchFieldForNew() {
+	const $wrapper = $('#new_branch_wrapper');
+	const $select = $('#new_branch_id');
+	if ($wrapper.length === 0 || $select.length === 0) return; // Only for admin creator UI
+
+	const roleId = parseInt($('#user_role').val());
+
+	if (roleId === ADMIN_ROLE_ID) {
+		// Admin account: no single-branch assignment; gets ALL branches automatically
+		$wrapper.hide();
+		$select.prop('disabled', true).val('');
+	} else {
+		// Non-admin: must pick exactly one branch
+		$wrapper.show();
+		$select.prop('disabled', false);
+	}
+}
+
 function toggleTableFieldForEdit() {
 	const roleId = parseInt($('.edit_user_role').val());
 	if (roleId === TABLE_ROLE_ID) {
@@ -225,6 +269,34 @@ function toggleTableFieldForEdit() {
 	}
 }
 
+function loadBranchesForNewUser() {
+	const $select = $('#new_branch_id');
+	if ($select.length === 0) return; // Only exists for admin
+
+	$.ajax({
+		url: '/branch',
+		method: 'GET',
+		headers: { Accept: 'application/json' },
+		dataType: 'json',
+		success: function (rows) {
+			$select.empty();
+			if (!rows || rows.length === 0) {
+				$select.append('<option value=\"\">No branches</option>');
+				$select.prop('disabled', true);
+				return;
+			}
+			rows.forEach(function (b) {
+				$select.append(`<option value=\"${b.IDNo}\">${b.BRANCH_NAME} (${b.BRANCH_CODE})</option>`);
+			});
+		},
+		error: function (xhr) {
+			console.error('Failed to load branches for new user:', xhr.responseText);
+			$select.empty().append('<option value=\"\">Failed to load branches</option>');
+			$select.prop('disabled', true);
+		}
+	});
+}
+
 // ============================================
 // GLOBAL FUNCTIONS
 // ============================================
@@ -235,6 +307,8 @@ function reloadUserData() {
 		url: '/users',
 		method: 'GET',
 		success: function (data) {
+			const permFromDom = Number($('#manageUsersTranslations').data('permissions') || 0);
+			const IS_ADMIN_VIEW = permFromDom === 1;
 			dataTable.clear();
 
 			// rebuild assigned tables map for 1-to-1 UI filtering
@@ -250,6 +324,7 @@ function reloadUserData() {
 			populateTableSelect('#edit_table_id', edit_user_table_id);
 			toggleTableFieldForNew();
 			toggleTableFieldForEdit();
+			toggleBranchFieldForNew();
 
 			if (!data || data.length === 0) {
 				return;
@@ -287,7 +362,14 @@ function reloadUserData() {
 					</button>
 				</div>`;
 
-				dataTable.row.add([row.LASTNAME, row.FIRSTNAME, row.USERNAME, row.role, status, btn]).draw();
+				if (IS_ADMIN_VIEW) {
+					const branchLabel = row.BRANCH_LABEL || row.BRANCHES || '';
+					dataTable.row
+						.add([row.LASTNAME, row.FIRSTNAME, row.USERNAME, branchLabel, row.role, status, btn])
+						.draw();
+				} else {
+					dataTable.row.add([row.LASTNAME, row.FIRSTNAME, row.USERNAME, row.role, status, btn]).draw();
+				}
 			});
 		},
 		error: function (xhr, status, error) {
@@ -367,6 +449,9 @@ function archive_user(id) {
 
 // Load user roles for dropdown (new user)
 function get_user_role() {
+	const permFromDom = Number($('#manageUsersTranslations').data('permissions') || 0);
+	const IS_ADMIN_VIEW = permFromDom === 1;
+
 	$.ajax({
 		url: '/user_role_data',
 		method: 'GET',
@@ -377,6 +462,10 @@ function get_user_role() {
 				return;
 			}
 			response.forEach(function (option) {
+				// If current user is non-admin, hide Administrator role (IDNo = 1)
+				if (!IS_ADMIN_VIEW && Number(option.IDNo) === 1) {
+					return;
+				}
 				selectOptions.append($('<option>', {
 					value: option.IDNo,
 					text: option.ROLE

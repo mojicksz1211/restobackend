@@ -18,7 +18,8 @@ class DashboardController {
 
 		try {
 			// Fetch all dashboard statistics
-			const stats = await DashboardModel.getDashboardStats();
+			const branchId = req.session.branch_id || null; // null = ALL branches (admin)
+			const stats = await DashboardModel.getDashboardStats(branchId);
 
 			res.render('dashboard', {
 				username: req.session.username,

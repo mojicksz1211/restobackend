@@ -104,6 +104,26 @@ class ApiController {
 					// Log successful login - simple format
 					console.log(`[${timestamp}] [LOGIN] ${username}`);
 
+					// Get user's accessible branches
+					let branches = [];
+					try {
+						const UserBranchModel = require('../models/userBranchModel');
+						if (user.PERMISSIONS === 1) {
+							// Admin can access all branches
+							const [allBranches] = await pool.execute(
+								'SELECT IDNo, BRANCH_CODE, BRANCH_NAME FROM branches WHERE ACTIVE = 1'
+							);
+							branches = allBranches;
+						} else {
+							// Regular users get their assigned branches
+							branches = await UserBranchModel.getBranchesByUserId(user.IDNo);
+						}
+					} catch (branchError) {
+						// Log error but don't fail login - just return empty branches array
+						console.error(`[${timestamp}] [LOGIN] Error getting branches for user ${user.IDNo}:`, branchError);
+						branches = [];
+					}
+
 					// Generate JWT tokens
 					const tokenPayload = {
 						user_id: user.IDNo,
@@ -122,7 +142,8 @@ class ApiController {
 							lastname: user.LASTNAME,
 							permissions: user.PERMISSIONS,
 							role: userRole, // Include role name from user_role table
-							table_id: user.TABLE_ID || null
+							table_id: user.TABLE_ID || null,
+							branches: branches
 						},
 						tokens: {
 							accessToken: tokens.accessToken,
@@ -237,7 +258,9 @@ class ApiController {
 			// Log request
 			console.log(`[${timestamp}] [API REQUEST] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, User-Agent: ${userAgent}`);
 
-			const menus = await MenuModel.getByCategory(categoryId);
+			// Get branch_id from query or user context
+			const branchId = req.query.branch_id || req.user?.branch_id || null;
+			const menus = await MenuModel.getByCategory(categoryId, branchId);
 			
 			// Format response for Android app
 			// Include full image URL - use HTTPS if available
@@ -372,9 +395,12 @@ class ApiController {
 				});
 			}
 
+			// Get branch_id from query or user context
+			const branchId = req.query.branch_id || req.user?.branch_id || null;
+
 			// Get orders by user ID or table ID (prioritize table_id if provided)
 			// This allows syncing orders after login/restart based on table assignment
-			const orders = await OrderModel.getByUserIdOrTableId(user_id, table_id);
+			const orders = await OrderModel.getByUserIdOrTableId(user_id, table_id, branchId);
 
 			// Get order items for each order
 			const ordersWithItems = await Promise.all(
@@ -730,6 +756,7 @@ class ApiController {
 
 			// Validate required fields
 			const {
+				branch_id,
 				order_no,
 				table_id,
 				order_type,
@@ -770,9 +797,19 @@ class ApiController {
 				}
 			}
 
+			// Validate branch_id
+			if (!branch_id) {
+				console.log(`[${timestamp}] [API ERROR] POST /api/orders - Missing branch_id - IP: ${clientIp}`);
+				return res.status(400).json({
+					success: false,
+					error: 'Branch ID is required'
+				});
+			}
+
 			// Prepare order data
 			// Status codes: 3=PENDING, 2=CONFIRMED, 1=SETTLED, -1=CANCELLED
 			const orderData = {
+				BRANCH_ID: parseInt(branch_id),
 				ORDER_NO: order_no.trim(),
 				TABLE_ID: table_id || null,
 				ORDER_TYPE: order_type || null,
@@ -817,6 +854,7 @@ class ApiController {
 
 			// Create billing record
 			await BillingModel.createForOrder({
+				branch_id: orderData.BRANCH_ID,
 				order_id: orderId,
 				amount_due: orderData.GRAND_TOTAL,
 				amount_paid: 0,

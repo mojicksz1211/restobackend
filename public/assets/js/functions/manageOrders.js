@@ -24,17 +24,35 @@ const orderStatusLabels = window.orderTranslations?.orderStatuses ? {
 	'-1': { text: 'Cancelled', className: 'bg-danger' }
 };
 
+function getOrderContext() {
+	const el = document.getElementById('orderContextData');
+	if (!el) {
+		return { permissions: 0, branchId: null };
+	}
+	const permissions = parseInt(el.getAttribute('data-permissions') || '0');
+	const branchId = el.getAttribute('data-branch-id') || null;
+	return { permissions, branchId };
+}
+
+function adminNeedsBranchSelection() {
+	const ctx = getOrderContext();
+	return ctx.permissions === 1 && !ctx.branchId;
+}
+
 let ordersDataTable;
 let tablesList = [];
 let menusList = [];
 let newOrderItems = [];
 let editOrderItems = [];
 let additionalOrderItems = [];
+let showBranchColumn = false;
 
 $(document).ready(function () {
 	if ($.fn.DataTable.isDataTable('#ordersTable')) {
 		$('#ordersTable').DataTable().destroy();
 	}
+
+	showBranchColumn = adminNeedsBranchSelection();
 
 	// Load pagination translations from data attributes
 	var $paginationEl = $('#ordersPaginationTranslations');
@@ -70,11 +88,15 @@ $(document).ready(function () {
 	const entriesText = paginationTrans.entries;
 	const searchText = paginationTrans.search;
 
+	const statusIdx = showBranchColumn ? 4 : 3;
+	const dateIdx = showBranchColumn ? 10 : 9;
+	const actionsIdx = showBranchColumn ? 12 : 11;
+
 	ordersDataTable = $('#ordersTable').DataTable({
-		order: [[9, 'desc']],
+		order: [[dateIdx, 'desc']],
 		columnDefs: [
-			{ targets: [3, 9, 11], className: 'text-center' },
-			{ targets: 11, orderable: false }
+			{ targets: [statusIdx, dateIdx, actionsIdx], className: 'text-center' },
+			{ targets: actionsIdx, orderable: false }
 		],
 		pageLength: 10,
 		language: {
@@ -115,6 +137,14 @@ $(document).on('input', '.order-total-field', function () {
 
 $('#new_order_form').submit(function (event) {
 	event.preventDefault();
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before creating an order.'
+		});
+		return;
+	}
 	const payload = gatherOrderPayload('new', true);
 
 	if (!payload.ORDER_ITEMS || payload.ORDER_ITEMS.length === 0) {
@@ -174,11 +204,13 @@ function loadOrders() {
 			data.forEach(function (row) {
 				// Show table number only for DINE_IN orders, otherwise show N/A
 				const n_a = window.orderTranslations?.n_a || 'N/A';
+				const branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || n_a;
 				const tableDisplay = (row.ORDER_TYPE === 'DINE_IN' && row.TABLE_NUMBER) 
 					? `#${row.TABLE_NUMBER}` 
 					: n_a;
-				ordersDataTable.row.add([
+				const baseRow = [
 					row.ORDER_NO || n_a,
+					showBranchColumn ? branchLabel : null,
 					tableDisplay,
 					formatOrderType(row.ORDER_TYPE),
 					formatOrderStatus(row.STATUS),
@@ -190,7 +222,10 @@ function loadOrders() {
 					formatDate(row.ENCODED_DT),
 					row.ENCODED_BY || '-',
 					renderActionButtons(row)
-				]);
+				];
+
+				const rowData = showBranchColumn ? baseRow : baseRow.filter((_, idx) => idx !== 1);
+				ordersDataTable.row.add(rowData);
 			});
 
 			ordersDataTable.draw();
@@ -458,6 +493,14 @@ function renderActionButtons(order) {
 }
 
 function openNewOrderModal() {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before creating an order.'
+		});
+		return;
+	}
 	$('#new_order_form')[0].reset();
 	newOrderItems = [];
 	renderOrderItems('new');
@@ -486,6 +529,14 @@ function openNewOrderModal() {
 }
 
 function openEditOrderModal(orderId) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before editing an order.'
+		});
+		return;
+	}
 	$('#edit_order_menu_id').val('');
 	$('#edit_order_menu_qty').val(1);
 	$('#edit_order_menu_price').val('');
@@ -549,6 +600,14 @@ function openEditOrderModal(orderId) {
 }
 
 function openAdditionalOrderModal(orderId, orderNo) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before adding to this order.'
+		});
+		return;
+	}
 	$('#additional_order_id').val(orderId);
 	$('#additional_order_no_display').text(orderNo);
 	$('#additional_order_menu_id').val('');
@@ -584,6 +643,14 @@ function openAdditionalOrderModal(orderId, orderNo) {
 
 $('#additional_order_form').submit(function (event) {
 	event.preventDefault();
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before saving additional items.'
+		});
+		return;
+	}
 	const id = $('#additional_order_id').val();
 	const total = parseFloat($('#additional_order_items_total_display').text()) || 0;
 	
@@ -633,6 +700,14 @@ function orderMenuSelectionChanged(prefix) {
 }
 
 function openOrderItemsModal(orderId) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before viewing order items.'
+		});
+		return;
+	}
 	$('#orderItemsTable tbody').empty();
 	$('#modal-order_items').modal('show');
 	
@@ -768,6 +843,14 @@ function formatDate(value) {
 }
 
 function confirmOrder(orderId) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before confirming an order.'
+		});
+		return;
+	}
 	Swal.fire({
 		title: 'Confirm Order',
 		text: 'Are you sure you want to confirm this order?',

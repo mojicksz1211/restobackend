@@ -41,6 +41,12 @@
                     <span><%= messages.error[0] %></span>
                   </div>
                 <% } %>
+                <% if ((!messages || !messages.error || messages.error.length === 0) && queryError) { %>
+                  <div class="alert alert-danger text-center mb-4 d-flex align-items-center justify-content-center gap-2" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span><%= queryError %></span>
+                  </div>
+                <% } %>
                 
                 <form class="login100-form validate-form" id="login" action="/login" method="POST">
                   <div class="row">

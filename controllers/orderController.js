@@ -26,7 +26,9 @@ class OrderController {
 
 	static async getAll(req, res) {
 		try {
-			const orders = await OrderModel.getAll();
+			// Get branch_id from query, body, or session (prioritize session)
+			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
+			const orders = await OrderModel.getAll(branchId);
 			res.json(orders);
 		} catch (error) {
 			console.error('Error fetching orders:', error);
@@ -50,7 +52,14 @@ class OrderController {
 
 	static async create(req, res) {
 		try {
+			// Prioritize session branch_id
+			const branchId = req.session?.branch_id || req.body.BRANCH_ID || req.query.branch_id || req.user?.branch_id;
+			if (!branchId) {
+				return res.status(400).json({ error: 'Branch ID is required. Please select a branch first.' });
+			}
+			
 			const payload = {
+				BRANCH_ID: branchId,
 				ORDER_NO: req.body.ORDER_NO,
 				TABLE_ID: req.body.TABLE_ID,
 				ORDER_TYPE: req.body.ORDER_TYPE,
@@ -60,7 +69,7 @@ class OrderController {
 				SERVICE_CHARGE: parseFloat(req.body.SERVICE_CHARGE) || 0,
 				DISCOUNT_AMOUNT: parseFloat(req.body.DISCOUNT_AMOUNT) || 0,
 				GRAND_TOTAL: parseFloat(req.body.GRAND_TOTAL) || 0,
-				user_id: req.session.user_id
+				user_id: req.session.user_id || req.user?.user_id
 			};
 
 			const orderId = await OrderModel.create(payload);
@@ -69,11 +78,12 @@ class OrderController {
 				await OrderItemsModel.createForOrder(orderId, items, req.session.user_id);
 			}
 			await BillingModel.createForOrder({
+				branch_id: payload.BRANCH_ID,
 				order_id: orderId,
 				amount_due: payload.GRAND_TOTAL,
 				amount_paid: 0,
 				status: 3,
-				user_id: req.session.user_id
+				user_id: req.session.user_id || req.user?.user_id
 			});
 
 			// Update table status to Occupied (2) if a table is assigned
@@ -136,11 +146,13 @@ class OrderController {
 					amount_due: payload.GRAND_TOTAL
 				});
 			} else {
+				const order = await OrderModel.getById(id);
 				await BillingModel.createForOrder({
+					branch_id: order?.BRANCH_ID,
 					order_id: id,
 					amount_due: payload.GRAND_TOTAL,
 					status: 3,
-					user_id: req.session.user_id
+					user_id: req.session.user_id || req.user?.user_id
 				});
 			}
 

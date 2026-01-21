@@ -1,0 +1,238 @@
+<!-- ============================================ -->
+<!-- BRANCH MANAGEMENT PAGE -->
+<!-- File: views/branch/manageBranch.ejs -->
+<!-- Description: Main page for managing branches (Admin only) -->
+<!-- ============================================ -->
+
+<%- include('../partials/header') %>
+<%- include('../partials/loader') %>
+  <%- include('../partials/sidebar') %>
+    <%- include('../partials/topbar') %>
+
+    <div class="container-fluid content-inner mt-4">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="card-title">
+                <div class="breadcrumb1 flat">
+                  <a href="/dashboard"><span class="fa fa-home"></span></a>
+                  <a href="/branch/manage" class="active">Manage Branches</a>
+                </div>
+              </h3>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-new_branch">
+                <i class="fa fa-plus" aria-hidden="true"></i> New Branch
+              </button>
+            </div>
+
+            <div class="card-body">
+              <table id="branchTable" class="table nowrap small-text" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Branch Modal -->
+    <div class="modal fade" id="modal-new_branch" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-primary">
+            <h5 class="block-title text-white mb-0">New Branch</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="formNewBranch">
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label">Branch Code</label>
+                <input type="text" class="form-control" name="BRANCH_CODE" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Branch Name</label>
+                <input type="text" class="form-control" name="BRANCH_NAME" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" name="ADDRESS" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Phone</label>
+                <input type="text" class="form-control" name="PHONE" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-sm btn-primary">Save</button>
+              <button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Branch Modal -->
+    <div class="modal fade" id="modal-edit_branch" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-info">
+            <h5 class="block-title text-white mb-0">Edit Branch</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="formEditBranch">
+            <input type="hidden" id="edit_branch_id" />
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label">Branch Code</label>
+                <input type="text" class="form-control" id="edit_branch_code" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Branch Name</label>
+                <input type="text" class="form-control" id="edit_branch_name" required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" id="edit_branch_address" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Phone</label>
+                <input type="text" class="form-control" id="edit_branch_phone" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-sm btn-info text-white">Save Changes</button>
+              <button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+      (function () {
+        const tableBody = document.querySelector('#branchTable tbody');
+        const form = document.getElementById('formNewBranch');
+        const formEdit = document.getElementById('formEditBranch');
+        const editModalEl = document.getElementById('modal-edit_branch');
+        const editModal = () => bootstrap.Modal.getOrCreateInstance(editModalEl);
+
+        // store branches by ID for quick edit prefill
+        let branchMap = new Map();
+
+        function esc(s) {
+          return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+          }[c]));
+        }
+
+        function loadBranches() {
+          fetch('/branch', { credentials: 'include' })
+            .then(r => r.json())
+            .then(rows => {
+              tableBody.innerHTML = '';
+              branchMap = new Map();
+              (rows || []).forEach(b => {
+                branchMap.set(String(b.IDNo), b);
+                const active = (parseInt(b.ACTIVE) === 1 || (b.ACTIVE && b.ACTIVE.data && b.ACTIVE.data[0] === 1));
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                  <td>${esc(b.BRANCH_CODE)}</td>
+                  <td>${esc(b.BRANCH_NAME)}</td>
+                  <td>${esc(b.ADDRESS)}</td>
+                  <td>${esc(b.PHONE)}</td>
+                  <td>${active ? '<span class="badge bg-success">ACTIVE</span>' : '<span class="badge bg-secondary">INACTIVE</span>'}</td>
+                  <td><button class="btn btn-sm btn-info" data-id="${esc(b.IDNo)}">Edit</button></td>
+                `;
+                tableBody.appendChild(tr);
+              });
+            })
+            .catch(() => {
+              tableBody.innerHTML = '<tr><td colspan="6" class="text-muted">Failed to load branches.</td></tr>';
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          const fd = new FormData(form);
+          const payload = Object.fromEntries(fd.entries());
+          fetch('/branch', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (!data || !data.success) throw new Error((data && data.error) || 'Failed');
+              form.reset();
+              const modalEl = document.getElementById('modal-new_branch');
+              const modal = bootstrap.Modal.getInstance(modalEl);
+              if (modal) modal.hide();
+              loadBranches();
+            })
+            .catch(err => {
+              alert(err.message || 'Failed to create branch');
+            });
+        });
+
+        // Edit handler (no delete)
+        tableBody.addEventListener('click', function (e) {
+          const btn = e.target.closest('button[data-id]');
+          if (!btn) return;
+          const id = btn.getAttribute('data-id');
+          const b = branchMap.get(String(id));
+          if (!b) return;
+
+          document.getElementById('edit_branch_id').value = b.IDNo;
+          document.getElementById('edit_branch_code').value = b.BRANCH_CODE || '';
+          document.getElementById('edit_branch_name').value = b.BRANCH_NAME || '';
+          document.getElementById('edit_branch_address').value = b.ADDRESS || '';
+          document.getElementById('edit_branch_phone').value = b.PHONE || '';
+
+          editModal().show();
+        });
+
+        formEdit.addEventListener('submit', function (e) {
+          e.preventDefault();
+          const id = document.getElementById('edit_branch_id').value;
+          const payload = {
+            BRANCH_CODE: document.getElementById('edit_branch_code').value,
+            BRANCH_NAME: document.getElementById('edit_branch_name').value,
+            ADDRESS: document.getElementById('edit_branch_address').value,
+            PHONE: document.getElementById('edit_branch_phone').value
+          };
+
+          fetch(`/branch/${encodeURIComponent(id)}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (!data || !data.success) throw new Error((data && (data.error || data.details)) || 'Failed');
+              editModal().hide();
+              loadBranches();
+            })
+            .catch(err => {
+              alert(err.message || 'Failed to update branch');
+            });
+        });
+
+        loadBranches();
+      })();
+    </script>
+
+

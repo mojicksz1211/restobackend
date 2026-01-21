@@ -23,7 +23,9 @@ class TableController {
 	// Get all restaurant tables
 	static async getAll(req, res) {
 		try {
-			const tables = await TableModel.getAll();
+			// Prioritize session branch_id
+			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
+			const tables = await TableModel.getAll(branchId);
 			res.json(tables);
 		} catch (error) {
 			console.error('Error fetching restaurant tables:', error);
@@ -44,8 +46,14 @@ class TableController {
 				return res.status(400).json({ error: 'Table number is required' });
 			}
 
-			const user_id = req.session.user_id;
+			const user_id = req.session.user_id || req.user?.user_id;
+			// Prioritize session branch_id
+			const branchId = req.session?.branch_id || req.body.BRANCH_ID || req.query.branch_id || req.user?.branch_id;
+			if (!branchId) {
+				return res.status(400).json({ error: 'Branch ID is required. Please select a branch first.' });
+			}
 			const tableId = await TableModel.create({
+				BRANCH_ID: branchId,
 				TABLE_NUMBER,
 				CAPACITY,
 				STATUS,
@@ -116,7 +124,8 @@ class TableController {
 	static async getTransactionHistory(req, res) {
 		try {
 			const { id } = req.params;
-			const transactions = await TableModel.getTransactionHistory(id);
+			const branchId = req.query.branch_id || req.body.branch_id || req.session?.branch_id || null;
+			const transactions = await TableModel.getTransactionHistory(id, branchId);
 			res.json(transactions);
 		} catch (error) {
 			console.error('Error fetching transaction history:', error);

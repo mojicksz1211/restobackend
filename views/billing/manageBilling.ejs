@@ -27,6 +27,9 @@
 							<thead>
 								<tr>
 									<th><%= __('billing.order_no') %></th>
+											<% if (parseInt(permissions) === 1 && !branch_id) { %>
+											<th>Branch</th>
+											<% } %>
 									<th><%= __('billing.payment_method') %></th>
 									<th><%= __('billing.amount_due') %></th>
 									<th><%= __('billing.amount_paid') %></th>
@@ -161,7 +164,13 @@
 	data-pagination-search="<%- __('billing.pagination.search') %>"
 	data-pagination-search-placeholder="<%- __('billing.pagination.search_placeholder') %>"
 	style="display: none;"></div>
-<script src="/assets/js/functions/manageBilling.js"></script>
+
+<!-- Billing context for admin branch checks -->
+<div id="billingContextData"
+	data-permissions="<%= (typeof permissions !== 'undefined' && permissions !== null) ? permissions : 0 %>"
+	data-branch-id="<%= (typeof branch_id !== 'undefined' && branch_id !== null) ? branch_id : '' %>"
+	style="display: none;"></div>
+<script src="/assets/js/functions/manageBilling.js?v=2026-01-21-branch"></script>
 <style>
 	.card-body {
 		overflow-x: auto;

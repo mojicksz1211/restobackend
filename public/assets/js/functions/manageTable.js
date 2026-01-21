@@ -16,9 +16,42 @@ var filteredData = [];
 var currentPage = 1;
 var itemsPerPage = 10;
 var searchQuery = '';
+var showBranchColumn = false;
 
 // Load translations from data attributes
 var manageTableTranslations = {};
+
+function getTableContext() {
+	const el = document.getElementById('tableContextData');
+	if (!el) {
+		return { permissions: 0, branchId: null };
+	}
+	const permissions = parseInt(el.getAttribute('data-permissions') || '0');
+	const branchId = el.getAttribute('data-branch-id') || null;
+	return { permissions, branchId };
+}
+
+function adminNeedsBranchSelection() {
+	const ctx = getTableContext();
+	return ctx.permissions === 1 && !ctx.branchId;
+}
+
+function requireBranchSelection(message) {
+	if (!adminNeedsBranchSelection()) {
+		return false;
+	}
+	const text = message || 'Please select a specific branch in the top bar first.';
+	if (typeof Swal !== 'undefined') {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text
+		});
+	} else {
+		alert(text);
+	}
+	return true;
+}
 
 // Wait for DOM and jQuery
 (function() {
@@ -104,6 +137,7 @@ var manageTableTranslations = {};
 	}
 
 	// Initial load
+	showBranchColumn = adminNeedsBranchSelection();
 	console.log('Calling reloadRestaurantTableData...');
 	reloadRestaurantTableData();
 
@@ -133,6 +167,9 @@ var manageTableTranslations = {};
 	// Edit restaurant table form submit
 	$('#edit_restaurant_table').submit(function (event) {
 		event.preventDefault();
+		if (requireBranchSelection('Please select a specific branch in the top bar before updating a table.')) {
+			return;
+		}
 
 		var formData = $(this).serialize();
 		$.ajax({
@@ -166,6 +203,9 @@ var manageTableTranslations = {};
 	// Add new restaurant table form submit
 	$('#add_new_restaurant_table').submit(function (event) {
 		event.preventDefault();
+		if (requireBranchSelection('Please select a specific branch in the top bar before creating a table.')) {
+			return;
+		}
 
 		var formData = $(this).serialize();
 		$.ajax({
@@ -358,21 +398,28 @@ function renderTableCards() {
 			// Escape single quotes for JavaScript
 			var tableNumber = (row.TABLE_NUMBER || '').replace(/'/g, "\\'");
 			
+			var branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || row.BRANCH_CODE || row.BRANCH_ID || 'N/A';
+			if (branchLabel && typeof branchLabel === 'string' && branchLabel.includes(' - ')) {
+				branchLabel = branchLabel.split(' - ').slice(1).join(' - ').trim() || branchLabel;
+			}
+			var branchBadge = showBranchColumn
+				? `<span class="badge bg-secondary">${branchLabel}</span>`
+				: '';
+
 			var cardHtml = `
 				<div class="col-md-6 col-lg-4 col-xl-3">
 					<div class="table-card">
 						<div class="table-card-header">
 							<span class="table-number-badge">Table ${row.TABLE_NUMBER || 'N/A'}</span>
 							${statusBadge}
+							${branchBadge}
 						</div>
 						<div class="table-card-body">
 							<div class="table-card-info">
-								<div class="table-card-info-item">
+								<div class="table-card-info-item table-card-capacity">
 									<span class="table-card-info-label"><i class="fa fa-users me-2"></i>Capacity: <span class="table-card-info-value">${row.CAPACITY || 0}</span></span>
 								</div>
-								<div class="table-card-info-item">
-									<span class="table-card-info-label"><i class="fa fa-calendar me-2"></i>Date Created: <span class="table-card-info-value" style="font-size: 11px;">${dateCreated}</span></span>
-								</div>
+								<!-- Date created removed per request -->
 							</div>
 						</div>
 						<div class="table-card-actions">
@@ -495,6 +542,9 @@ function changePage(page) {
 
 // Open new restaurant table modal
 function add_restaurant_table_modal() {
+	if (requireBranchSelection('Please select a specific branch in the top bar before adding a table.')) {
+		return;
+	}
 	// Hide all tooltips before opening modal
 	$('[data-bs-toggle="tooltip"]').tooltip('hide');
 	$('.tooltip').remove();
@@ -504,6 +554,9 @@ function add_restaurant_table_modal() {
 
 // Open edit restaurant table modal with data
 function edit_restaurant_table(id, tableNumber, capacity, status) {
+	if (requireBranchSelection('Please select a specific branch in the top bar before editing a table.')) {
+		return;
+	}
 	// Hide all tooltips before opening modal
 	$('[data-bs-toggle="tooltip"]').tooltip('hide');
 	$('.tooltip').remove();
@@ -518,6 +571,9 @@ function edit_restaurant_table(id, tableNumber, capacity, status) {
 
 // Delete restaurant table with confirmation
 function delete_restaurant_table(id) {
+	if (requireBranchSelection('Please select a specific branch in the top bar before deleting a table.')) {
+		return;
+	}
 	Swal.fire({
 		title: manageTableTranslations.delete_confirmation_title || 'Are you sure?',
 		text: manageTableTranslations.delete_confirmation_text || "You won't be able to revert this!",
@@ -558,6 +614,9 @@ function delete_restaurant_table(id) {
 
 // View transaction history for a table
 function view_transaction_history(tableId, tableNumber) {
+	if (requireBranchSelection('Please select a specific branch in the top bar before viewing transactions.')) {
+		return;
+	}
 	// Hide all tooltips before opening modal to prevent overlap
 	$('[data-bs-toggle="tooltip"]').tooltip('hide');
 	$('.tooltip').remove(); // Remove any lingering tooltip elements

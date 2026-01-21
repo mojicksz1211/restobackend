@@ -108,6 +108,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// Make ?error=... available to login.ejs (fallback when session/flash can't be used)
+app.use((req, res, next) => {
+  res.locals.queryError = req.query?.error;
+  next();
+});
+
+// Make session values available to ALL EJS views (sidebar/topbar needs permissions everywhere)
+app.use((req, res, next) => {
+  res.locals.permissions = req.session?.permissions;
+  res.locals.username = req.session?.username;
+  res.locals.firstname = req.session?.firstname;
+  res.locals.lastname = req.session?.lastname;
+  res.locals.user_id = req.session?.user_id;
+  res.locals.branch_id = req.session?.branch_id ?? null; // null = ALL
+  next();
+});
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -142,7 +159,11 @@ app.use('/api', (req, res, next) => {
 });
 
 // Register API routes with /api prefix (public endpoints for Android app)
+// IMPORTANT: API routes must be registered FIRST to avoid route conflicts
 app.use('/api', require('./routes/apiRoutes'));
+
+// Register branch routes at /branch to avoid conflicts with /api routes
+app.use('/branch', require('./routes/branchRoutes'));
 
 // Register other routes
 routes.forEach(router => app.use('/', router));

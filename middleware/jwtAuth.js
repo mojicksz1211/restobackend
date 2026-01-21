@@ -43,7 +43,8 @@ const authenticateJWT = (req, res, next) => {
 		req.user = {
 			user_id: decoded.user_id,
 			username: decoded.username,
-			permissions: decoded.permissions
+			permissions: decoded.permissions,
+			branch_id: decoded.branch_id || null // Optional branch context
 		};
 
 		// Continue to next middleware
@@ -92,7 +93,8 @@ const optionalJWT = (req, res, next) => {
 					req.user = {
 						user_id: decoded.user_id,
 						username: decoded.username,
-						permissions: decoded.permissions
+						permissions: decoded.permissions,
+						branch_id: decoded.branch_id || null
 					};
 				} catch (error) {
 					// Token invalid, but continue without user
@@ -127,8 +129,8 @@ const requirePermission = (requiredPermissions) => {
 			: [requiredPermissions];
 
 		// Check if user has required permission
-		// Permission 11 is admin (highest level)
-		if (userPermissions === 11 || permissionsArray.includes(userPermissions)) {
+		// Permission 1 is admin (highest level)
+		if (userPermissions === 1 || permissionsArray.includes(userPermissions)) {
 			next();
 		} else {
 			return res.status(403).json({

@@ -23,7 +23,9 @@ class MenuController {
 	// Get all menus
 	static async getAll(req, res) {
 		try {
-			const menus = await MenuModel.getAll();
+			// Prioritize session branch_id
+			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
+			const menus = await MenuModel.getAll(branchId);
 			res.json(menus);
 		} catch (error) {
 			console.error('Error fetching menus:', error);
@@ -59,8 +61,14 @@ class MenuController {
 				MENU_IMG = `/uploads/menu/${req.file.filename}`;
 			}
 
-			const user_id = req.session.user_id;
+			const user_id = req.session.user_id || req.user?.user_id;
+			// Prioritize session branch_id
+			const branchId = req.session?.branch_id || req.body.BRANCH_ID || req.query.branch_id || req.user?.branch_id;
+			if (!branchId) {
+				return res.status(400).json({ error: 'Branch ID is required. Please select a branch first.' });
+			}
 			const menuId = await MenuModel.create({
+				BRANCH_ID: branchId,
 				CATEGORY_ID,
 				MENU_NAME,
 				MENU_DESCRIPTION,
