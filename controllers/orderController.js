@@ -81,6 +81,21 @@ class OrderController {
 				await TableModel.updateStatus(payload.TABLE_ID, 2);
 			}
 
+			// Get full order data with items for socket emission
+			const fullOrder = await OrderModel.getById(orderId);
+			const orderItems = await OrderItemsModel.getByOrderId(orderId);
+
+			// Emit socket event for order creation
+			socketService.emitOrderCreated(orderId, {
+				order_id: orderId,
+				order_no: payload.ORDER_NO,
+				table_id: payload.TABLE_ID,
+				status: payload.STATUS,
+				grand_total: payload.GRAND_TOTAL,
+				items: orderItems,
+				items_count: items.length
+			});
+
 			res.json({ success: true, id: orderId });
 		} catch (error) {
 			console.error('Error creating order:', error);
