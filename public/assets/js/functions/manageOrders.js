@@ -462,11 +462,14 @@ function renderActionButtons(order) {
 	
 	let buttons = '';
 	
-		if (status === 3) {
+	if (status === 3) {
 		// PENDING: Confirmation button stays green even if theme changes
 		buttons = `
 			<button type="button" class="btn btn-sm btn-success btn-confirmation" onclick="confirmOrder(${order.IDNo})" title="Confirm Order">
 				<i class="fa fa-check"></i> Confirmation
+			</button>
+			<button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="cancelOrder(${order.IDNo})" title="Cancel Order">
+				<i class="fa fa-times"></i> Cancel
 			</button>
 			<button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditOrderModal(${order.IDNo})" title="Edit Order">
 				<i class="fa fa-pencil-alt"></i>
@@ -953,6 +956,81 @@ function confirmOrder(orderId) {
 				}
 			});
 		}
+	});
+}
+
+function cancelOrder(orderId) {
+	if (adminNeedsBranchSelection()) {
+		Swal.fire({
+			icon: 'warning',
+			title: 'Select a branch',
+			text: 'Please select a specific branch in the top bar before cancelling an order.'
+		});
+		return;
+	}
+	Swal.fire({
+		title: 'Cancel Order',
+		text: 'Are you sure you want to cancel this order?',
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#d33',
+		cancelButtonColor: '#3085d6',
+		confirmButtonText: 'Yes, cancel it!',
+		cancelButtonText: 'Keep it'
+	}).then((result) => {
+		if (!result.isConfirmed) {
+			return;
+		}
+
+		$.ajax({
+			url: `/orders/${orderId}`,
+			method: 'GET',
+			success(order) {
+				const payload = {
+					TABLE_ID: order.TABLE_ID,
+					ORDER_TYPE: order.ORDER_TYPE,
+					STATUS: -1,
+					SUBTOTAL: parseFloat(order.SUBTOTAL) || 0,
+					TAX_AMOUNT: parseFloat(order.TAX_AMOUNT) || 0,
+					SERVICE_CHARGE: parseFloat(order.SERVICE_CHARGE) || 0,
+					DISCOUNT_AMOUNT: parseFloat(order.DISCOUNT_AMOUNT) || 0,
+					GRAND_TOTAL: parseFloat(order.GRAND_TOTAL) || 0,
+				};
+
+				$.ajax({
+					url: `/orders/${orderId}`,
+					method: 'PUT',
+					contentType: 'application/json',
+					data: JSON.stringify(payload),
+					success() {
+						Swal.fire({
+							icon: 'success',
+							title: 'Cancelled',
+							text: 'Order has been cancelled.',
+							timer: 1500,
+							showConfirmButton: false
+						});
+						loadOrders();
+					},
+					error(xhr) {
+						console.error('Error cancelling order:', xhr.responseText);
+						Swal.fire({
+							icon: 'error',
+							title: 'Error',
+							text: 'Failed to cancel order. Please try again.'
+						});
+					}
+				});
+			},
+			error(xhr) {
+				console.error('Error fetching order for cancel:', xhr.responseText);
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'Unable to load order details.'
+				});
+			}
+		});
 	});
 }
 
