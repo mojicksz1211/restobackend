@@ -120,6 +120,25 @@ function emitOrderItemsAdded(orderId, orderData) {
   console.log(`[SOCKET] Emitted order_items_added to room: ${room} and kitchen`);
 }
 
+// Emit table updated event
+function emitTableUpdated(tableData, action = 'updated') {
+  if (!io) {
+    console.warn('[SOCKET] Socket.io not initialized');
+    return;
+  }
+
+  const tableId = tableData.id || tableData.table_id || tableData.IDNo;
+  const payload = {
+    table_id: tableId,
+    table: tableData,
+    action,
+    timestamp: new Date().toISOString()
+  };
+
+  io.emit('table_updated', payload);
+  console.log(`[SOCKET] Emitted table_updated (${action}) for table: ${tableId}`);
+}
+
 // Get socket.io instance
 function getIO() {
   return io;
@@ -130,6 +149,7 @@ module.exports = {
   emitOrderUpdate,
   emitOrderCreated,
   emitOrderItemsAdded,
+  emitTableUpdated,
   getIO
 };
 

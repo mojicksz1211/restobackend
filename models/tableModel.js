@@ -6,6 +6,7 @@
 // ============================================
 
 const pool = require('../config/db');
+const socketService = require('../utils/socketService');
 
 class TableModel {
 	// Get all restaurant tables
@@ -96,7 +97,20 @@ class TableModel {
 			currentDate
 		]);
 
-		return result.insertId;
+		const newId = result.insertId;
+		if (newId) {
+			const table = await TableModel.getById(newId);
+			if (table) {
+				socketService.emitTableUpdated({
+					id: table.IDNo,
+					table_number: table.TABLE_NUMBER,
+					capacity: table.CAPACITY,
+					status: table.STATUS,
+					branch_id: table.BRANCH_ID ?? null
+				}, 'created');
+			}
+		}
+		return newId;
 	}
 
 	// Update restaurant table
@@ -117,8 +131,20 @@ class TableModel {
 			parseInt(STATUS) || 1,
 			id
 		]);
-
-		return result.affectedRows > 0;
+		const updated = result.affectedRows > 0;
+		if (updated) {
+			const table = await TableModel.getById(id);
+			if (table) {
+				socketService.emitTableUpdated({
+					id: table.IDNo,
+					table_number: table.TABLE_NUMBER,
+					capacity: table.CAPACITY,
+					status: table.STATUS,
+					branch_id: table.BRANCH_ID ?? null
+				}, 'updated');
+			}
+		}
+		return updated;
 	}
 
 	// Delete restaurant table (soft delete - set ACTIVE = 0)
@@ -130,7 +156,18 @@ class TableModel {
 		`;
 
 		const [result] = await pool.execute(query, [id]);
-		return result.affectedRows > 0;
+		const updated = result.affectedRows > 0;
+		if (updated) {
+			const table = await TableModel.getById(id);
+			socketService.emitTableUpdated({
+				id,
+				table_number: table?.TABLE_NUMBER,
+				capacity: table?.CAPACITY,
+				status: table?.STATUS,
+				branch_id: table?.BRANCH_ID ?? null
+			}, 'deleted');
+		}
+		return updated;
 	}
 
 	static async updateStatus(id, status) {
@@ -140,7 +177,20 @@ class TableModel {
 			WHERE IDNo = ?
 		`;
 		const [result] = await pool.execute(query, [status, id]);
-		return result.affectedRows > 0;
+		const updated = result.affectedRows > 0;
+		if (updated) {
+			const table = await TableModel.getById(id);
+			if (table) {
+				socketService.emitTableUpdated({
+					id: table.IDNo,
+					table_number: table.TABLE_NUMBER,
+					capacity: table.CAPACITY,
+					status: table.STATUS,
+					branch_id: table.BRANCH_ID ?? null
+				}, 'updated');
+			}
+		}
+		return updated;
 	}
 
 	// Get transaction history for a specific table
