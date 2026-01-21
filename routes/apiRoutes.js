@@ -114,6 +114,21 @@ router.post("/orders", authenticateJWT, ApiController.createOrder);
 // }
 // Response: { success: true, data: { order_id, order_no, items_added, new_subtotal, new_grand_total } }
 router.post("/orders/:order_id/items", authenticateJWT, ApiController.addItemsToOrder);
+// PUT - Replace items in existing order (Edit Order)
+// URL: /api/orders/:order_id/items
+// Headers: Authorization: Bearer <accessToken>
+// Body: {
+//   items: [
+//     {
+//       menu_id: number (required),
+//       qty: number (required),
+//       unit_price: number (required),
+//       status: number (optional, default: 3)
+//     }
+//   ] (required, at least one item)
+// }
+// Response: { success: true, data: { order_id, order_no, items_count, new_grand_total } }
+router.put("/orders/:order_id/items", authenticateJWT, ApiController.replaceOrderItems);
 
 // ============================================
 // EXPORT

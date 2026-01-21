@@ -1052,6 +1052,117 @@ class ApiController {
 			});
 		}
 	}
+
+	// Replace items in existing order (Edit Order)
+	static async replaceOrderItems(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+		const { order_id } = req.params;
+
+		try {
+			console.log(`[${timestamp}] [API REQUEST] PUT /api/orders/${order_id}/items - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+
+			if (!order_id) {
+				return res.status(400).json({
+					success: false,
+					error: 'Order ID is required'
+				});
+			}
+
+			const existingOrder = await OrderModel.getById(order_id);
+			if (!existingOrder) {
+				return res.status(404).json({
+					success: false,
+					error: 'Order not found'
+				});
+			}
+
+			const { items } = req.body;
+			if (!items || !Array.isArray(items) || items.length === 0) {
+				return res.status(400).json({
+					success: false,
+					error: 'At least one order item is required'
+				});
+			}
+
+			for (const item of items) {
+				if (!item.menu_id || !item.qty || !item.unit_price) {
+					return res.status(400).json({
+						success: false,
+						error: 'Each item must have menu_id, qty, and unit_price'
+					});
+				}
+			}
+
+			const replacementItems = items.map(item => ({
+				menu_id: parseInt(item.menu_id),
+				qty: parseFloat(item.qty),
+				unit_price: parseFloat(item.unit_price),
+				line_total: parseFloat(item.qty) * parseFloat(item.unit_price),
+				status: item.status || 3
+			}));
+
+			const newSubtotal = Number(
+				replacementItems.reduce((sum, item) => sum + item.line_total, 0).toFixed(2)
+			);
+			const taxAmount = Number(existingOrder.TAX_AMOUNT) || 0;
+			const serviceCharge = Number(existingOrder.SERVICE_CHARGE) || 0;
+			const discountAmount = Number(existingOrder.DISCOUNT_AMOUNT) || 0;
+			const newGrandTotal = Number((newSubtotal + taxAmount + serviceCharge - discountAmount).toFixed(2));
+
+			await OrderItemsModel.replaceForOrder(order_id, replacementItems, user_id);
+
+			await OrderModel.update(order_id, {
+				TABLE_ID: existingOrder.TABLE_ID,
+				ORDER_TYPE: existingOrder.ORDER_TYPE,
+				STATUS: existingOrder.STATUS,
+				SUBTOTAL: newSubtotal,
+				TAX_AMOUNT: taxAmount,
+				SERVICE_CHARGE: serviceCharge,
+				DISCOUNT_AMOUNT: discountAmount,
+				GRAND_TOTAL: newGrandTotal,
+				user_id: user_id
+			});
+
+			const existingBilling = await BillingModel.getByOrderId(order_id);
+			if (existingBilling) {
+				await BillingModel.updateForOrder(order_id, {
+					amount_due: newGrandTotal
+				});
+			}
+
+			const updatedOrder = await OrderModel.getById(order_id);
+			const updatedItems = await OrderItemsModel.getByOrderId(order_id);
+
+			socketService.emitOrderUpdate(order_id, {
+				order_id: parseInt(order_id),
+				order_no: updatedOrder.ORDER_NO,
+				table_id: updatedOrder.TABLE_ID,
+				status: updatedOrder.STATUS,
+				grand_total: newGrandTotal,
+				items: updatedItems
+			});
+
+			return res.json({
+				success: true,
+				data: {
+					order_id: parseInt(order_id),
+					order_no: updatedOrder.ORDER_NO,
+					items_count: replacementItems.length,
+					new_grand_total: newGrandTotal
+				}
+			});
+		} catch (error) {
+			console.error(`[${timestamp}] [API ERROR] PUT /api/orders/${order_id}/items - IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to update order items',
+				message: error.message
+			});
+		}
+	}
 }
 
 module.exports = ApiController;
