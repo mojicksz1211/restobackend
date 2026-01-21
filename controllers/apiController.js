@@ -223,12 +223,22 @@ class ApiController {
 		try {
 			console.log(`[${timestamp}] [API REQUEST] GET /api/tables - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
 
-			const tables = await TableModel.getAll();
+			let resolvedBranchId = req.query.branch_id || req.user?.branch_id || null;
+			if (!resolvedBranchId && user_id) {
+				const UserBranchModel = require('../models/userBranchModel');
+				const branches = await UserBranchModel.getBranchesByUserId(user_id);
+				if (branches.length > 0) {
+					resolvedBranchId = branches[0].IDNo;
+				}
+			}
+
+			const tables = await TableModel.getAll(resolvedBranchId);
 			const formattedTables = tables.map(table => ({
 				id: table.IDNo,
 				table_number: table.TABLE_NUMBER,
 				capacity: table.CAPACITY,
-				status: table.STATUS
+				status: table.STATUS,
+				branch_id: table.BRANCH_ID ?? null
 			}));
 
 			console.log(`[${timestamp}] [API SUCCESS] GET /api/tables - User ID: ${user_id}, Tables returned: ${formattedTables.length} - IP: ${clientIp}`);
