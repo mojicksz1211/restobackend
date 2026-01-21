@@ -663,6 +663,7 @@ function openOrderItemsModal(orderId) {
 								</button>
 								<ul class="dropdown-menu dropdown-menu-end">
 									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 3, ${orderId})">Pending</a></li>
+									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 2, ${orderId})">Preparing</a></li>
 									<li><a class="dropdown-item" href="javascript:void(0)" onclick="updateItemStatus(${item.IDNo}, 1, ${orderId})">Ready</a></li>
 								</ul>
 							</div>
