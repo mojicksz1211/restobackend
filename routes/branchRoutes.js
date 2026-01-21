@@ -60,8 +60,8 @@ router.post('/', checkSession, requireAdminSession, BranchController.create);
 // Update branch (admin only)
 router.put('/:id', checkSession, requireAdminSession, BranchController.update);
 
-// Delete branch disabled for now (branch ID is referenced by other tables)
-// router.delete('/:id', checkSession, requireAdminSession, BranchController.delete);
+// Delete branch (soft delete)
+router.delete('/:id', checkSession, requireAdminSession, BranchController.delete);
 
 // Get users by branch (admin only)
 router.get('/:branchId/users', checkSession, requireAdminSession, BranchController.getUsersByBranch);

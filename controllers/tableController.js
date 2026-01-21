@@ -52,9 +52,16 @@ class TableController {
 			if (!branchId) {
 				return res.status(400).json({ error: 'Branch ID is required. Please select a branch first.' });
 			}
+
+			const normalizedTableNumber = TABLE_NUMBER.trim();
+			const tableExists = await TableModel.existsByBranchAndNumber(branchId, normalizedTableNumber);
+			if (tableExists) {
+				return res.status(409).json({ error: 'Table number already exists for the selected branch.' });
+			}
+
 			const tableId = await TableModel.create({
 				BRANCH_ID: branchId,
-				TABLE_NUMBER,
+				TABLE_NUMBER: normalizedTableNumber,
 				CAPACITY,
 				STATUS,
 				user_id

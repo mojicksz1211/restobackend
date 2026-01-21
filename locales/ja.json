@@ -854,6 +854,8 @@
 			"next": "次へ",
 			"search": "検索",
 			"search_placeholder": "検索..."
-		}
+		},
+		"branch": "table.branch",
+		"actions": "table.actions"
 	}
 }

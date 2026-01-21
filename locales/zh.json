@@ -855,6 +855,8 @@
 			"next": "下一页",
 			"search": "搜索",
 			"search_placeholder": "搜索..."
-		}
+		},
+		"branch": "table.branch",
+		"actions": "table.actions"
 	}
 }

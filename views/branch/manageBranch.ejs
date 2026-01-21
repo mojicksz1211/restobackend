@@ -122,86 +122,119 @@
 
     <script>
       (function () {
-        const tableBody = document.querySelector('#branchTable tbody');
-        const form = document.getElementById('formNewBranch');
+        const tableEl = document.getElementById('branchTable');
+        const formNew = document.getElementById('formNewBranch');
         const formEdit = document.getElementById('formEditBranch');
         const editModalEl = document.getElementById('modal-edit_branch');
-        const editModal = () => bootstrap.Modal.getOrCreateInstance(editModalEl);
+        const newModalEl = document.getElementById('modal-new_branch');
+        const editModalInstance = () => bootstrap.Modal.getOrCreateInstance(editModalEl);
+        const newModalInstance = () => bootstrap.Modal.getOrCreateInstance(newModalEl);
+        const branchMap = new Map();
 
-        // store branches by ID for quick edit prefill
-        let branchMap = new Map();
-
-        function esc(s) {
-          return String(s ?? '').replace(/[&<>"']/g, (c) => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-          }[c]));
+        function showAlert(message, type = 'success') {
+          if (window.Swal && typeof Swal.fire === 'function') {
+            Swal.fire({ icon: type, text: message, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
+          } else {
+            console[type === 'error' ? 'error' : 'log'](message);
+          }
         }
 
-        function loadBranches() {
-          fetch('/branch', { credentials: 'include' })
-            .then(r => r.json())
-            .then(rows => {
-              tableBody.innerHTML = '';
-              branchMap = new Map();
-              (rows || []).forEach(b => {
-                branchMap.set(String(b.IDNo), b);
-                const active = (parseInt(b.ACTIVE) === 1 || (b.ACTIVE && b.ACTIVE.data && b.ACTIVE.data[0] === 1));
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                  <td>${esc(b.BRANCH_CODE)}</td>
-                  <td>${esc(b.BRANCH_NAME)}</td>
-                  <td>${esc(b.ADDRESS)}</td>
-                  <td>${esc(b.PHONE)}</td>
-                  <td>${active ? '<span class="badge bg-success">ACTIVE</span>' : '<span class="badge bg-secondary">INACTIVE</span>'}</td>
-                  <td><button class="btn btn-sm btn-info" data-id="${esc(b.IDNo)}">Edit</button></td>
+        function handleResponse(response) {
+          return response.json().then(json => {
+            if (!response.ok || !json || json.success === false) {
+              const errorMessage = (json && (json.error || json.message || json.details)) || 'Request failed';
+              throw new Error(errorMessage);
+            }
+            return json;
+          });
+        }
+
+        const branchTable = $(tableEl).DataTable({
+          responsive: true,
+          processing: true,
+          lengthChange: false,
+          ajax: {
+            url: '/branch',
+            method: 'GET',
+            dataSrc: ''
+          },
+          columns: [
+            { data: 'BRANCH_CODE', defaultContent: '—' },
+            { data: 'BRANCH_NAME', defaultContent: '—' },
+            { data: 'ADDRESS', defaultContent: '—' },
+            { data: 'PHONE', defaultContent: '—' },
+            {
+              data: 'ACTIVE',
+              orderable: false,
+              searchable: false,
+              className: 'text-center align-middle',
+              render: function (data) {
+                return parseInt(data) === 1
+                  ? '<span class="badge bg-success">Active</span>'
+                  : '<span class="badge bg-secondary">Inactive</span>';
+              }
+            },
+            {
+              data: null,
+              orderable: false,
+              searchable: false,
+              className: 'text-center align-middle',
+              render: function (data) {
+                const id = data.IDNo || '';
+                return `
+                  <div class="d-flex justify-content-center gap-1 flex-wrap">
+                    <button type="button" class="btn btn-sm btn-info" data-action="edit" data-id="${id}" aria-label="Edit">
+                      <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-id="${id}" aria-label="Delete">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
                 `;
-                tableBody.appendChild(tr);
-              });
-            })
-            .catch(() => {
-              tableBody.innerHTML = '<tr><td colspan="6" class="text-muted">Failed to load branches.</td></tr>';
-            });
-        }
+              }
+            }
+          ],
+          order: [[1, 'asc']]
+        });
 
-        form.addEventListener('submit', function (e) {
+        $(tableEl).on('xhr.dt', function (event, settings, json) {
+          branchMap.clear();
+          (json || []).forEach(row => branchMap.set(String(row.IDNo), row));
+        });
+
+        formNew.addEventListener('submit', function (e) {
           e.preventDefault();
-          const fd = new FormData(form);
-          const payload = Object.fromEntries(fd.entries());
+          const payload = Object.fromEntries(new FormData(formNew).entries());
           fetch('/branch', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })
-            .then(r => r.json())
-            .then(data => {
-              if (!data || !data.success) throw new Error((data && data.error) || 'Failed');
-              form.reset();
-              const modalEl = document.getElementById('modal-new_branch');
-              const modal = bootstrap.Modal.getInstance(modalEl);
-              if (modal) modal.hide();
-              loadBranches();
+            .then(handleResponse)
+            .then(() => {
+              formNew.reset();
+              newModalInstance().hide();
+              branchTable.ajax.reload(null, false);
+              showAlert('Branch created successfully');
             })
             .catch(err => {
-              alert(err.message || 'Failed to create branch');
+              showAlert(err.message || 'Failed to create branch', 'error');
             });
         });
 
-        // Edit handler (no delete)
-        tableBody.addEventListener('click', function (e) {
-          const btn = e.target.closest('button[data-id]');
-          if (!btn) return;
-          const id = btn.getAttribute('data-id');
-          const b = branchMap.get(String(id));
-          if (!b) return;
-
-          document.getElementById('edit_branch_id').value = b.IDNo;
-          document.getElementById('edit_branch_code').value = b.BRANCH_CODE || '';
-          document.getElementById('edit_branch_name').value = b.BRANCH_NAME || '';
-          document.getElementById('edit_branch_address').value = b.ADDRESS || '';
-          document.getElementById('edit_branch_phone').value = b.PHONE || '';
-
-          editModal().show();
+        $(tableEl).on('click', 'button[data-action="edit"]', function () {
+          const id = $(this).data('id');
+          const branch = branchMap.get(String(id));
+          if (!branch) {
+            return;
+          }
+          document.getElementById('edit_branch_id').value = branch.IDNo;
+          document.getElementById('edit_branch_code').value = branch.BRANCH_CODE || '';
+          document.getElementById('edit_branch_name').value = branch.BRANCH_NAME || '';
+          document.getElementById('edit_branch_address').value = branch.ADDRESS || '';
+          document.getElementById('edit_branch_phone').value = branch.PHONE || '';
+          editModalInstance().show();
         });
 
         formEdit.addEventListener('submit', function (e) {
@@ -213,26 +246,43 @@
             ADDRESS: document.getElementById('edit_branch_address').value,
             PHONE: document.getElementById('edit_branch_phone').value
           };
-
           fetch(`/branch/${encodeURIComponent(id)}`, {
             method: 'PUT',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })
-            .then(r => r.json())
-            .then(data => {
-              if (!data || !data.success) throw new Error((data && (data.error || data.details)) || 'Failed');
-              editModal().hide();
-              loadBranches();
+            .then(handleResponse)
+            .then(() => {
+              editModalInstance().hide();
+              branchTable.ajax.reload(null, false);
+              showAlert('Branch updated successfully');
             })
             .catch(err => {
-              alert(err.message || 'Failed to update branch');
+              showAlert(err.message || 'Failed to update branch', 'error');
             });
         });
 
-        loadBranches();
+        $(tableEl).on('click', 'button[data-action="delete"]', function () {
+          const id = $(this).data('id');
+          if (!id) {
+            return;
+          }
+          if (!confirm('Are you sure you want to delete this branch?')) {
+            return;
+          }
+          fetch(`/branch/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          })
+            .then(handleResponse)
+            .then(() => {
+              branchTable.ajax.reload(null, false);
+              showAlert('Branch deleted successfully');
+            })
+            .catch(err => {
+              showAlert(err.message || 'Failed to delete branch', 'error');
+            });
+        });
       })();
     </script>
-
-

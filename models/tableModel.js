@@ -57,9 +57,22 @@ class TableModel {
 		return rows[0] || null;
 	}
 
+	static async existsByBranchAndNumber(branchId, tableNumber) {
+		const query = `
+			SELECT 1
+			FROM restaurant_tables
+			WHERE BRANCH_ID = ?
+				AND TABLE_NUMBER = ?
+				AND ACTIVE = 1
+			LIMIT 1
+		`;
+		const [rows] = await pool.execute(query, [branchId, tableNumber]);
+		return rows.length > 0;
+	}
+
 	// Create new restaurant table
 	static async create(data) {
-		const { TABLE_NUMBER, CAPACITY, STATUS, user_id } = data;
+		const { TABLE_NUMBER, CAPACITY, STATUS, BRANCH_ID, user_id } = data;
 		const currentDate = new Date();
 
 		const query = `

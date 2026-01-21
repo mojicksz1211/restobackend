@@ -853,6 +853,8 @@
 			"next": "Next",
 			"search": "Search",
 			"search_placeholder": "Search..."
-		}
+		},
+		"branch": "table.branch",
+		"actions": "table.actions"
 	}
 }

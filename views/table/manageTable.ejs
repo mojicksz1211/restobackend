@@ -46,26 +46,20 @@
 								</div>
 							</div>
 
-							<div class="card-body">
-								<!-- Cards Container -->
-								<div id="tableCardsContainer" class="row g-3">
-									<!-- Cards will be dynamically inserted here -->
-								</div>
-								
-								<!-- Empty State -->
-								<div id="emptyState" class="text-center py-5" style="display: block;">
-									<i class="fa fa-table fa-3x text-muted mb-3"></i>
-									<p class="text-muted">No tables found. Click "+ New Table" to add one.</p>
-								</div>
-								
-								<!-- Pagination -->
-								<div class="d-flex justify-content-between align-items-center mt-4">
-									<div id="paginationInfo" class="text-muted" style="font-size: 12px;"></div>
-									<nav>
-										<ul class="pagination pagination-sm mb-0" id="paginationControls">
-											<!-- Pagination buttons will be inserted here -->
-										</ul>
-									</nav>
+							<div class="card-body pt-3">
+								<div class="table-responsive">
+									<table id="restaurantTables" class="table  nowrap small-text" style="width:100%">
+										<thead class="table-light">
+											<tr>
+												<th><%= __('table.table_number') %></th>
+												<th><%= __('table.capacity') %></th>
+												<th><%= __('table.status') %></th>
+												<th><%= __('table.branch') %></th>
+												<th><%= __('table.actions') %></th>
+											</tr>
+										</thead>
+										<tbody></tbody>
+									</table>
 								</div>
 							</div>
 						</div>
@@ -126,303 +120,40 @@
 			<!-- ============================================ -->
 			<!-- SCRIPTS -->
 			<!-- ============================================ -->
-			<script>
-				console.log('=== Script tag reached ===');
-				console.log('About to load manageTable.js');
-				
-				// Test if file exists by trying to load it
-				var script = document.createElement('script');
-				script.src = '/assets/js/functions/manageTable.js?v=' + new Date().getTime();
-				script.onload = function() {
-					console.log('✓ manageTable.js loaded successfully');
-				};
-				script.onerror = function() {
-					console.error('✗ ERROR: Failed to load manageTable.js');
-					console.error('Check Network tab for 404 error');
-				};
-				document.head.appendChild(script);
-			</script>
+			<script src="/assets/js/functions/manageTable.js?v=2026-01-21-branch"></script>
 
 			<style>
+				/* Keep tables readable when horizontal overflow is needed */
 				.card-body {
 					overflow-x: auto;
 				}
 
-				/* Pure Table Image - No Card Style */
-				.table-card {
-					border: none;
-					border-radius: 0;
-					height: 100%;
-					min-height: 280px;
-					background-image: url('/assets/images/Table6.webp');
-					background-size: cover;
-					background-position: center;
-					background-repeat: no-repeat;
-					box-shadow: none;
-					overflow: visible;
-					position: relative;
-					display: flex;
-					flex-direction: column;
-					transition: transform 0.3s ease, filter 0.3s ease;
-				}
-
-				.table-card:hover {
-					transform: scale(1.02);
-					filter: brightness(1.05);
-				}
-
-				.table-card-header {
-					background: transparent;
-					color: #DB5363;
-					padding: 0;
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					position: absolute;
-					top: 15px;
-					left: 0;
-					right: 0;
-					z-index: 2;
-					flex-direction: column;
-					gap: 8px;
-				}
-
-				.table-card-header .table-number-badge {
-					text-align: center;
-				}
-
-				.table-card-header .badge {
-					text-align: center;
-					margin: 0 auto;
-				}
-
-				.table-card-body {
-					padding: 0;
-					background: transparent;
-					position: absolute;
-					top: 50%;
-					left: 50%;
-					transform: translate(-50%, -50%);
-					z-index: 1;
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					flex-direction: column;
-				}
-
-				.table-card-info {
-					display: flex;
-					flex-direction: column;
-					gap: 16px;
-				}
-
-				.table-card-info-item {
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					padding: 4px 8px;
-					margin-bottom: 6px;
-					background: transparent;
-					border-radius: 0;
-					box-shadow: none;
-					gap: 4px;
-					position: relative;
-					width: fit-content;
-					margin-left: auto;
-					margin-right: auto;
-					text-align: center;
-				}
-
-				.table-card-info-item:first-child {
-					margin-bottom: 15px;
-					margin-top: -5px;
-					justify-content: center;
-					margin-left: auto;
-					margin-right: auto;
-				}
-
-				/* Push capacity below the table plant graphic */
-				.table-card-info-item.table-card-capacity {
-					margin-top: 80px;
-					margin-bottom: 0;
-				}
-
-				.table-card-info-item:last-child {
-					margin-bottom: 0;
-				}
-
-				.table-card-info-label {
-					font-weight: 600;
-					color: #2c3e50;
-					font-size: 12px;
-					display: inline-flex;
-					align-items: center;
-					gap: 1px;
-					position: relative;
-					z-index: 2;
-					text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 1px 1px rgba(0, 0, 0, 0.1);
-					white-space: nowrap;
-					transition: all 0.2s ease;
-				}
-
-				.table-card-info-label i {
-					color: #DB5363;
-					font-size: 14px;
-					text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-					transition: all 0.2s ease;
-				}
-
-				.table-card-info-item:hover .table-card-info-label {
-					transform: translateY(-1px);
-				}
-
-				.table-card-info-item:hover .table-card-info-label i {
-					transform: scale(1.1);
-					color: #c82333;
-				}
-
-				/* Position date created icon more inside the table - compact */
-				.table-card-info-item:last-child {
-					gap: 2px;
-					padding: 2px 6px;
-				}
-
-				.table-card-info-item:last-child .table-card-info-label {
-					gap: 1px;
-					font-size: 11px;
-				}
-
-				.table-card-info-item:last-child .table-card-info-label i.fa-calendar {
+				#restaurantTables {
+					width: 100%;
 					font-size: 13px;
-					margin-right: 2px;
+					border-collapse: collapse;
 				}
 
-				.table-card-info-item:last-child .table-card-info-value {
-					font-size: 11px;
-					margin-left: 2px;
-				}
-
-				.table-card-info-value {
-					color: #1a1a1a;
-					font-size: 14px;
-					font-weight: 700;
-					position: relative;
-					z-index: 2;
-					text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 1px 1px rgba(0, 0, 0, 0.1);
-					transition: all 0.2s ease;
-				}
-
-				.table-card-info-item:hover .table-card-info-value {
-					color: #000;
-					transform: scale(1.05);
-				}
-
-				.table-card-actions {
-					padding: 0;
-					display: flex;
-					justify-content: center;
-					gap: 10px;
-					background: transparent;
-					position: absolute;
-					bottom: 15px;
-					left: 50%;
-					transform: translateX(-50%);
-					z-index: 2;
-				}
-
-				.table-card-actions .btn {
-					border-radius: 8px;
-					padding: 8px 14px;
-					font-weight: 600;
-					font-size: 12px;
-					transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-					box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+				#restaurantTables thead th {
+					background: var(--bs-primary-bg-subtle);
+					color: var(--bs-primary);
+					font-weight: 500;
+					padding: 12px 15px;
+					text-align: left;
 					border: none;
 				}
 
-				.table-card-actions .btn:hover {
-					transform: translateY(-3px) scale(1.05);
-					box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+				#restaurantTables tbody tr {
+					border-bottom: 1px solid #eee;
 				}
 
-				.table-card-actions .btn:active {
-					transform: translateY(-1px) scale(1.02);
+				#restaurantTables td {
+					padding: 12px 15px;
+					color: #666;
 				}
 
-				.table-card-actions .btn-danger {
-					background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-					border: none;
-				}
-
-				.table-card-actions .btn-info {
-					background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-					border: none;
-				}
-
-				.table-card-actions .btn-success {
-					background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-					border: none;
-				}
-
-				.table-number-badge {
-					font-size: 20px;
-					font-weight: 700;
-					letter-spacing: 0.5px;
-					text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 10px rgba(219, 83, 99, 0.2);
-					position: relative;
-					z-index: 3;
-					color: #DB5363;
-					transition: all 0.3s ease;
-				}
-
-				.table-card:hover .table-number-badge {
-					transform: scale(1.05);
-					text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 15px rgba(219, 83, 99, 0.3);
-				}
-
-				/* Premium Round status badges */
-				.table-card-header .badge {
-					border-radius: 50px;
-					padding: 6px 12px;
-					font-size: 10px;
-					font-weight: 600;
-					letter-spacing: 0.5px;
-					box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 15px rgba(0, 0, 0, 0.1);
-					text-transform: uppercase;
-					position: relative;
-					z-index: 3;
-					backdrop-filter: blur(10px);
-					transition: all 0.3s ease;
-				}
-
-				.table-card:hover .table-card-header .badge {
-					transform: scale(1.05);
-					box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.15);
-				}
-
-				/* Badge color enhancements */
-				.table-card-header .badge.bg-success {
-					background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-				}
-
-				.table-card-header .badge.bg-warning {
-					background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
-				}
-
-				.table-card-header .badge.bg-info {
-					background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%) !important;
-				}
-
-				.table-card-header .badge.bg-danger {
-					background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-				}
-
-				/* Branch badge should be transparent */
-				.table-card-header .badge.bg-secondary {
-					background: transparent !important;
-					box-shadow: none;
-					color: #333;
-					
+				#restaurantTables tbody tr:hover {
+					background-color: #f5f5f5 !important;
 				}
 
 				.bg-light {
@@ -439,165 +170,8 @@
 					margin-bottom: 5px;
 				}
 
-				#filter_status, #search_input {
+				#filter_status,
+				#search_input {
 					font-size: 12px;
 				}
-
-				/* Premium Empty State */
-				#emptyState {
-					padding: 60px 20px;
-					background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-					border-radius: 12px;
-					border: 2px dashed #dee2e6;
-				}
-
-				#emptyState i {
-					opacity: 0.3;
-					animation: pulse 2s ease-in-out infinite;
-				}
-
-				@keyframes pulse {
-					0%, 100% {
-						opacity: 0.3;
-						transform: scale(1);
-					}
-					50% {
-						opacity: 0.5;
-						transform: scale(1.05);
-					}
-				}
-
-				#emptyState p {
-					font-size: 16px;
-					color: #6c757d;
-					margin-top: 16px;
-					font-weight: 500;
-				}
-
-				/* Premium Filter Section */
-				.card-body.border-bottom.bg-light {
-					background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%) !important;
-					border-bottom: 1px solid rgba(219, 83, 99, 0.1) !important;
-					padding: 16px 20px;
-				}
-
-				#filter_status, #search_input {
-					border-radius: 8px;
-					border: 1px solid #dee2e6;
-					transition: all 0.3s ease;
-				}
-
-				#filter_status:focus, #search_input:focus {
-					border-color: #DB5363;
-					box-shadow: 0 0 0 3px rgba(219, 83, 99, 0.1);
-					outline: none;
-				}
-
-				/* Premium Pagination */
-				.pagination .page-link {
-					border-radius: 8px;
-					margin: 0 4px;
-					border: 1px solid #dee2e6;
-					color: #495057;
-					transition: all 0.3s ease;
-				}
-
-				.pagination .page-link:hover {
-					background: #DB5363;
-					color: white;
-					border-color: #DB5363;
-					transform: translateY(-2px);
-					box-shadow: 0 4px 8px rgba(219, 83, 99, 0.2);
-				}
-
-				.pagination .page-item.active .page-link {
-					background: linear-gradient(135deg, #DB5363 0%, #C94454 100%);
-					border-color: #DB5363;
-					box-shadow: 0 4px 12px rgba(219, 83, 99, 0.3);
-				}
-
-				/* Responsive adjustments */
-				@media (max-width: 768px) {
-					.table-card {
-						margin-bottom: 15px;
-					}
-					
-					.table-card-header {
-						padding: 14px 16px;
-					}
-					
-					.table-card-body {
-						padding: 20px 16px;
-					}
-				}
-
-				/* Transaction History Modal Scroll Fix */
-				#modal-transaction_history .modal-body {
-					overflow-x: auto;
-					max-height: 70vh;
-				}
-
-				#modal-transaction_history .table-responsive {
-					overflow-x: auto;
-					-webkit-overflow-scrolling: touch;
-					display: block;
-					width: 100%;
-				}
-
-				#modal-transaction_history table {
-					min-width: 800px;
-					width: 100%;
-				}
-
-				/* Custom Scrollbar Styling - #DB5363 */
-				#modal-transaction_history .modal-body::-webkit-scrollbar,
-				#modal-transaction_history .table-responsive::-webkit-scrollbar {
-					width: 12px;
-					height: 12px;
-				}
-
-				#modal-transaction_history .modal-body::-webkit-scrollbar-track,
-				#modal-transaction_history .table-responsive::-webkit-scrollbar-track {
-					background: #f1f1f1;
-					border-radius: 10px;
-				}
-
-				#modal-transaction_history .modal-body::-webkit-scrollbar-thumb,
-				#modal-transaction_history .table-responsive::-webkit-scrollbar-thumb {
-					background: #DB5363;
-					border-radius: 10px;
-				}
-
-				#modal-transaction_history .modal-body::-webkit-scrollbar-thumb:hover,
-				#modal-transaction_history .table-responsive::-webkit-scrollbar-thumb:hover {
-					background: #C94454;
-				}
-
-				/* Firefox Scrollbar */
-				#modal-transaction_history .modal-body,
-				#modal-transaction_history .table-responsive {
-					scrollbar-width: thin;
-					scrollbar-color: #DB5363 #f1f1f1;
-				}
-
-				/* Fix tooltip overlap with modal */
-				.modal.show ~ .tooltip,
-				.modal.show .tooltip {
-					display: none !important;
-					visibility: hidden !important;
-					opacity: 0 !important;
-				}
-
-				.tooltip {
-					z-index: 9999;
-				}
-
-				.modal {
-					z-index: 1050;
-				}
-
-				.modal-backdrop {
-					z-index: 1040;
-				}
 			</style>
-

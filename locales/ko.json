@@ -856,6 +856,8 @@
 			"next": "다음",
 			"search": "검색",
 			"search_placeholder": "검색..."
-		}
+		},
+		"branch": "table.branch",
+		"actions": "table.actions"
 	}
 }
