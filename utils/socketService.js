@@ -37,6 +37,12 @@ function initializeSocket(server) {
       console.log(`[SOCKET] Client ${socket.id} left room: ${room}`);
     });
 
+    // Handle kitchen room joining
+    socket.on('join_kitchen', () => {
+      socket.join('kitchen');
+      console.log(`[SOCKET] Client ${socket.id} joined kitchen room`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`[SOCKET] Client disconnected: ${socket.id}`);
     });
@@ -54,13 +60,18 @@ function emitOrderUpdate(orderId, orderData) {
   }
 
   const room = `order_${orderId}`;
-  io.to(room).emit('order_updated', {
+  const payload = {
     order_id: orderId,
     order: orderData,
     timestamp: new Date().toISOString()
-  });
+  };
+  
+  // Emit to order room
+  io.to(room).emit('order_updated', payload);
+  // Also emit to kitchen room
+  io.to('kitchen').emit('order_updated', payload);
 
-  console.log(`[SOCKET] Emitted order_updated to room: ${room}`);
+  console.log(`[SOCKET] Emitted order_updated to room: ${room} and kitchen`);
 }
 
 // Emit order created event
@@ -71,13 +82,20 @@ function emitOrderCreated(orderId, orderData) {
   }
 
   const room = `order_${orderId}`;
-  io.to(room).emit('order_created', {
+  const payload = {
     order_id: orderId,
     order: orderData,
     timestamp: new Date().toISOString()
-  });
+  };
 
-  console.log(`[SOCKET] Emitted order_created to room: ${room}`);
+  // Emit to order room
+  io.to(room).emit('order_created', payload);
+  // Also emit to kitchen room (NEW ORDERS)
+  io.to('kitchen').emit('order_created', payload);
+  // Also emit globally for safety
+  io.emit('order_created', payload);
+
+  console.log(`[SOCKET] Emitted order_created to room: ${room} and kitchen`);
 }
 
 // Emit order items added event
@@ -88,13 +106,18 @@ function emitOrderItemsAdded(orderId, orderData) {
   }
 
   const room = `order_${orderId}`;
-  io.to(room).emit('order_items_added', {
+  const payload = {
     order_id: orderId,
     order: orderData,
     timestamp: new Date().toISOString()
-  });
+  };
 
-  console.log(`[SOCKET] Emitted order_items_added to room: ${room}`);
+  // Emit to order room
+  io.to(room).emit('order_items_added', payload);
+  // Also emit to kitchen room
+  io.to('kitchen').emit('order_items_added', payload);
+
+  console.log(`[SOCKET] Emitted order_items_added to room: ${room} and kitchen`);
 }
 
 // Get socket.io instance
