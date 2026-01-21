@@ -74,16 +74,16 @@ class ApiController {
 				}
 
 				if (isValid) {
-					// Check if user has PERMISSIONS = 2 (Tablet App) or PERMISSIONS = 16 (Kitchen)
-					// Allow both tablet app users and kitchen users to login via API
-					const allowedPermissions = [2, 16]; // 2 = Tablet App, 16 = Kitchen
+					// Check if user has PERMISSIONS = 2 (Tablet), 14 (Waiter), or 16 (Kitchen)
+					// Allow tablet, waiter, and kitchen users to login via API
+					const allowedPermissions = [2, 14, 16]; // 2 = Tablet, 14 = Waiter, 16 = Kitchen
 					const userPermissions = parseInt(user.PERMISSIONS, 10); // Convert to integer for comparison
 					
 					// Debug logging
 					console.log(`[${timestamp}] [LOGIN CHECK] ${username} - PERMISSIONS: ${user.PERMISSIONS} (type: ${typeof user.PERMISSIONS}), parsed: ${userPermissions}, allowed: [${allowedPermissions.join(', ')}]`);
 					
 					if (!allowedPermissions.includes(userPermissions)) {
-						console.log(`[${timestamp}] [LOGIN FAILED] ${username} - Not a tablet app user (PERMISSIONS: ${user.PERMISSIONS}, parsed: ${userPermissions}, allowed: [${allowedPermissions.join(', ')}])`);
+						console.log(`[${timestamp}] [LOGIN FAILED] ${username} - Not an allowed mobile app user (PERMISSIONS: ${user.PERMISSIONS}, parsed: ${userPermissions}, allowed: [${allowedPermissions.join(', ')}])`);
 						return res.status(403).json({
 							success: false,
 							error: 'This account is for web admin only. Please use the web application to login.'
