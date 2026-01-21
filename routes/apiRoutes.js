@@ -37,6 +37,11 @@ router.post("/refresh", ApiController.refreshToken);
 // Note: Categories are public, but keeping protected for consistency
 router.get("/categories", authenticateJWT, ApiController.getCategories);
 
+// GET - Get all restaurant tables
+// URL: /api/tables
+// Headers: Authorization: Bearer <accessToken>
+router.get("/tables", authenticateJWT, ApiController.getTables);
+
 // GET - Get all menu items
 // URL: /api/menu
 // Headers: Authorization: Bearer <accessToken>

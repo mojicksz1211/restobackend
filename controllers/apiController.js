@@ -192,6 +192,40 @@ class ApiController {
 		}
 	}
 
+	// Get all restaurant tables
+	static async getTables(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+
+		try {
+			console.log(`[${timestamp}] [API REQUEST] GET /api/tables - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+
+			const tables = await TableModel.getAll();
+			const formattedTables = tables.map(table => ({
+				id: table.IDNo,
+				table_number: table.TABLE_NUMBER,
+				capacity: table.CAPACITY,
+				status: table.STATUS
+			}));
+
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/tables - User ID: ${user_id}, Tables returned: ${formattedTables.length} - IP: ${clientIp}`);
+
+			return res.json({
+				success: true,
+				data: formattedTables
+			});
+		} catch (error) {
+			console.error(`[${timestamp}] [API ERROR] GET /api/tables - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to fetch tables',
+				message: error.message
+			});
+		}
+	}
+
 	// Get menu items (with optional category filter)
 	static async getMenuItems(req, res) {
 		const timestamp = new Date().toISOString();
