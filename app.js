@@ -17,6 +17,17 @@ const compression = require('compression');
 const app = express();
 app.use(compression());
 
+// Move CORS to the top to handle preflight requests immediately
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // i18n configuration
 i18n.configure({
   locales: ['en', 'ko', 'ja', 'zh'], // Supported languages including Chinese
@@ -44,18 +55,6 @@ app.use((req, res, next) => {
 // Body parser middleware for handling form submissions
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// CORS middleware for static files (images, etc.)
-app.use((req, res, next) => {
-  // Add CORS headers for all requests (including static files)
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
 
 // Static file serving with cache headers
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -145,17 +144,6 @@ app.get('/change-lang', (req, res) => {
     i18n.setLocale(req, lang); // Apply language immediately after cookie update
   }
   res.redirect('back'); // Redirect back to the previous page
-});
-
-// CORS middleware for API endpoints (for Android app)
-app.use('/api', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
 });
 
 // Register API routes with /api prefix (public endpoints for Android app)

@@ -64,6 +64,8 @@ router.get("/kitchen/orders", authenticateJWT, ApiController.getKitchenOrders);
 // URL: /api/kitchen/orders/:order_id/status
 // Body: { status: number } (allowed: 3=PENDING, 2=PREPARING, 1=READY, -1=CANCELLED)
 router.patch("/kitchen/orders/:order_id/status", authenticateJWT, ApiController.updateKitchenOrderStatus);
+// POST fallback for CORS issues
+router.post("/kitchen/orders/:order_id/status", authenticateJWT, ApiController.updateKitchenOrderStatus);
 
 // GET - Get waiter orders (orders table status)
 // URL: /api/waiter/orders

@@ -301,10 +301,11 @@ class OrderModel {
 
 	// Get kitchen orders - orders that have items with PENDING (3) or PREPARING (2) status
 	// Kitchen needs to see all active orders based on order_items status, not orders.status
-	static async getKitchenOrders() {
-		const query = `
+	static async getKitchenOrders(branchId = null) {
+		let query = `
 			SELECT DISTINCT
 				o.IDNo,
+				o.BRANCH_ID,
 				o.ORDER_NO,
 				o.TABLE_ID,
 				t.TABLE_NUMBER,
@@ -321,24 +322,18 @@ class OrderModel {
 			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
 			INNER JOIN order_items oi ON oi.ORDER_ID = o.IDNo
 			WHERE oi.STATUS IN (3, 2)  -- PENDING (3) or PREPARING (2) items
-			ORDER BY o.ENCODED_DT ASC  -- Oldest first (FIFO)
 		`;
 
-		const [rows] = await pool.execute(query);
+		const params = [];
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY o.ENCODED_DT ASC -- Oldest first (FIFO)`;
+
+		const [rows] = await pool.execute(query, params);
 		return rows;
-	}
-
-	// Update order status (used by kitchen to advance order)
-	static async updateStatus(orderId, status) {
-		const query = `
-			UPDATE orders 
-			SET STATUS = ? 
-			WHERE IDNo = ?
-			LIMIT 1
-		`;
-
-		const [result] = await pool.execute(query, [status, orderId]);
-		return result;
 	}
 }
 

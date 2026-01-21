@@ -466,8 +466,11 @@ class ApiController {
 				});
 			}
 
+			// Get branch_id from query or user context
+			const branchId = req.query.branch_id || req.user?.branch_id || null;
+
 			// Get all PENDING (3) and CONFIRMED (2) orders for kitchen
-			const orders = await OrderModel.getKitchenOrders();
+			const orders = await OrderModel.getKitchenOrders(branchId);
 
 			// Get order items for each order and calculate overall status from items
 			const ordersWithItems = await Promise.all(
@@ -547,7 +550,7 @@ class ApiController {
 		const allowedStatuses = [3, 2, 1]; // Pending (3), Preparing (2), Ready (1)
 
 		try {
-			console.log(`[${timestamp}] [API REQUEST] PATCH /api/kitchen/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
+			console.log(`[${timestamp}] [API REQUEST] POST /api/kitchen/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
 
 			if (!user_id) {
 				return res.status(400).json({
@@ -557,7 +560,7 @@ class ApiController {
 			}
 
 			const targetStatus = parseInt(status, 10);
-			if (!allowedStatuses.includes(targetStatus)) {
+			if (isNaN(targetStatus) || !allowedStatuses.includes(targetStatus)) {
 				return res.status(400).json({
 					success: false,
 					error: 'Invalid status. Allowed: 3 (Pending), 2 (Preparing), 1 (Ready)'
@@ -571,13 +574,34 @@ class ApiController {
 				});
 			}
 
+			// Get the order first to check existence and branch
+			const order = await OrderModel.getById(order_id);
+			if (!order) {
+				console.log(`[${timestamp}] [API ERROR] Order ${order_id} not found in database`);
+				return res.status(404).json({
+					success: false,
+					error: `Order #${order_id} not found`
+				});
+			}
+
+			// Branching check
+			const resolvedBranchId = req.query.branch_id || req.user?.branch_id || null;
+			if (resolvedBranchId && order.BRANCH_ID && parseInt(order.BRANCH_ID) !== parseInt(resolvedBranchId)) {
+				console.log(`[${timestamp}] [API ERROR] Branch mismatch for order ${order_id}. Order branch: ${order.BRANCH_ID}, User branch: ${resolvedBranchId}`);
+				return res.status(403).json({
+					success: false,
+					error: 'Order is not in your branch'
+				});
+			}
+
 			// Get all order items for this order
 			const items = await OrderItemsModel.getByOrderId(order_id);
 			
 			if (items.length === 0) {
+				console.log(`[${timestamp}] [API ERROR] No items found for order ${order_id}`);
 				return res.status(404).json({
 					success: false,
-					error: 'Order items not found'
+					error: 'Order has no items to update'
 				});
 			}
 
@@ -588,7 +612,21 @@ class ApiController {
 				)
 			);
 
-			console.log(`[${timestamp}] [API SUCCESS] PATCH /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, New Status: ${targetStatus}, Items Updated: ${items.length}, IP: ${clientIp}`);
+			// ALSO update the main orders table status
+			await OrderModel.updateStatus(order_id, targetStatus, user_id);
+
+			// Emit socket update
+			socketService.emitOrderUpdate(order_id, {
+				order_id: parseInt(order_id, 10),
+				order_no: order.ORDER_NO,
+				table_id: order.TABLE_ID,
+				order_type: order.ORDER_TYPE,
+				status: targetStatus,
+				grand_total: parseFloat(order.GRAND_TOTAL || 0),
+				items: items.map(item => ({ ...item, STATUS: targetStatus }))
+			});
+
+			console.log(`[${timestamp}] [API SUCCESS] POST /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, New Status: ${targetStatus}, Items Updated: ${items.length}, IP: ${clientIp}`);
 
 			return res.json({
 				success: true,
@@ -599,7 +637,7 @@ class ApiController {
 				}
 			});
 		} catch (error) {
-			console.error(`[${timestamp}] [API ERROR] PATCH /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
+			console.error(`[${timestamp}] [API ERROR] POST /api/kitchen/orders/${order_id}/status - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
 			return res.status(500).json({
 				success: false,
 				error: 'Failed to update order status',
