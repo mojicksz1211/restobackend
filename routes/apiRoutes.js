@@ -65,6 +65,16 @@ router.get("/kitchen/orders", authenticateJWT, ApiController.getKitchenOrders);
 // Body: { status: number } (allowed: 3=PENDING, 2=PREPARING, 1=READY, -1=CANCELLED)
 router.patch("/kitchen/orders/:order_id/status", authenticateJWT, ApiController.updateKitchenOrderStatus);
 
+// GET - Get waiter orders (orders table status)
+// URL: /api/waiter/orders
+// Headers: Authorization: Bearer <accessToken>
+router.get("/waiter/orders", authenticateJWT, ApiController.getWaiterOrders);
+
+// PATCH - Update waiter order status (orders table)
+// URL: /api/waiter/orders/:order_id/status
+// Body: { status: number } (allowed: 3=PENDING, 2=CONFIRMED)
+router.patch("/waiter/orders/:order_id/status", authenticateJWT, ApiController.updateWaiterOrderStatus);
+
 // POST - Create new order
 // URL: /api/orders
 // Headers: Authorization: Bearer <accessToken>

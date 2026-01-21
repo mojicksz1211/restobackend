@@ -582,6 +582,141 @@ class ApiController {
 		}
 	}
 
+	// Get waiter orders - use orders table status (PENDING=3, CONFIRMED=2)
+	static async getWaiterOrders(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+
+		try {
+			console.log(`[${timestamp}] [API REQUEST] GET /api/waiter/orders - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
+
+			const orders = await OrderModel.getAll();
+			const activeOrders = orders.filter(order => [3, 2].includes(order.STATUS));
+
+			const ordersWithItems = await Promise.all(
+				activeOrders.map(async (order) => {
+					const items = await OrderItemsModel.getByOrderId(order.IDNo);
+					return {
+						order_id: order.IDNo,
+						order_no: order.ORDER_NO,
+						table_id: order.TABLE_ID,
+						table_number: order.TABLE_NUMBER || null,
+						order_type: order.ORDER_TYPE,
+						status: order.STATUS,
+						subtotal: parseFloat(order.SUBTOTAL || 0),
+						tax_amount: parseFloat(order.TAX_AMOUNT || 0),
+						service_charge: parseFloat(order.SERVICE_CHARGE || 0),
+						discount_amount: parseFloat(order.DISCOUNT_AMOUNT || 0),
+						grand_total: parseFloat(order.GRAND_TOTAL || 0),
+						encoded_dt: order.ENCODED_DT,
+						items: items.map(item => ({
+							item_id: item.IDNo,
+							menu_id: item.MENU_ID,
+							menu_name: item.MENU_NAME,
+							qty: parseFloat(item.QTY || 0),
+							unit_price: parseFloat(item.UNIT_PRICE || 0),
+							line_total: parseFloat(item.LINE_TOTAL || 0),
+							status: item.STATUS
+						}))
+					};
+				})
+			);
+
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/waiter/orders - User ID: ${user_id}, Orders returned: ${ordersWithItems.length} - IP: ${clientIp}`);
+
+			return res.json({
+				success: true,
+				data: ordersWithItems
+			});
+		} catch (error) {
+			console.error(`[${timestamp}] [API ERROR] GET /api/waiter/orders - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to fetch waiter orders',
+				message: error.message
+			});
+		}
+	}
+
+	// Update waiter order status (orders table only)
+	static async updateWaiterOrderStatus(req, res) {
+		const timestamp = new Date().toISOString();
+		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const user_id = req.user?.user_id;
+		const { order_id } = req.params;
+		const { status } = req.body || {};
+
+		const allowedStatuses = [3, 2]; // Pending (3), Confirmed (2)
+
+		try {
+			console.log(`[${timestamp}] [API REQUEST] PATCH /api/waiter/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
+
+			if (!user_id) {
+				return res.status(400).json({
+					success: false,
+					error: 'User ID is required'
+				});
+			}
+
+			const targetStatus = parseInt(status, 10);
+			if (!allowedStatuses.includes(targetStatus)) {
+				return res.status(400).json({
+					success: false,
+					error: 'Invalid status. Allowed: 3 (Pending), 2 (Confirmed)'
+				});
+			}
+
+			if (!order_id) {
+				return res.status(400).json({
+					success: false,
+					error: 'Order ID is required'
+				});
+			}
+
+			const order = await OrderModel.getById(order_id);
+			if (!order) {
+				return res.status(404).json({
+					success: false,
+					error: 'Order not found'
+				});
+			}
+
+			await OrderModel.updateStatus(order_id, targetStatus, user_id);
+
+			// Emit socket update
+			const orderItems = await OrderItemsModel.getByOrderId(order_id);
+			socketService.emitOrderUpdate(order_id, {
+				order_id: parseInt(order_id, 10),
+				order_no: order.ORDER_NO,
+				table_id: order.TABLE_ID,
+				order_type: order.ORDER_TYPE,
+				status: targetStatus,
+				grand_total: parseFloat(order.GRAND_TOTAL || 0),
+				items: orderItems
+			});
+
+			console.log(`[${timestamp}] [API SUCCESS] PATCH /api/waiter/orders/${order_id}/status - User ID: ${user_id}, New Status: ${targetStatus}, IP: ${clientIp}`);
+
+			return res.json({
+				success: true,
+				data: {
+					order_id: parseInt(order_id, 10),
+					status: targetStatus
+				}
+			});
+		} catch (error) {
+			console.error(`[${timestamp}] [API ERROR] PATCH /api/waiter/orders/${order_id}/status - User ID: ${user_id}, IP: ${clientIp}, Error:`, error);
+			return res.status(500).json({
+				success: false,
+				error: 'Failed to update order status',
+				message: error.message
+			});
+		}
+	}
+
 	// Create order endpoint for mobile app
 	static async createOrder(req, res) {
 		const timestamp = new Date().toISOString();
