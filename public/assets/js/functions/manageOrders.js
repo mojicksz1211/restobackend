@@ -116,6 +116,12 @@ $(document).on('input', '.order-total-field', function () {
 $('#new_order_form').submit(function (event) {
 	event.preventDefault();
 	const payload = gatherOrderPayload('new', true);
+
+	if (!payload.ORDER_ITEMS || payload.ORDER_ITEMS.length === 0) {
+		Swal.fire({ icon: 'error', title: 'Validation', text: 'Please add at least one menu item to the order.' });
+		return;
+	}
+
 	$.ajax({
 		url: '/orders',
 		method: 'POST',
