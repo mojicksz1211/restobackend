@@ -208,6 +208,8 @@ function loadOrders() {
 				const tableDisplay = (row.ORDER_TYPE === 'DINE_IN' && row.TABLE_NUMBER) 
 					? `#${row.TABLE_NUMBER}` 
 					: n_a;
+				const encodedByLabel = row.ENCODED_BY_NAME || row.ENCODED_BY || '-';
+
 				const baseRow = [
 					row.ORDER_NO || n_a,
 					showBranchColumn ? branchLabel : null,
@@ -219,8 +221,8 @@ function loadOrders() {
 					formatCurrency(row.SERVICE_CHARGE),
 					formatCurrency(row.DISCOUNT_AMOUNT),
 					formatCurrency(row.GRAND_TOTAL),
-					formatDate(row.ENCODED_DT),
-					row.ENCODED_BY || '-',
+					formatDateColumn(row.ENCODED_DT),
+					encodedByLabel,
 					renderActionButtons(row)
 				];
 
@@ -460,10 +462,10 @@ function renderActionButtons(order) {
 	
 	let buttons = '';
 	
-	if (status === 3) {
-		// PENDING: Show Confirmation and Edit buttons (theme primary)
+		if (status === 3) {
+		// PENDING: Confirmation button stays green even if theme changes
 		buttons = `
-			<button type="button" class="btn btn-sm btn-primary" onclick="confirmOrder(${order.IDNo})" title="Confirm Order">
+			<button type="button" class="btn btn-sm btn-success btn-confirmation" onclick="confirmOrder(${order.IDNo})" title="Confirm Order">
 				<i class="fa fa-check"></i> Confirmation
 			</button>
 			<button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditOrderModal(${order.IDNo})" title="Edit Order">
@@ -840,6 +842,21 @@ function formatDate(value) {
 		hour: '2-digit',
 		minute: '2-digit'
 	});
+}
+
+function formatDateColumn(value) {
+	const formatted = formatDate(value);
+	if (!value) {
+		return formatted;
+	}
+
+	const date = new Date(value);
+	const timestamp = date.getTime();
+	if (Number.isNaN(timestamp)) {
+		return formatted;
+	}
+
+	return `<span data-order="${timestamp}">${formatted}</span>`;
 }
 
 function confirmOrder(orderId) {

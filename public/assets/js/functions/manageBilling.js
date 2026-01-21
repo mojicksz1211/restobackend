@@ -189,21 +189,22 @@ function loadBillingData() {
 						</button>
 					`;
 
-			const n_a = billingTranslations.n_a || 'N/A';
-			const branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || n_a;
-			const baseRow = [
-				row.ORDER_NO || n_a,
-				showBranchColumn ? branchLabel : null,
-				row.PAYMENT_METHOD || n_a,
-				formatCurrency(row.AMOUNT_DUE),
-				formatCurrency(row.AMOUNT_PAID),
-				row.PAYMENT_REF || '-',
-				formatBillingStatus(row.STATUS),
-				formatDate(row.ENCODED_DT),
-				row.ENCODED_BY || '-',
-				paymentsBtn,
-				actions
-			];
+				const n_a = billingTranslations.n_a || 'N/A';
+				const branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || n_a;
+				const encodedByLabel = row.ENCODED_BY_NAME || row.ENCODED_BY || '-';
+				const baseRow = [
+					row.ORDER_NO || n_a,
+					showBranchColumn ? branchLabel : null,
+					row.PAYMENT_METHOD || n_a,
+					formatCurrency(row.AMOUNT_DUE),
+					formatCurrency(row.AMOUNT_PAID),
+					row.PAYMENT_REF || '-',
+					formatBillingStatus(row.STATUS),
+					formatDate(row.ENCODED_DT),
+					encodedByLabel,
+					paymentsBtn,
+					actions
+				];
 			const rowData = showBranchColumn ? baseRow : baseRow.filter((_, idx) => idx !== 1);
 			billingDataTable.row.add(rowData);
 			});

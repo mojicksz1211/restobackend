@@ -24,10 +24,12 @@ class BillingModel {
 				b.PAYMENT_REF,
 				b.STATUS,
 				b.ENCODED_BY,
+				ui.FIRSTNAME AS ENCODED_BY_NAME,
 				b.ENCODED_DT
 			FROM billing b
 			LEFT JOIN orders o ON o.IDNo = b.ORDER_ID
 			LEFT JOIN branches br ON br.IDNo = b.BRANCH_ID
+			LEFT JOIN user_info ui ON ui.IDNo = b.ENCODED_BY
 			WHERE o.STATUS IN (2, 1)
 		`;
 
@@ -37,7 +39,7 @@ class BillingModel {
 			params.push(branchId);
 		}
 
-		query += ` ORDER BY b.ENCODED_DT DESC`;
+		query += ` ORDER BY b.ENCODED_DT DESC, b.IDNo DESC`;
 
 		const [rows] = await pool.execute(query, params);
 		return rows;
@@ -55,9 +57,11 @@ class BillingModel {
 				b.PAYMENT_REF,
 				b.STATUS,
 				b.ENCODED_BY,
+				ui.FIRSTNAME AS ENCODED_BY_NAME,
 				b.ENCODED_DT
 			FROM billing b
 			LEFT JOIN orders o ON o.IDNo = b.ORDER_ID
+			LEFT JOIN user_info ui ON ui.IDNo = b.ENCODED_BY
 			WHERE b.ORDER_ID = ?
 			LIMIT 1
 		`;

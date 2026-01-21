@@ -27,10 +27,12 @@ class OrderModel {
 				o.DISCOUNT_AMOUNT,
 				o.GRAND_TOTAL,
 				o.ENCODED_DT,
-				o.ENCODED_BY
+				o.ENCODED_BY,
+				ui.FIRSTNAME AS ENCODED_BY_NAME
 			FROM orders o
 			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
 			LEFT JOIN branches b ON b.IDNo = o.BRANCH_ID
+			LEFT JOIN user_info ui ON ui.IDNo = o.ENCODED_BY
 			WHERE 1=1
 		`;
 
