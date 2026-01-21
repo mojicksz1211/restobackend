@@ -39,6 +39,24 @@ class TableModel {
 		return rows;
 	}
 
+	// Get single table by ID
+	static async getById(id) {
+		const query = `
+			SELECT
+				IDNo,
+				BRANCH_ID,
+				TABLE_NUMBER,
+				CAPACITY,
+				STATUS
+			FROM restaurant_tables
+			WHERE IDNo = ?
+			LIMIT 1
+		`;
+
+		const [rows] = await pool.execute(query, [id]);
+		return rows[0] || null;
+	}
+
 	// Create new restaurant table
 	static async create(data) {
 		const { TABLE_NUMBER, CAPACITY, STATUS, user_id } = data;

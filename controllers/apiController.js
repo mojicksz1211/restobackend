@@ -618,7 +618,15 @@ class ApiController {
 		try {
 			console.log(`[${timestamp}] [API REQUEST] GET /api/waiter/orders - IP: ${clientIp}, User ID: ${user_id}, User-Agent: ${userAgent}`);
 
-			const orders = await OrderModel.getAll();
+			let resolvedBranchId = req.query.branch_id || req.user?.branch_id || null;
+			if (!resolvedBranchId && user_id) {
+				const UserBranchModel = require('../models/userBranchModel');
+				const branches = await UserBranchModel.getBranchesByUserId(user_id);
+				if (branches.length > 0) {
+					resolvedBranchId = branches[0].IDNo;
+				}
+			}
+			const orders = await OrderModel.getAll(resolvedBranchId);
 			const activeOrders = orders.filter(order => [3, 2].includes(order.STATUS));
 
 			const ordersWithItems = await Promise.all(
@@ -709,6 +717,13 @@ class ApiController {
 					error: 'Order not found'
 				});
 			}
+			const resolvedBranchId = req.query.branch_id || req.user?.branch_id || null;
+			if (resolvedBranchId && order.BRANCH_ID && parseInt(order.BRANCH_ID) !== parseInt(resolvedBranchId)) {
+				return res.status(403).json({
+					success: false,
+					error: 'Order is not in your branch'
+				});
+			}
 
 			await OrderModel.updateStatus(order_id, targetStatus, user_id);
 
@@ -797,8 +812,22 @@ class ApiController {
 				}
 			}
 
-			// Validate branch_id
-			if (!branch_id) {
+			// Resolve branch_id (prefer body, then table, then user branch)
+			let resolvedBranchId = branch_id ? parseInt(branch_id) : null;
+			if (!resolvedBranchId && table_id) {
+				const table = await TableModel.getById(table_id);
+				if (table?.BRANCH_ID) {
+					resolvedBranchId = parseInt(table.BRANCH_ID);
+				}
+			}
+			if (!resolvedBranchId && user_id) {
+				const UserBranchModel = require('../models/userBranchModel');
+				const branches = await UserBranchModel.getBranchesByUserId(user_id);
+				if (branches.length > 0) {
+					resolvedBranchId = parseInt(branches[0].IDNo);
+				}
+			}
+			if (!resolvedBranchId) {
 				console.log(`[${timestamp}] [API ERROR] POST /api/orders - Missing branch_id - IP: ${clientIp}`);
 				return res.status(400).json({
 					success: false,
@@ -809,7 +838,7 @@ class ApiController {
 			// Prepare order data
 			// Status codes: 3=PENDING, 2=CONFIRMED, 1=SETTLED, -1=CANCELLED
 			const orderData = {
-				BRANCH_ID: parseInt(branch_id),
+				BRANCH_ID: resolvedBranchId,
 				ORDER_NO: order_no.trim(),
 				TABLE_ID: table_id || null,
 				ORDER_TYPE: order_type || null,
@@ -938,6 +967,13 @@ class ApiController {
 				return res.status(404).json({
 					success: false,
 					error: 'Order not found'
+				});
+			}
+			const resolvedBranchId = req.query.branch_id || req.user?.branch_id || null;
+			if (resolvedBranchId && existingOrder.BRANCH_ID && parseInt(existingOrder.BRANCH_ID) !== parseInt(resolvedBranchId)) {
+				return res.status(403).json({
+					success: false,
+					error: 'Order is not in your branch'
 				});
 			}
 
@@ -1114,6 +1150,13 @@ class ApiController {
 				return res.status(404).json({
 					success: false,
 					error: 'Order not found'
+				});
+			}
+			const resolvedBranchId = req.query.branch_id || req.user?.branch_id || null;
+			if (resolvedBranchId && existingOrder.BRANCH_ID && parseInt(existingOrder.BRANCH_ID) !== parseInt(resolvedBranchId)) {
+				return res.status(403).json({
+					success: false,
+					error: 'Order is not in your branch'
 				});
 			}
 
