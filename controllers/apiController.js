@@ -731,7 +731,7 @@ class ApiController {
 		const { order_id } = req.params;
 		const { status } = req.body || {};
 
-		const allowedStatuses = [3, 2]; // Pending (3), Confirmed (2)
+		const allowedStatuses = [3, 2, 1]; // Pending (3), Confirmed (2), Settled (1)
 
 		try {
 			console.log(`[${timestamp}] [API REQUEST] PATCH /api/waiter/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
@@ -747,7 +747,7 @@ class ApiController {
 			if (!allowedStatuses.includes(targetStatus)) {
 				return res.status(400).json({
 					success: false,
-					error: 'Invalid status. Allowed: 3 (Pending), 2 (Confirmed)'
+					error: 'Invalid status. Allowed: 3 (Pending), 2 (Confirmed), 1 (Settled)'
 				});
 			}
 
