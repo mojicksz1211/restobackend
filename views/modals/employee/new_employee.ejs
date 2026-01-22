@@ -1,0 +1,142 @@
+<!-- ============================================ -->
+<!-- NEW EMPLOYEE MODAL -->
+<!-- File: views/modals/employee/new_employee.ejs -->
+<!-- Description: Modal form for creating new employee -->
+<!-- ============================================ -->
+
+<div class="modal fade" id="modal-new_employee" role="dialog" aria-labelledby="modal-default-popout" aria-hidden="true"
+	data-keyboard="false" data-bs-backdrop="static">
+	<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+		<div class="modal-content">
+
+
+			<div class="modal-header bg-primary">
+
+				<h5 class="block-title text-white">New Employee</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+
+
+			<div class="modal-body">
+				<form id="add_new_employee">
+					<!-- Personal Information Section -->
+					<div class="mb-4">
+						<h6 class="mb-3 text-primary border-bottom pb-2">
+							<i class="fa fa-user me-2"></i>Personal Information
+						</h6>
+						<div class="alert alert-info mb-3" role="alert">
+							<small><i class="fa fa-info-circle me-1"></i>Branch will be automatically assigned from your account's branch.</small>
+						</div>
+						
+						<div class="row mb-2">
+							<div class="col-sm-6">
+								<label class="form-label">First Name <span class="text-danger">*</span></label>
+								<input type="text" class="form-control" name="FIRSTNAME" placeholder="Enter first name" required>
+							</div>
+							<div class="col-sm-6">
+								<label class="form-label">Last Name <span class="text-danger">*</span></label>
+								<input type="text" class="form-control" name="LASTNAME" placeholder="Enter last name" required>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<div class="col-sm-6">
+								<label class="form-label">Contact Number</label>
+								<input type="text" class="form-control" name="CONTACTNo" placeholder="Enter contact number">
+							</div>
+							<div class="col-sm-6">
+								<label class="form-label">Department</label>
+								<select class="form-control" name="DEPARTMENT" id="new_employee_department">
+									<option value="">Select Department</option>
+									<% if (typeof departments !== 'undefined' && departments) { %>
+										<% departments.forEach(function(dept) { %>
+											<option value="<%= dept %>"><%= dept %></option>
+										<% }); %>
+									<% } %>
+								</select>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<div class="col-sm-12">
+								<label class="form-label">Address</label>
+								<textarea class="form-control" name="ADDRESS" placeholder="Enter address" rows="2"></textarea>
+							</div>
+						</div>
+						<div class="row mb-2">
+							<div class="col-sm-6">
+								<label class="form-label">Date Started</label>
+								<input type="date" class="form-control" name="DATE_STARTED">
+							</div>
+							<div class="col-sm-6">
+								<label class="form-label">Salary</label>
+								<input type="text" class="form-control" name="SALARY" id="new_employee_salary" placeholder="Enter salary" oninput="formatSalary(this)">
+							</div>
+						</div>
+						<div class="row mb-2">
+							<div class="col-sm-6">
+								<label class="form-label">Emergency Contact Name</label>
+								<input type="text" class="form-control" name="EMERGENCY_CONTACT_NAME" placeholder="Enter emergency contact name">
+							</div>
+							<div class="col-sm-6">
+								<label class="form-label">Emergency Contact Phone</label>
+								<input type="text" class="form-control" name="EMERGENCY_CONTACT_PHONE" placeholder="Enter emergency contact phone">
+							</div>
+						</div>
+					</div>
+
+					<!-- User Account Creation Section -->
+					<div class="mb-4">
+						<h6 class="mb-3 text-primary border-bottom pb-2">
+							<i class="fa fa-key me-2"></i>User Account Creation
+						</h6>
+						
+						<div class="row mb-3">
+							<div class="col-sm-12">
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="create_user_account_checkbox" name="CREATE_USER_ACCOUNT" value="true">
+									<label class="form-check-label" for="create_user_account_checkbox">
+										Create login account for this employee
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<div id="user_account_fields" style="display: none;">
+							<div class="row mb-2">
+								<div class="col-sm-6">
+									<label class="form-label">Username <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="USERNAME" id="new_employee_username" placeholder="Enter username">
+								</div>
+								<div class="col-sm-6">
+									<label class="form-label">User Role <span class="text-danger">*</span></label>
+									<select class="form-control" name="PERMISSIONS" id="new_employee_permissions">
+										<option value="">Select Role</option>
+										<% if (typeof roles !== 'undefined' && roles) { %>
+											<% roles.forEach(function(role) { %>
+												<option value="<%= role.IDNo %>"><%= role.ROLE %></option>
+											<% }); %>
+										<% } %>
+									</select>
+								</div>
+							</div>
+							<div class="row mb-2">
+								<div class="col-sm-6">
+									<label class="form-label">Password <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="PASSWORD" id="new_employee_password" placeholder="Enter password">
+								</div>
+								<div class="col-sm-6">
+									<label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="PASSWORD2" id="new_employee_password2" placeholder="Confirm password">
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-sm btn-primary">Save</button>
+						<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+

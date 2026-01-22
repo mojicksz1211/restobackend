@@ -78,6 +78,7 @@
 		"user_roles": "ユーザー役割",
 		"manage_menu": "メニュー管理",
 		"manage_table": "テーブル管理",
+		"manage_employee": "従業員管理",
 		"settings": "設定",
 		"telegram_API": "テレグラムAPI",
 		"Change_Game_No": "ゲーム番号の変更"
@@ -858,5 +859,30 @@
 		},
 		"branch": "table.branch",
 		"actions": "table.actions"
+	},
+	"employee": {
+		"manage_employee": "従業員管理",
+		"new_employee": "新しい従業員",
+		"fullname": "氏名",
+		"contact": "連絡先",
+		"department": "部門",
+		"branch": "支店",
+		"status": "ステータス",
+		"date_started": "開始日",
+		"action": "アクション",
+		"active": "アクティブ",
+		"inactive": "非アクティブ",
+		"success": "成功！",
+		"employee_created_successfully": "従業員が正常に作成されました",
+		"employee_updated_successfully": "従業員が正常に更新されました",
+		"employee_deleted_successfully": "従業員が削除されました",
+		"error": "エラー！",
+		"failed_to_create_employee": "従業員の作成に失敗しました",
+		"failed_to_update_employee": "従業員の更新に失敗しました",
+		"failed_to_delete_employee": "従業員の削除に失敗しました",
+		"failed_to_load_employees": "従業員の読み込みに失敗しました。ページを更新してください。",
+		"delete_confirmation_title": "本当によろしいですか？",
+		"delete_confirmation_text": "元に戻すことはできません！",
+		"delete_confirm_button": "はい、削除します"
 	}
 }

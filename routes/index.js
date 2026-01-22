@@ -12,6 +12,7 @@ module.exports = [
     // Note: branchRoutes is registered separately in app.js at /branch to avoid conflicts
     require('./categoryRoutes'),          // Category routes
     require('./dashboardRoutes'),         // Dashboard routes
+    require('./employeeRoutes'),          // Employee routes
     require('./menuRoutes'),              // Menu routes
     require('./orderRoutes'),             // Order routes
     require('./tableRoutes')              // Restaurant table routes

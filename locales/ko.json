@@ -78,6 +78,7 @@
 		"user_roles": "사용자 역할",
 		"manage_menu": "메뉴 관리",
 		"manage_table": "테이블 관리",
+		"manage_employee": "직원 관리",
 		"settings": "설정",
 		"telegram_API": "텔레그램 API",
 		"Change_Game_No": "게임 번호 변경",
@@ -860,5 +861,30 @@
 		},
 		"branch": "table.branch",
 		"actions": "table.actions"
+	},
+	"employee": {
+		"manage_employee": "직원 관리",
+		"new_employee": "새 직원",
+		"fullname": "이름",
+		"contact": "연락처",
+		"department": "부서",
+		"branch": "지점",
+		"status": "상태",
+		"date_started": "시작일",
+		"action": "작업",
+		"active": "활성",
+		"inactive": "비활성",
+		"success": "성공!",
+		"employee_created_successfully": "직원이 성공적으로 생성되었습니다",
+		"employee_updated_successfully": "직원이 성공적으로 업데이트되었습니다",
+		"employee_deleted_successfully": "직원이 삭제되었습니다",
+		"error": "오류!",
+		"failed_to_create_employee": "직원 생성에 실패했습니다",
+		"failed_to_update_employee": "직원 업데이트에 실패했습니다",
+		"failed_to_delete_employee": "직원 삭제에 실패했습니다",
+		"failed_to_load_employees": "직원을 불러오지 못했습니다. 페이지를 새로고침하세요.",
+		"delete_confirmation_title": "정말로 하시겠습니까?",
+		"delete_confirmation_text": "되돌릴 수 없습니다!",
+		"delete_confirm_button": "예, 삭제합니다"
 	}
 }

@@ -1,0 +1,136 @@
+<!-- ============================================ -->
+<!-- EMPLOYEE MANAGEMENT PAGE -->
+<!-- File: views/employee/manageEmployee.ejs -->
+<!-- Description: Main page for managing employees -->
+<!-- ============================================ -->
+
+<%- include('../partials/header') %>
+<%- include('../partials/loader') %>
+	<%- include('../partials/sidebar') %>
+
+		<%- include('../partials/topbar') %>
+
+			<div class="container-fluid content-inner mt-4">
+				<div class="row">
+					<div class="col-sm-12">
+						<div class="card">
+							<div class="card-header d-flex justify-content-between align-items-center">
+								
+								<h3 class="card-title"><div class="breadcrumb1 flat">
+									<a href="/dashboard" ><span class="fa fa-home"></span></a>
+									<a href="/manageEmployee"class="active"><%= __('employee.manage_employee') %></a>
+								</div></h3>
+									<button type="button" class="btn btn-primary" onclick="add_employee_modal()">
+										<i class="fa fa-plus" aria-hidden="true"></i> <%= __('employee.new_employee') %>
+									</button>
+								
+							</div>
+
+
+							<div class="card-body">
+																
+								<table id="employeeTable" class="table  nowrap small-text" style="width:100%">
+									<thead>
+										<tr>
+											<th class="d-none d-sm-table-cell"><%= __('employee.fullname') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('employee.contact') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('employee.department') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('employee.branch') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('employee.status') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('employee.date_started') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('employee.action') %></th>
+										</tr>
+									</thead>
+									<tbody>
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			<!-- ============================================ -->
+			<!-- MODALS -->
+			<!-- ============================================ -->
+			<%- include ('../modals/employee/new_employee'); %>
+			<%- include ('../modals/employee/edit_employee'); %>
+			<%- include ('../modals/employee/view_employee'); %>
+
+			<!-- ============================================ -->
+			<!-- FOOTER -->
+			<!-- ============================================ -->
+			<%- include ('../partials/footer'); -%>
+
+			<!-- Translations passed via data attribute to avoid linter issues -->
+			<div id="manageEmployeeTranslations" 
+				data-success="<%- __('employee.success') %>"
+				data-error="<%- __('employee.error') %>"
+				data-employee-created-successfully="<%- __('employee.employee_created_successfully') %>"
+				data-employee-updated-successfully="<%- __('employee.employee_updated_successfully') %>"
+				data-employee-deleted-successfully="<%- __('employee.employee_deleted_successfully') %>"
+				data-failed-to-create-employee="<%- __('employee.failed_to_create_employee') %>"
+				data-failed-to-update-employee="<%- __('employee.failed_to_update_employee') %>"
+				data-failed-to-delete-employee="<%- __('employee.failed_to_delete_employee') %>"
+				data-failed-to-load-employees="<%- __('employee.failed_to_load_employees') %>"
+				data-delete-confirmation-title="<%- __('employee.delete_confirmation_title') %>"
+				data-delete-confirmation-text="<%- __('employee.delete_confirmation_text') %>"
+				data-delete-confirm-button="<%- __('employee.delete_confirm_button') %>"
+				data-active="<%- __('employee.active') %>"
+				data-inactive="<%- __('employee.inactive') %>"
+				data-permissions="<%- permissions %>"
+				style="display: none;"></div>
+
+			<!-- ============================================ -->
+			<!-- SCRIPTS -->
+			<!-- ============================================ -->
+			<script src="/assets/js/functions/manageEmployee.js"></script>
+			
+			<script>
+				// Format salary with comma separator
+				function formatSalary(input) {
+					var value = input.value.replace(/,/g, '');
+					if (value && !isNaN(value)) {
+						input.value = parseFloat(value).toLocaleString('en-US');
+					}
+				}
+			</script>
+
+			<style>
+				.card-body {
+					overflow-x: auto;
+				}
+				#employeeTable {
+					width: 100%;
+					font-size: 13px;
+					border-collapse: collapse;
+				}
+
+				/* Header styles */
+				#employeeTable thead th {
+					background: var(--bs-primary-bg-subtle);
+					color: var(--bs-primary);
+					font-weight: 500;
+					padding: 12px 15px;
+					text-align: left;
+					border: none;
+				}
+
+				/* Row styles */
+				#employeeTable tbody tr {
+					border-bottom: 1px solid #eee;
+				}
+
+				/* Cell styles */
+				#employeeTable td {
+					padding: 12px 15px;
+					color: #666;
+				}
+
+				#employeeTable tbody tr:hover {
+					background-color: #f5f5f5 !important;
+				}
+			</style>
+

@@ -78,6 +78,7 @@
 		"user_roles": "用户角色",
 		"manage_menu": "菜单管理",
 		"manage_table": "餐桌管理",
+		"manage_employee": "员工管理",
 		"settings": "设置",
 		"telegram_API": "电报 API",
 		"Change_Game_No": "修改游戏编号"
@@ -859,5 +860,30 @@
 		},
 		"branch": "table.branch",
 		"actions": "table.actions"
+	},
+	"employee": {
+		"manage_employee": "员工管理",
+		"new_employee": "新员工",
+		"fullname": "姓名",
+		"contact": "联系方式",
+		"department": "部门",
+		"branch": "分店",
+		"status": "状态",
+		"date_started": "开始日期",
+		"action": "操作",
+		"active": "活跃",
+		"inactive": "非活跃",
+		"success": "成功！",
+		"employee_created_successfully": "员工创建成功",
+		"employee_updated_successfully": "员工更新成功",
+		"employee_deleted_successfully": "员工已删除",
+		"error": "错误！",
+		"failed_to_create_employee": "创建员工失败",
+		"failed_to_update_employee": "更新员工失败",
+		"failed_to_delete_employee": "删除员工失败",
+		"failed_to_load_employees": "加载员工失败。请刷新页面。",
+		"delete_confirmation_title": "确定吗？",
+		"delete_confirmation_text": "您将无法撤销此操作！",
+		"delete_confirm_button": "是的，删除"
 	}
 }

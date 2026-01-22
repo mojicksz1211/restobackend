@@ -78,6 +78,7 @@
 		"user_roles": "User Role",
 		"manage_menu": "Manage Menu",
 		"manage_table": "Manage Tables",
+		"manage_employee": "Manage Employee",
 		"settings": "Settings",
 		"telegram_API": "Telegram API",
 		"Change_Game_No": "Modify Game Number",
@@ -857,5 +858,30 @@
 		},
 		"branch": "table.branch",
 		"actions": "table.actions"
+	},
+	"employee": {
+		"manage_employee": "Manage Employee",
+		"new_employee": "New Employee",
+		"fullname": "Full Name",
+		"contact": "Contact",
+		"department": "Department",
+		"branch": "Branch",
+		"status": "Status",
+		"date_started": "Date Started",
+		"action": "Action",
+		"active": "ACTIVE",
+		"inactive": "INACTIVE",
+		"success": "Success!",
+		"employee_created_successfully": "Employee created successfully",
+		"employee_updated_successfully": "Employee updated successfully",
+		"employee_deleted_successfully": "Employee has been deleted",
+		"error": "Error!",
+		"failed_to_create_employee": "Failed to create employee",
+		"failed_to_update_employee": "Failed to update employee",
+		"failed_to_delete_employee": "Failed to delete employee",
+		"failed_to_load_employees": "Failed to load employees. Please refresh the page.",
+		"delete_confirmation_title": "Are you sure?",
+		"delete_confirmation_text": "You won't be able to revert this!",
+		"delete_confirm_button": "Yes, delete it!"
 	}
 }
