@@ -729,12 +729,12 @@ class ApiController {
 		const userAgent = req.headers['user-agent'] || 'Unknown';
 		const user_id = req.user?.user_id;
 		const { order_id } = req.params;
-		const { status } = req.body || {};
+		const { status, payment_method } = req.body || {};
 
 		const allowedStatuses = [3, 2, 1]; // Pending (3), Confirmed (2), Settled (1)
 
 		try {
-			console.log(`[${timestamp}] [API REQUEST] PATCH /api/waiter/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, User-Agent: ${userAgent}`);
+			console.log(`[${timestamp}] [API REQUEST] PATCH /api/waiter/orders/${order_id}/status - IP: ${clientIp}, User ID: ${user_id}, Status: ${status}, Payment Method: ${payment_method || 'N/A'}, User-Agent: ${userAgent}`);
 
 			if (!user_id) {
 				return res.status(400).json({
@@ -780,6 +780,8 @@ class ApiController {
 				const TableModel = require('../models/tableModel');
 				const BillingModel = require('../models/billingModel');
 				
+				const paymentMethod = payment_method || 'CASH';
+
 				// 1. Free up the table (Status 1 = Available) if it's a table order
 				if (order.TABLE_ID) {
 					await TableModel.updateStatus(order.TABLE_ID, 1);
@@ -791,13 +793,13 @@ class ApiController {
 					await BillingModel.updateForOrder(order_id, {
 						status: 1, // PAID
 						amount_paid: order.GRAND_TOTAL,
-						payment_method: 'CASH'
+						payment_method: paymentMethod
 					});
 				} else {
 					await BillingModel.createForOrder({
 						branch_id: order.BRANCH_ID,
 						order_id: order_id,
-						payment_method: 'CASH',
+						payment_method: paymentMethod,
 						amount_due: order.GRAND_TOTAL,
 						amount_paid: order.GRAND_TOTAL,
 						status: 1, // PAID
@@ -808,7 +810,7 @@ class ApiController {
 				// 3. Record transaction history
 				await BillingModel.recordTransaction({
 					order_id: order_id,
-					payment_method: 'CASH',
+					payment_method: paymentMethod,
 					amount_paid: order.GRAND_TOTAL,
 					payment_ref: 'Settled via Cashier App',
 					user_id: user_id

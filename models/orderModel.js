@@ -28,11 +28,13 @@ class OrderModel {
 				o.GRAND_TOTAL,
 				o.ENCODED_DT,
 				o.ENCODED_BY,
-				ui.FIRSTNAME AS ENCODED_BY_NAME
+				ui.FIRSTNAME AS ENCODED_BY_NAME,
+				bill.PAYMENT_METHOD AS payment_method
 			FROM orders o
 			LEFT JOIN restaurant_tables t ON t.IDNo = o.TABLE_ID
 			LEFT JOIN branches b ON b.IDNo = o.BRANCH_ID
 			LEFT JOIN user_info ui ON ui.IDNo = o.ENCODED_BY
+			LEFT JOIN billing bill ON bill.ORDER_ID = o.IDNo
 			WHERE 1=1
 		`;
 
