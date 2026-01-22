@@ -775,6 +775,46 @@ class ApiController {
 
 			await OrderModel.updateStatus(order_id, targetStatus, user_id);
 
+			// If status is 1 (Settled), free up the table and create billing
+			if (targetStatus === 1) {
+				const TableModel = require('../models/tableModel');
+				const BillingModel = require('../models/billingModel');
+				
+				// 1. Free up the table (Status 1 = Available) if it's a table order
+				if (order.TABLE_ID) {
+					await TableModel.updateStatus(order.TABLE_ID, 1);
+				}
+				
+				// 2. Create or Update Billing record
+				const existingBilling = await BillingModel.getByOrderId(order_id);
+				if (existingBilling) {
+					await BillingModel.updateForOrder(order_id, {
+						status: 1, // PAID
+						amount_paid: order.GRAND_TOTAL,
+						payment_method: 'CASH'
+					});
+				} else {
+					await BillingModel.createForOrder({
+						branch_id: order.BRANCH_ID,
+						order_id: order_id,
+						payment_method: 'CASH',
+						amount_due: order.GRAND_TOTAL,
+						amount_paid: order.GRAND_TOTAL,
+						status: 1, // PAID
+						user_id: user_id
+					});
+				}
+
+				// 3. Record transaction history
+				await BillingModel.recordTransaction({
+					order_id: order_id,
+					payment_method: 'CASH',
+					amount_paid: order.GRAND_TOTAL,
+					payment_ref: 'Settled via Cashier App',
+					user_id: user_id
+				});
+			}
+
 			// Emit socket update
 			const orderItems = await OrderItemsModel.getByOrderId(order_id);
 			socketService.emitOrderUpdate(order_id, {
