@@ -623,7 +623,10 @@ class ApiController {
 			);
 
 			// ALSO update the main orders table status
-			await OrderModel.updateStatus(order_id, targetStatus, user_id);
+			// Only update if it's not READY (1), because 1 in orders table means SETTLED
+			if (targetStatus !== 1) {
+				await OrderModel.updateStatus(order_id, targetStatus, user_id);
+			}
 
 			// Emit socket update
 			socketService.emitOrderUpdate(order_id, {
@@ -631,7 +634,10 @@ class ApiController {
 				order_no: order.ORDER_NO,
 				table_id: order.TABLE_ID,
 				order_type: order.ORDER_TYPE,
-				status: targetStatus,
+				// Use targetStatus for socket, but if it's 1 (READY for kitchen), 
+				// we should probably send the current order status (likely 2=CONFIRMED) 
+				// to avoid triggering "Settled" logic on frontend
+				status: targetStatus === 1 ? (order.STATUS || 2) : targetStatus,
 				grand_total: parseFloat(order.GRAND_TOTAL || 0),
 				items: items.map(item => ({ ...item, STATUS: targetStatus }))
 			});
