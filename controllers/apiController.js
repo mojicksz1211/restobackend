@@ -776,13 +776,13 @@ class ApiController {
 
 			await OrderModel.updateStatus(order_id, targetStatus, user_id);
 
+			const paymentMethod = payment_method || 'CASH';
+
 			// If status is 1 (Settled), free up the table and create billing
 			if (targetStatus === 1) {
 				const TableModel = require('../models/tableModel');
 				const BillingModel = require('../models/billingModel');
 				
-				const paymentMethod = payment_method || 'CASH';
-
 				// 1. Free up the table (Status 1 = Available) if it's a table order
 				if (order.TABLE_ID) {
 					await TableModel.updateStatus(order.TABLE_ID, 1);
@@ -808,14 +808,18 @@ class ApiController {
 					});
 				}
 
-				// 3. Record transaction history
-				await BillingModel.recordTransaction({
-					order_id: order_id,
-					payment_method: paymentMethod,
-					amount_paid: order.GRAND_TOTAL,
-					payment_ref: 'Settled via Cashier App',
-					user_id: user_id
-				});
+				// 3. Record transaction history (Wrapped in try-catch in case table doesn't exist)
+				try {
+					await BillingModel.recordTransaction({
+						order_id: order_id,
+						payment_method: paymentMethod,
+						amount_paid: order.GRAND_TOTAL,
+						payment_ref: 'Settled via Cashier App',
+						user_id: user_id
+					});
+				} catch (e) {
+					console.error(`[${timestamp}] [TRANSACTION ERROR] Could not record to payment_transactions table: ${e.message}`);
+				}
 			}
 
 			// Emit socket update
