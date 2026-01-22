@@ -675,7 +675,7 @@ class ApiController {
 				}
 			}
 			const orders = await OrderModel.getAll(resolvedBranchId);
-			const activeOrders = orders.filter(order => [3, 2].includes(order.STATUS));
+			const activeOrders = orders.filter(order => [3, 2, 1].includes(order.STATUS));
 
 			const ordersWithItems = await Promise.all(
 				activeOrders.map(async (order) => {
