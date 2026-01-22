@@ -683,6 +683,7 @@ class ApiController {
 					return {
 						order_id: order.IDNo,
 						order_no: order.ORDER_NO,
+						payment_method: order.payment_method || null,
 						table_id: order.TABLE_ID,
 						table_number: order.TABLE_NUMBER || null,
 						order_type: order.ORDER_TYPE,
@@ -822,6 +823,7 @@ class ApiController {
 			socketService.emitOrderUpdate(order_id, {
 				order_id: parseInt(order_id, 10),
 				order_no: order.ORDER_NO,
+				payment_method: targetStatus === 1 ? paymentMethod : null,
 				table_id: order.TABLE_ID,
 				order_type: order.ORDER_TYPE,
 				status: targetStatus,

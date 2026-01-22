@@ -53,19 +53,21 @@ class OrderModel {
 	static async getById(id) {
 		const query = `
 			SELECT 
-				IDNo,
-				BRANCH_ID,
-				ORDER_NO,
-				TABLE_ID,
-				ORDER_TYPE,
-				STATUS,
-				SUBTOTAL,
-				TAX_AMOUNT,
-				SERVICE_CHARGE,
-				DISCOUNT_AMOUNT,
-				GRAND_TOTAL
-			FROM orders
-			WHERE IDNo = ?
+				o.IDNo,
+				o.BRANCH_ID,
+				o.ORDER_NO,
+				o.TABLE_ID,
+				o.ORDER_TYPE,
+				o.STATUS,
+				o.SUBTOTAL,
+				o.TAX_AMOUNT,
+				o.SERVICE_CHARGE,
+				o.DISCOUNT_AMOUNT,
+				o.GRAND_TOTAL,
+				bill.PAYMENT_METHOD AS payment_method
+			FROM orders o
+			LEFT JOIN billing bill ON bill.ORDER_ID = o.IDNo
+			WHERE o.IDNo = ?
 			LIMIT 1
 		`;
 		const [rows] = await pool.execute(query, [id]);
