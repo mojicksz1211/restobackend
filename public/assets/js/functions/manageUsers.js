@@ -8,19 +8,21 @@
 
 var user_id;
 var dataTable;
+var userRoleDataTable; // DataTable for user roles modal
 var tablesList = [];
 var edit_user_table_id = null;
+var role_id; // For user role editing
+var keepUserRolesModalOpen = false; // Track if user roles modal should stay open
 const ADMIN_ROLE_ID = 1; // IDNo = 1 (Administrator)
 const TABLE_ROLE_ID = 2; // IDNo = 2 (Table-TabletMenu)
 var assignedTableIds = new Set(); // active users' assigned TABLE_IDs (1-to-1)
 
 // Load translations from data attributes
 var manageUsersTranslations = {};
+var userRolesTranslations = {};
 $(document).ready(function () {
-	// Determine if current viewer is admin (PERMISSIONS=1) from data attribute (safe for EJS linting)
 	const permFromDom = Number($('#manageUsersTranslations').data('permissions') || 0);
 	const IS_ADMIN_VIEW = permFromDom === 1;
-	// Load translations from data attributes
 	var $transEl = $('#manageUsersTranslations');
 	if ($transEl.length) {
 		manageUsersTranslations = {
@@ -47,7 +49,6 @@ $(document).ready(function () {
 		$('#usersTable').DataTable().destroy();
 	}
 
-	// Get pagination translations
 	const paginationTrans = manageUsersTranslations.pagination || {};
 	const showingText = paginationTrans.showing || 'Showing';
 	const toText = paginationTrans.to || 'to';
@@ -62,17 +63,12 @@ $(document).ready(function () {
 					$(cell).addClass('text-center');
 				}
 			},
-			// If admin view has Branch column, keep that column left-aligned for readability
-			...(IS_ADMIN_VIEW
-				? [
-						{
-							targets: 3,
-							createdCell: function (cell) {
-								$(cell).removeClass('text-center');
-							}
-						}
-				  ]
-				: [])
+			...(IS_ADMIN_VIEW ? [{
+				targets: 2,
+				createdCell: function (cell) {
+					$(cell).removeClass('text-center');
+				}
+			}] : [])
 		],
 		pageLength: 10,
 		language: {
@@ -89,30 +85,39 @@ $(document).ready(function () {
 		}
 	});
 
-	// Initial load
 	reloadUserData();
 	loadRestaurantTables();
 
-	// Toggle table / branch select when role changes (new user)
 	$(document).on('change', '#user_role', function () {
 		toggleTableFieldForNew();
 		toggleBranchFieldForNew();
 	});
 
-	// Toggle table select when role changes (edit user)
 	$(document).on('change', '.edit_user_role', function () {
 		toggleTableFieldForEdit();
 	});
 
-	// Edit user form submit
+	// Helper function for error handling
+	function showError(xhr, defaultMsg) {
+		var errorMsg = defaultMsg;
+		if (xhr.responseJSON && xhr.responseJSON.error) {
+			errorMsg = xhr.responseJSON.error;
+		}
+		Swal.fire({
+			icon: "error",
+			title: "Error!",
+			text: errorMsg,
+		});
+	}
+
 	$('#edit_user').submit(function (event) {
 		event.preventDefault();
-
-		var formData = $(this).serialize();
+		var $form = $(this);
+		
 		$.ajax({
 			url: '/user/' + user_id,
 			type: 'PUT',
-			data: formData,
+			data: $form.serialize(),
 			success: function (response) {
 				Swal.fire({
 					icon: "success",
@@ -124,26 +129,16 @@ $(document).ready(function () {
 			},
 			error: function (xhr, status, error) {
 				console.error('Error updating user:', error);
-				var errorMsg = 'Failed to update user';
-				if (xhr.responseJSON && xhr.responseJSON.error) {
-					errorMsg = xhr.responseJSON.error;
-				}
-				Swal.fire({
-					icon: "error",
-					title: "Error!",
-					text: errorMsg,
-				});
+				showError(xhr, 'Failed to update user');
 			}
 		});
 	});
 
-	// Add new user form submit
 	$('#add_new_user').submit(function (event) {
 		event.preventDefault();
-
+		var $form = $(this);
 		const salt = generateSalt(50);
-		var formData = $(this).serialize();
-		formData += '&salt=' + salt;
+		var formData = $form.serialize() + '&salt=' + salt;
 
 		$.ajax({
 			url: '/add_user',
@@ -157,7 +152,7 @@ $(document).ready(function () {
 				});
 				reloadUserData();
 				$('#modal-new_user').modal('hide');
-				$('#add_new_user')[0].reset();
+				$form[0].reset();
 			},
 			error: function (xhr, status, error) {
 				console.error('Error creating user:', error);
@@ -168,21 +163,146 @@ $(document).ready(function () {
 						errorMsg = 'Password not match!';
 					}
 				}
-				Swal.fire({
-					icon: "error",
-					title: "Error!",
-					text: errorMsg,
-				});
+				showError(xhr, errorMsg);
 			}
 		});
 	});
 
-	// Load branches for new user (admin creator only; non-admin sees auto-branch)
 	loadBranchesForNewUser();
-
-	// Also load when the modal opens (handles cases where the modal HTML is injected/lazy-loaded)
 	$('#modal-new_user').on('shown.bs.modal', function () {
 		loadBranchesForNewUser();
+	});
+	
+	// User Roles Translations
+	var $userRolesTransEl = $('#userRolesTranslations');
+	if ($userRolesTransEl.length) {
+		userRolesTranslations = {
+			active: $userRolesTransEl.data('active') || 'ACTIVE',
+			inactive: $userRolesTransEl.data('inactive') || 'INACTIVE',
+			pagination: {
+				showing: $userRolesTransEl.data('pagination-showing') || 'Showing',
+				to: $userRolesTransEl.data('pagination-to') || 'to',
+				of: $userRolesTransEl.data('pagination-of') || 'of',
+				entries: $userRolesTransEl.data('pagination-entries') || 'entries',
+				previous: $userRolesTransEl.data('pagination-previous') || 'Previous',
+				next: $userRolesTransEl.data('pagination-next') || 'Next',
+				search: $userRolesTransEl.data('pagination-search') || 'Search',
+				search_placeholder: $userRolesTransEl.data('pagination-search-placeholder') || 'Search...'
+			}
+		};
+	}
+
+	$('#modal-user-roles').on('shown.bs.modal', function () {
+		if (!userRoleDataTable && $('#userRoleTable').length) {
+			const pagTrans = userRolesTranslations.pagination || {};
+			const showText = pagTrans.showing || 'Showing';
+			const toText = pagTrans.to || 'to';
+			const ofText = pagTrans.of || 'of';
+			const entriesText = pagTrans.entries || 'entries';
+			const searchText = pagTrans.search || 'Search';
+
+			if ($.fn.DataTable.isDataTable('#userRoleTable')) {
+				$('#userRoleTable').DataTable().destroy();
+			}
+
+			userRoleDataTable = $('#userRoleTable').DataTable({
+				columnDefs: [{
+					createdCell: function (cell) {
+						$(cell).addClass('text-center');
+					}
+				}],
+				pageLength: 10,
+				language: {
+					lengthMenu: showText + " _MENU_ " + entriesText,
+					info: showText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+					infoEmpty: showText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+					infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+					search: searchText + ":",
+					searchPlaceholder: pagTrans.search_placeholder || "Search...",
+					paginate: {
+						previous: pagTrans.previous || 'Previous',
+						next: pagTrans.next || 'Next'
+					}
+				}
+			});
+			
+			reloadUserRoleData();
+		} else if (userRoleDataTable) {
+			reloadUserRoleData();
+		}
+	});
+
+	$('#modal-user-roles').on('hide.bs.modal', function (e) {
+		if ($('#modal-new-role').hasClass('show') || $('#modal-edit_user_role').hasClass('show')) {
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			return false;
+		}
+	});
+	
+	$('#modal-new-role, #modal-edit_user_role').on('hidden.bs.modal', function () {
+		setTimeout(function() {
+			if (keepUserRolesModalOpen) {
+				$('#modal-user-roles').addClass('show').css({
+					'display': 'block',
+					'padding-right': '0px'
+				});
+				$('body').addClass('modal-open');
+				
+				if ($('.modal-backdrop').length === 0) {
+					$('body').append('<div class="modal-backdrop fade show"></div>');
+				}
+				
+				reloadUserRoleData();
+			}
+		}, 200);
+	});
+
+	$(document).on('submit', 'form[action="/add_user_role"]', function (event) {
+		event.preventDefault();
+		var $form = $(this);
+		
+		$.ajax({
+			url: '/add_user_role',
+			type: 'POST',
+			data: $form.serialize(),
+			success: function (response) {
+				Swal.fire({
+					icon: "success",
+					title: "Success!",
+					text: "User role created successfully",
+				});
+				$form[0].reset();
+				$('#modal-new-role').modal('hide');
+			},
+			error: function (xhr, status, error) {
+				console.error('Error creating user role:', error);
+				showError(xhr, 'Failed to create user role');
+			}
+		});
+	});
+
+	$('#update_role').submit(function (event) {
+		event.preventDefault();
+		var $form = $(this);
+		
+		$.ajax({
+			url: '/user_role/' + role_id,
+			type: 'PUT',
+			data: $form.serialize(),
+			success: function (response) {
+				Swal.fire({
+					icon: "success",
+					title: "Success!",
+					text: "User role updated successfully",
+				});
+				$('#modal-edit_user_role').modal('hide');
+			},
+			error: function (xhr, status, error) {
+				console.error('Error updating user role:', error);
+				showError(xhr, 'Failed to update user role');
+			}
+		});
 	});
 });
 
@@ -205,18 +325,17 @@ function loadRestaurantTables() {
 function populateTableSelect(selector, selectedId = null) {
 	const $select = $(selector);
 	if ($select.length === 0) return;
-	$select.empty();
-	$select.append('<option value="">Select Table</option>');
+	$select.empty().append('<option value="">Select Table</option>');
 
-	const selected =
-		selectedId !== null && selectedId !== undefined && selectedId !== ''
-			? parseInt(selectedId)
-			: null;
+	const selected = (selectedId !== null && selectedId !== undefined && selectedId !== '') 
+		? parseInt(selectedId) 
+		: null;
 
 	(tablesList || []).forEach(function (t) {
 		const tid = parseInt(t.IDNo);
-		const isAssignedToOther = assignedTableIds.has(tid) && (selected === null || tid !== selected);
-		if (isAssignedToOther) return; // enforce 1-to-1: hide already assigned tables
+		if (assignedTableIds.has(tid) && (selected === null || tid !== selected)) {
+			return; // enforce 1-to-1: hide already assigned tables
+		}
 		$select.append(`<option value="${t.IDNo}">#${t.TABLE_NUMBER}</option>`);
 	});
 
@@ -297,10 +416,6 @@ function loadBranchesForNewUser() {
 	});
 }
 
-// ============================================
-// GLOBAL FUNCTIONS
-// ============================================
-
 // Reload user data in DataTable
 function reloadUserData() {
 	$.ajax({
@@ -311,7 +426,6 @@ function reloadUserData() {
 			const IS_ADMIN_VIEW = permFromDom === 1;
 			dataTable.clear();
 
-			// rebuild assigned tables map for 1-to-1 UI filtering
 			assignedTableIds = new Set();
 			(data || []).forEach(function (u) {
 				const tid = u.TABLE_ID;
@@ -319,7 +433,6 @@ function reloadUserData() {
 					assignedTableIds.add(parseInt(tid));
 				}
 			});
-			// refresh selects based on assigned table IDs
 			populateTableSelect('#new_table_id');
 			populateTableSelect('#edit_table_id', edit_user_table_id);
 			toggleTableFieldForNew();
@@ -329,27 +442,23 @@ function reloadUserData() {
 			if (!data || data.length === 0) {
 				return;
 			}
+			var rows = [];
+			var activeText = manageUsersTranslations.active || 'ACTIVE';
+			var inactiveText = manageUsersTranslations.inactive || 'INACTIVE';
+			var deleteLabel = manageUsersTranslations.delete || 'Delete';
+			var editLabel = manageUsersTranslations.edit || 'Edit';
+			
 			data.forEach(function (row) {
-				var status = '';
-				// ACTIVE can be BIT (Buffer) or TINYINT (number) depending on MySQL settings
-				const isActive =
-					row.ACTIVE && row.ACTIVE.data
-						? parseInt(row.ACTIVE.data[0]) === 1
-						: parseInt(row.ACTIVE) === 1;
+				const isActive = row.ACTIVE && row.ACTIVE.data
+					? parseInt(row.ACTIVE.data[0]) === 1
+					: parseInt(row.ACTIVE) === 1;
+				const status = isActive 
+					? `<span class="css-blue">${activeText}</span>`
+					: `<span class="css-red">${inactiveText}</span>`;
 
-				if (isActive) {
-					status = `<span class="css-blue">${manageUsersTranslations.active || 'ACTIVE'}</span>`;
-				} else {
-					status = `<span class="css-red">${manageUsersTranslations.inactive || 'INACTIVE'}</span>`;
-				}
-
-				// Escape single quotes for JavaScript
 				var firstname = (row.FIRSTNAME || '').replace(/'/g, "\\'");
 				var lastname = (row.LASTNAME || '').replace(/'/g, "\\'");
 				var username = (row.USERNAME || '').replace(/'/g, "\\'");
-
-				const deleteLabel = manageUsersTranslations.delete || 'Delete';
-				const editLabel = manageUsersTranslations.edit || 'Edit';
 
 				var btn = `<div class="btn-group">
 					<button type="button" class="btn btn-sm bg-danger-subtle js-bs-tooltip-enabled" onclick="archive_user(${row.user_id})"
@@ -362,15 +471,19 @@ function reloadUserData() {
 					</button>
 				</div>`;
 
+				const fullName = `${row.FIRSTNAME || ''} ${row.LASTNAME || ''}`.trim();
+				
 				if (IS_ADMIN_VIEW) {
 					const branchLabel = row.BRANCH_LABEL || row.BRANCHES || '';
-					dataTable.row
-						.add([row.LASTNAME, row.FIRSTNAME, row.USERNAME, branchLabel, row.role, status, btn])
-						.draw();
+					rows.push([fullName, row.USERNAME, branchLabel, row.role, status, btn]);
 				} else {
-					dataTable.row.add([row.LASTNAME, row.FIRSTNAME, row.USERNAME, row.role, status, btn]).draw();
+					rows.push([fullName, row.USERNAME, row.role, status, btn]);
 				}
 			});
+			
+			if (rows.length > 0) {
+				dataTable.rows.add(rows).draw();
+			}
 		},
 		error: function (xhr, status, error) {
 			console.error('Error fetching users:', error);
@@ -383,7 +496,6 @@ function reloadUserData() {
 	});
 }
 
-// Generate salt for password
 function generateSalt(length) {
 	const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 	let salt = '';
@@ -392,8 +504,6 @@ function generateSalt(length) {
 	}
 	return salt;
 }
-
-// Open edit user modal with data
 function edit_user(id, firstname, lastname, username, role, table_id) {
 	user_id = id;
 	edit_user_table_id = table_id !== undefined ? table_id : null;
@@ -401,13 +511,11 @@ function edit_user(id, firstname, lastname, username, role, table_id) {
 	$('#lastname').val(lastname);
 	$('#username').val(username);
 	get_user_role_edit(role);
-	// set table dropdown default (will show only if role is 2)
 	populateTableSelect('#edit_table_id', edit_user_table_id);
 	toggleTableFieldForEdit();
 	$('#modal-edit_user').modal('show');
 }
 
-// Archive/delete user with confirmation
 function archive_user(id) {
 	Swal.fire({
 		title: 'Are you sure?',
@@ -432,22 +540,13 @@ function archive_user(id) {
 				},
 				error: function (xhr, status, error) {
 					console.error('Error deleting user:', error);
-					var errorMsg = 'Failed to delete user';
-					if (xhr.responseJSON && xhr.responseJSON.error) {
-						errorMsg = xhr.responseJSON.error;
-					}
-					Swal.fire({
-						icon: "error",
-						title: "Error!",
-						text: errorMsg,
-					});
+					showError(xhr, 'Failed to delete user');
 				}
 			});
 		}
 	});
 }
 
-// Load user roles for dropdown (new user)
 function get_user_role() {
 	const permFromDom = Number($('#manageUsersTranslations').data('permissions') || 0);
 	const IS_ADMIN_VIEW = permFromDom === 1;
@@ -484,29 +583,23 @@ function get_user_role() {
 	});
 }
 
-// Load user roles for dropdown (edit user)
 function get_user_role_edit(id) {
 	$.ajax({
 		url: '/user_role_data',
 		method: 'GET',
 		success: function (response) {
-			var selectOptionsEdit = $('.edit_user_role');
-			selectOptionsEdit.empty();
+			var $select = $('.edit_user_role');
+			$select.empty();
 			if (!response || response.length === 0) {
 				return;
 			}
 			response.forEach(function (option) {
-				var selected = false;
-				if (option.IDNo == id) {
-					selected = true;
-				}
-				selectOptionsEdit.append($('<option>', {
-					selected: selected,
+				$select.append($('<option>', {
+					selected: option.IDNo == id,
 					value: option.IDNo,
 					text: option.ROLE
 				}));
 			});
-			// After roles loaded, toggle table field visibility
 			toggleTableFieldForEdit();
 		},
 		error: function (xhr, status, error) {
@@ -520,9 +613,113 @@ function get_user_role_edit(id) {
 	});
 }
 
-// Open new user modal
 function add_user_modal() {
 	$('#modal-new_user').modal('show');
 	get_user_role();
 	toggleTableFieldForNew();
 }
+
+function showUserRolesModal() {
+	keepUserRolesModalOpen = true;
+	$('#modal-user-roles').modal('show');
+}
+
+function openNewRoleModal() {
+	keepUserRolesModalOpen = true;
+	$('#modal-new-role').modal('show');
+}
+
+$(document).on('click', '#modal-user-roles .btn-close, #modal-user-roles button[data-bs-dismiss="modal"]', function() {
+	keepUserRolesModalOpen = false;
+});
+function reloadUserRoleData() {
+	if (!userRoleDataTable) return;
+	
+	$.ajax({
+		url: '/user_role_data',
+		method: 'GET',
+		success: function (data) {
+			userRoleDataTable.clear();
+			if (!data || data.length === 0) {
+				return;
+			}
+			
+			var rows = [];
+			var activeText = userRolesTranslations.active || 'ACTIVE';
+			var inactiveText = userRolesTranslations.inactive || 'INACTIVE';
+			
+			data.forEach(function (row) {
+				const isActive = row.ACTIVE && row.ACTIVE.data
+					? parseInt(row.ACTIVE.data[0]) === 1
+					: parseInt(row.ACTIVE) === 1;
+				const status = isActive 
+					? `<span class="css-blue">${activeText}</span>`
+					: `<span class="css-red">${inactiveText}</span>`;
+
+				var role = (row.ROLE || '').replace(/'/g, "\\'");
+				var btn = `<div class="btn-group">
+					<button type="button" class="btn btn-sm bg-info-subtle js-bs-tooltip-enabled" onclick="edit_role(${row.IDNo}, '${role}')"
+						data-bs-toggle="tooltip" aria-label="Edit" data-bs-original-title="Edit">
+						<i class="fa fa-pencil-alt"></i>
+					</button>
+				</div>`;
+
+				rows.push([row.ROLE, status, btn]);
+			});
+			
+			if (rows.length > 0) {
+				userRoleDataTable.rows.add(rows).draw();
+			}
+		},
+		error: function (xhr, status, error) {
+			console.error('Error fetching user roles:', error);
+			Swal.fire({
+				icon: "error",
+				title: "Error!",
+				text: "Failed to load user roles. Please refresh the page.",
+			});
+		}
+	});
+}
+
+function edit_role(id, role) {
+	role_id = id;
+	$('#role').val(role);
+	$('#modal-edit_user_role').modal('show');
+}
+
+function archive_role(id) {
+	Swal.fire({
+		title: 'Are you sure?',
+		text: "You won't be able to revert this!",
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		confirmButtonText: 'Yes, delete it!'
+	}).then((result) => {
+		if (result.isConfirmed) {
+			$.ajax({
+				url: '/user_role/remove/' + id,
+				type: 'PUT',
+				success: function (response) {
+					Swal.fire({
+						icon: "success",
+						title: "Deleted!",
+						text: "User role has been deleted",
+					});
+					reloadUserRoleData();
+				},
+				error: function (xhr, status, error) {
+					console.error('Error deleting user role:', error);
+					showError(xhr, 'Failed to delete user role');
+				}
+			});
+		}
+	});
+}
+
+window.showUserRolesModal = showUserRolesModal;
+window.openNewRoleModal = openNewRoleModal;
+window.edit_role = edit_role;
+window.archive_role = archive_role;

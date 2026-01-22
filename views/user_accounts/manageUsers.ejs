@@ -14,20 +14,23 @@
 									<a href="/dashboard" ><span class="fa fa-home"></span></a>
 									<a href="/manageUsers"class="active"><%= __('manage_users.manage_users') %></a>
 								</div></h3>
+								<div class="d-flex gap-2">
+									<button type="button" class="btn btn-primary" onclick="showUserRolesModal()">
+										<i class="fa fa-user-tag" aria-hidden="true"></i> <%= __('user_roles.user_roles') %>
+									</button>
 									<button type="button" class="btn btn-primary" onclick="add_user_modal()">
 										<i class="fa fa-plus" aria-hidden="true"></i> <%= __('manage_users.new_user') %>
 									</button>
+								</div>
 								
 							</div>
 
 
 							<div class="card-body">
-																
 								<table id="usersTable" class="table  nowrap small-text" style="width:100%">
 									<thead>
 										<tr>
-											<th class="d-none d-sm-table-cell"><%= __('manage_users.last_name') %></th>
-											<th class="d-none d-sm-table-cell"><%= __('manage_users.first_name') %></th>
+											<th class="d-none d-sm-table-cell"><%= __('manage_users.name') || 'Name' %></th>
 											<th class="d-none d-sm-table-cell"><%= __('manage_users.username') %></th>
 											<% if (permissions === 1) { %>
 											<th class="d-none d-sm-table-cell">Branch</th>
@@ -50,6 +53,9 @@
 
 			<%- include ('../modals/user_accounts/newUserAccount'); %>
 				<%- include ('../modals/user_accounts/editUserAccount'); %>
+					<%- include ('../modals/user_accounts/userRolesModal'); %>
+						<%- include ('../modals/user_accounts/newUserRole'); %>
+							<%- include ('../modals/user_accounts/editUserRole'); %>
 
 					<%- include ('../partials/footer'); -%>
 
@@ -71,7 +77,20 @@
 						data-pagination-search="<%- __('manage_users.pagination.search') %>"
 						data-pagination-search-placeholder="<%- __('manage_users.pagination.search_placeholder') %>"
 						style="display: none;"></div>
-					<script src="/assets/js/functions/manageUsers.js?v=2026-01-21-users-branch"></script>
+					<!-- User Roles Translations -->
+					<div id="userRolesTranslations" 
+						data-active="<%- __('user_roles.active') %>" 
+						data-inactive="<%- __('user_roles.inactive') %>"
+						data-pagination-showing="<%- __('user_roles.pagination.showing') %>"
+						data-pagination-to="<%- __('user_roles.pagination.to') %>"
+						data-pagination-of="<%- __('user_roles.pagination.of') %>"
+						data-pagination-entries="<%- __('user_roles.pagination.entries') %>"
+						data-pagination-previous="<%- __('user_roles.pagination.previous') %>"
+						data-pagination-next="<%- __('user_roles.pagination.next') %>"
+						data-pagination-search="<%- __('user_roles.pagination.search') %>"
+						data-pagination-search-placeholder="<%- __('user_roles.pagination.search_placeholder') %>"
+						style="display: none;"></div>
+					<script src="/assets/js/functions/manageUsers.js?v=2026-01-21-cleaned"></script>
 						
 
 						<script>
@@ -141,8 +160,7 @@
         font-size: 10px; /* Mas maliit sa mobile */
     }
 
-    #usersTable th,
-    #usersTable td {
+    #usersTable th, #usersTable td {
         padding: 5px;
     }
 }

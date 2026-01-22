@@ -1,0 +1,58 @@
+<!-- ============================================ -->
+<!-- CATEGORY MANAGEMENT MODAL -->
+<!-- File: views/modals/category/categoryModal.ejs -->
+<!-- Description: Main modal for managing categories -->
+<!-- ============================================ -->
+
+<div class="modal fade" id="modal-manage-categories" role="dialog" aria-labelledby="modal-manage-categories" aria-hidden="true"
+	data-keyboard="false" data-bs-backdrop="static">
+	<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary">
+				<h5 class="block-title text-white"><%= __('category.manage_category') %></h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<h6 class="mb-0"><%= __('category.manage_category') %></h6>
+					<button class="btn btn-sm btn-primary" onclick="openNewCategoryModal()">
+						<i class="fa fa-plus" aria-hidden="true"></i> <%= __('category.new_category') %>
+					</button>
+				</div>
+				<table id="categoryTable" class="table nowrap small-text" style="width:100%">
+					<thead>
+						<tr>
+							<th class="d-none d-sm-table-cell"><%= __('category.category_name') %></th>
+							<th class="d-none d-sm-table-cell"><%= __('category.description') %></th>
+							<th class="d-none d-sm-table-cell"><%= __('category.date_created') %></th>
+							<th class="d-none d-sm-table-cell" style="width: 100px;"><%= __('category.action') %></th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-sm btn-alt-secondary" data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Translations passed via data attribute to avoid linter issues -->
+<div id="manageCategoryTranslations" 
+	data-success="<%- __('category.success') %>"
+	data-error="<%- __('category.error') %>"
+	data-category-created-successfully="<%- __('category.category_created_successfully') %>"
+	data-category-updated-successfully="<%- __('category.category_updated_successfully') %>"
+	data-category-deleted-successfully="<%- __('category.category_deleted_successfully') %>"
+	data-failed-to-create-category="<%- __('category.failed_to_create_category') %>"
+	data-failed-to-update-category="<%- __('category.failed_to_update_category') %>"
+	data-failed-to-delete-category="<%- __('category.failed_to_delete_category') %>"
+	data-failed-to-load-categories="<%- __('category.failed_to_load_categories') %>"
+	data-delete-confirmation-title="<%- __('category.delete_confirmation_title') %>"
+	data-delete-confirmation-text="<%- __('category.delete_confirmation_text') %>"
+	data-delete-confirm-button="<%- __('category.delete_confirm_button') %>"
+	data-no-description="<%- __('category.no_description') %>"
+	style="display: none;"></div>
+

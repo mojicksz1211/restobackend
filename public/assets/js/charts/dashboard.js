@@ -244,6 +244,131 @@ if (document.querySelectorAll('#d-activity').length) {
   window.updateWinlossChart = updateWinlossChart;
 }
 
+if (document.querySelector('#admin-sales-trend')) {
+  const adminSalesOptions = {
+    series: [
+      { name: 'Mainbranch', data: [620000, 870000, 1050000, 1280000, 1500000, 1710000, 1980000, 2140000] },
+      { name: 'Makati Branch', data: [410000, 650000, 870000, 932000, 1050000, 1170000, 1290000, 1410000] },
+      { name: 'BGC Branch', data: [520000, 710000, 940000, 1130000, 1310000, 1460000, 1680000, 1820000] }
+    ],
+    chart: {
+      type: 'area',
+      height: 280,
+      toolbar: { show: false },
+      stacked: false,
+      sparkline: { enabled: false }
+    },
+    colors: ['#0d6efd', '#0dcaf0', '#f97316'],
+    dataLabels: { enabled: false },
+    stroke: {
+      curve: 'smooth',
+      width: 2
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.65,
+        opacityTo: 0.12,
+        stops: [0, 60, 100]
+      }
+    },
+    markers: { size: 0 },
+    xaxis: {
+      categories: ['7AM', '9AM', '11AM', '1PM', '3PM', '5PM', '7PM', '9PM'],
+      labels: {
+        style: {
+          colors: '#6c757d'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        formatter: function (val) {
+          return '₱ ' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 0 });
+        }
+      }
+    },
+    tooltip: {
+      y: {
+        formatter: function (val) {
+          return '₱ ' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 0 });
+        }
+      }
+    },
+    legend: {
+      position: 'top',
+      horizontalAlign: 'right'
+    }
+  };
+
+  const adminSalesChart = new ApexCharts(document.querySelector('#admin-sales-trend'), adminSalesOptions);
+  adminSalesChart.render();
+}
+
+if (document.querySelector('#admin-cost-analysis')) {
+  const adminCostOptions = {
+    series: [
+      { name: 'Mainbranch', data: [2.48, 1.32, 0.95] },
+      { name: 'Makati Branch', data: [1.85, 1.05, 1.05] },
+      { name: 'BGC Branch', data: [1.92, 0.98, 0.82] }
+    ],
+    chart: {
+      type: 'bar',
+      height: 280,
+      stacked: false,
+      toolbar: { show: false }
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 4,
+        columnWidth: '45%',
+        distributed: false
+      }
+    },
+    colors: ['#0d6efd', '#0dcaf0', '#f97316'],
+    dataLabels: { enabled: false },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent']
+    },
+    xaxis: {
+      categories: ['Personnel', 'Material', 'Operating'],
+      labels: {
+        style: {
+          colors: '#6c757d'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        formatter: function (val) {
+          return '₱ ' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 }) + 'M';
+        }
+      },
+      title: {
+        text: '₱ Millions',
+        style: {
+          fontSize: '12px',
+          color: '#6c757d'
+        }
+      }
+    },
+    tooltip: {
+      y: {
+        formatter: function (val) {
+          return '₱ ' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' Million';
+        }
+      }
+    },
+    legend: { show: false }
+  };
+
+  const adminCostChart = new ApexCharts(document.querySelector('#admin-cost-analysis'), adminCostOptions);
+  adminCostChart.render();
+}
+
 if (document.querySelectorAll('#d-main').length) {
   const options = {
       series: [{

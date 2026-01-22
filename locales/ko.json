@@ -339,7 +339,8 @@
 			"next": "다음",
 			"search": "검색",
 			"search_placeholder": "검색..."
-		}
+		},
+		"name": "전체 이름"
 	},
 	"user_roles": {
 		"user_roles": "사용자 역할",

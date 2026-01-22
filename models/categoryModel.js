@@ -42,8 +42,8 @@ class CategoryModel {
 
 	// Create new category
 	static async create(data) {
-		const { CAT_NAME, CAT_DESC, user_id } = data;
-		const branchId = data.BRANCH_ID ?? null;
+		const { CAT_NAME, CAT_DESC, BRANCH_ID, user_id } = data;
+		const branchId = BRANCH_ID || null;
 		const currentDate = new Date();
 
 		const query = `

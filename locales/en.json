@@ -336,7 +336,8 @@
 			"next": "Next",
 			"search": "Search",
 			"search_placeholder": "Search..."
-		}
+		},
+		"name": "Full Name"
 	},
 	"user_roles": {
 		"user_roles": "User Roles",

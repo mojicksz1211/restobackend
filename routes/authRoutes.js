@@ -217,10 +217,20 @@ router.post('/add_user_role', async (req, res) => {
 		const query = `INSERT INTO user_role (ROLE, ENCODED_BY, ENCODED_DT) VALUES (?, ?, ?)`;
 
 		await pool.execute(query, [role, req.session.user_id, date_now]);
-		res.redirect('/userRoles');
+		
+		// Check if it's an AJAX request
+		if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+			res.json({ success: true, message: 'User role created successfully' });
+		} else {
+			res.redirect('/userRoles');
+		}
 	} catch (err) {
 		console.error('Error inserting user role:', err);
-		res.status(500).send('Error inserting user');
+		if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+			res.status(500).json({ error: 'Error inserting user role' });
+		} else {
+			res.status(500).send('Error inserting user');
+		}
 	}
 });
 

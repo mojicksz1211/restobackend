@@ -338,7 +338,8 @@
 			"next": "下一页",
 			"search": "搜索",
 			"search_placeholder": "搜索..."
-		}
+		},
+		"name": "全名"
 	},
 	"user_roles": {
 		"user_roles": "用户角色",

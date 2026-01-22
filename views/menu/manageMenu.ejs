@@ -21,9 +21,9 @@
 									<a href="/manageMenu"class="active"><%= __('menu.manage_menu') %></a>
 								</div></h3>
 									<div class="d-flex gap-2">
-										<a href="/manageCategory" class="btn btn-primary">
+										<button type="button" class="btn btn-primary" onclick="showManageCategoriesModal()">
 											<i class="fa fa-tags" aria-hidden="true"></i> <%= __('menu.manage_category') %>
-										</a>
+										</button>
 										<button type="button" class="btn btn-primary" onclick="add_menu_modal()">
 											<i class="fa fa-plus" aria-hidden="true"></i> <%= __('menu.new_menu') %>
 										</button>
@@ -85,6 +85,9 @@
 			<!-- ============================================ -->
 			<%- include ('../modals/menu/newMenu'); %>
 			<%- include ('../modals/menu/editMenu'); %>
+			<%- include ('../modals/category/categoryModal'); %>
+			<%- include ('../modals/category/new_category'); %>
+			<%- include ('../modals/category/edit_category'); %>
 
 			<!-- ============================================ -->
 			<!-- FOOTER -->
@@ -118,6 +121,7 @@
 			<!-- SCRIPTS -->
 			<!-- ============================================ -->
 			<script src="/assets/js/functions/manageMenu.js?v=2026-01-21-branch"></script>
+			<script src="/assets/js/functions/manageCategory.js"></script>
 						
 
 						<script>

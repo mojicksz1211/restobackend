@@ -7,12 +7,24 @@
 // ============================================
 
 var category_id;
-var dataTable;
-
-// Load translations from data attributes
+var categoryDataTable;
+var keepManageCategoriesModalOpen = false;
 var manageCategoryTranslations = {};
+
+// Helper function for error handling
+function showError(xhr, defaultMsg) {
+	var errorMsg = defaultMsg;
+	if (xhr.responseJSON && xhr.responseJSON.error) {
+		errorMsg = xhr.responseJSON.error;
+	}
+	Swal.fire({
+		icon: "error",
+		title: manageCategoryTranslations.error || 'Error!',
+		text: errorMsg,
+	});
+}
+
 $(document).ready(function () {
-	// Load translations from data attributes
 	var $transEl = $('#manageCategoryTranslations');
 	if ($transEl.length) {
 		manageCategoryTranslations = {
@@ -32,129 +44,170 @@ $(document).ready(function () {
 		};
 	}
 
-	if ($.fn.DataTable.isDataTable('#categoryTable')) {
-		$('#categoryTable').DataTable().destroy();
-	}
-
-	dataTable = $('#categoryTable').DataTable({
-		columnDefs: [{
-			createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
-				$(cell).addClass('text-center');
+	// Initialize category DataTable when modal opens
+	$('#modal-manage-categories').on('shown.bs.modal', function () {
+		if ($('#categoryTable').length) {
+			if ($.fn.DataTable.isDataTable('#categoryTable')) {
+				$('#categoryTable').DataTable().destroy();
+				categoryDataTable = null;
 			}
-		}]
+
+			categoryDataTable = $('#categoryTable').DataTable({
+				columnDefs: [
+					{ targets: [0, 1, 2], className: 'text-left' },
+					{ targets: [3], className: 'text-center' }
+				],
+				order: [[0, 'asc']],
+				pageLength: 10
+			});
+			
+			reloadCategoryData();
+		}
 	});
 
-	// Initial load
-	reloadCategoryData();
+	// Prevent manage categories modal from closing when child modals are open
+	$('#modal-manage-categories').on('hide.bs.modal', function (e) {
+		if ($('#modal-new_category').hasClass('show') || $('#modal-edit_category').hasClass('show')) {
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			return false;
+		}
+	});
+	
+	// When child modals close, ensure manage categories modal stays open
+	$('#modal-new_category, #modal-edit_category').on('hidden.bs.modal', function () {
+		setTimeout(function() {
+			if (keepManageCategoriesModalOpen) {
+				$('#modal-manage-categories').addClass('show').css({
+					'display': 'block',
+					'padding-right': '0px'
+				});
+				$('body').addClass('modal-open');
+				
+				if ($('.modal-backdrop').length === 0) {
+					$('body').append('<div class="modal-backdrop fade show"></div>');
+				}
+				
+				reloadCategoryData();
+			}
+		}, 200);
+	});
 
 	// Edit category form submit
-	$('#edit_category').submit(function (event) {
+	$(document).on('submit', '#edit_category', function (event) {
 		event.preventDefault();
-
-		var formData = $(this).serialize();
+		var $form = $(this);
+		
 		$.ajax({
 			url: '/category/' + category_id,
 			type: 'PUT',
-			data: formData,
+			data: $form.serialize(),
 			success: function (response) {
 				Swal.fire({
 					icon: "success",
 					title: manageCategoryTranslations.success,
 					text: manageCategoryTranslations.category_updated_successfully,
 				});
-				reloadCategoryData();
+				$form[0].reset();
 				$('#modal-edit_category').modal('hide');
+				reloadCategoryData();
 			},
 			error: function (xhr, status, error) {
 				console.error('Error updating category:', error);
-				var errorMsg = manageCategoryTranslations.failed_to_update_category;
-				if (xhr.responseJSON && xhr.responseJSON.error) {
-					errorMsg = xhr.responseJSON.error;
-				}
-				Swal.fire({
-					icon: "error",
-					title: manageCategoryTranslations.error,
-					text: errorMsg,
-				});
+				showError(xhr, manageCategoryTranslations.failed_to_update_category);
 			}
 		});
 	});
 
 	// Add new category form submit
-	$('#add_new_category').submit(function (event) {
+	$(document).on('submit', '#add_new_category', function (event) {
 		event.preventDefault();
-
-		var formData = $(this).serialize();
+		var $form = $(this);
+		
 		$.ajax({
 			url: '/category',
 			type: 'POST',
-			data: formData,
+			data: $form.serialize(),
 			success: function (response) {
 				Swal.fire({
 					icon: "success",
 					title: manageCategoryTranslations.success,
 					text: manageCategoryTranslations.category_created_successfully,
 				});
-				reloadCategoryData();
+				$form[0].reset();
 				$('#modal-new_category').modal('hide');
-				$('#add_new_category')[0].reset();
+				reloadCategoryData();
 			},
 			error: function (xhr, status, error) {
 				console.error('Error creating category:', error);
-				var errorMessage = manageCategoryTranslations.failed_to_create_category;
-				if (xhr.responseJSON && xhr.responseJSON.error) {
-					errorMessage = xhr.responseJSON.error;
-				}
-				Swal.fire({
-					icon: "error",
-					title: manageCategoryTranslations.error,
-					text: errorMessage,
-				});
+				showError(xhr, manageCategoryTranslations.failed_to_create_category);
 			}
 		});
 	});
 });
 
 // ============================================
-// GLOBAL FUNCTIONS
+// CATEGORY MANAGEMENT MODAL FUNCTIONS
 // ============================================
+
+// Show manage categories modal
+function showManageCategoriesModal() {
+	keepManageCategoriesModalOpen = true;
+	$('#modal-manage-categories').modal('show');
+}
+
+// Open new category modal without closing manage categories modal
+function openNewCategoryModal() {
+	keepManageCategoriesModalOpen = true;
+	$('#modal-new_category').modal('show');
+}
+
+// Open new category modal (standalone - for backward compatibility)
+function add_category_modal() {
+	$('#modal-new_category').modal('show');
+}
+
+// Allow user to close manage categories modal when clicking close button
+$(document).on('click', '#modal-manage-categories .btn-close, #modal-manage-categories button[data-bs-dismiss="modal"]', function() {
+	keepManageCategoriesModalOpen = false;
+});
 
 // Reload category data in DataTable
 function reloadCategoryData() {
+	if (!categoryDataTable) {
+		return;
+	}
+	
 	$.ajax({
 		url: '/categories_list',
 		method: 'GET',
 		success: function (data) {
-			dataTable.clear();
+			categoryDataTable.clear();
+			
 			if (!data || data.length === 0) {
+				categoryDataTable.draw();
 				return;
 			}
+			
+			var rows = [];
+			var noDesc = manageCategoryTranslations.no_description || 'No description';
+			
 			data.forEach(function (row) {
-				// Format date
-				var dateCreated = '';
-				if (row.ENCODED_DT) {
-					var date = new Date(row.ENCODED_DT);
-					dateCreated = date.toLocaleDateString('en-US', { 
-						year: 'numeric', 
-						month: 'short', 
-						day: 'numeric',
-						hour: '2-digit',
-						minute: '2-digit'
-					});
-				} else {
-					dateCreated = 'N/A';
-				}
+				var dateCreated = row.ENCODED_DT 
+					? new Date(row.ENCODED_DT).toLocaleDateString('en-US', { 
+						year: 'numeric', month: 'short', day: 'numeric',
+						hour: '2-digit', minute: '2-digit'
+					})
+					: 'N/A';
 
-				// Format description
 				var description = row.CAT_DESC || '';
 				if (description.length > 50) {
 					description = description.substring(0, 50) + '...';
 				}
 				if (!description) {
-					description = '<span class="text-muted">' + (manageCategoryTranslations.no_description || 'No description') + '</span>';
+					description = '<span class="text-muted">' + noDesc + '</span>';
 				}
 
-				// Escape single quotes for JavaScript
 				var categoryName = (row.CAT_NAME || '').replace(/'/g, "\\'");
 				var categoryDesc = (row.CAT_DESC || '').replace(/'/g, "\\'");
 				
@@ -169,13 +222,10 @@ function reloadCategoryData() {
 					</button>
 				</div>`;
 
-				dataTable.row.add([
-					row.CAT_NAME,
-					description,
-					dateCreated,
-					btn
-				]).draw();
+				rows.push([row.CAT_NAME || '', description, dateCreated, btn]);
 			});
+			
+			categoryDataTable.rows.add(rows).draw();
 		},
 		error: function (xhr, status, error) {
 			console.error('Error fetching categories:', error);
@@ -186,11 +236,6 @@ function reloadCategoryData() {
 			});
 		}
 	});
-}
-
-// Open new category modal
-function add_category_modal() {
-	$('#modal-new_category').modal('show');
 }
 
 // Open edit category modal with data
@@ -227,19 +272,17 @@ function delete_category(id) {
 				},
 				error: function (xhr, status, error) {
 					console.error('Error deleting category:', error);
-					var errorMsg = manageCategoryTranslations.failed_to_delete_category;
-					if (xhr.responseJSON && xhr.responseJSON.error) {
-						errorMsg = xhr.responseJSON.error;
-					}
-					Swal.fire({
-						icon: "error",
-						title: manageCategoryTranslations.error,
-						text: errorMsg,
-					});
+					showError(xhr, manageCategoryTranslations.failed_to_delete_category);
 				}
 			});
 		}
 	});
 }
 
+// Expose functions globally for onclick handlers
+window.showManageCategoriesModal = showManageCategoriesModal;
+window.openNewCategoryModal = openNewCategoryModal;
+window.add_category_modal = add_category_modal;
+window.edit_category = edit_category;
+window.delete_category = delete_category;
 

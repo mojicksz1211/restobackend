@@ -6,7 +6,6 @@
 // ============================================
 
 const CategoryModel = require('../models/categoryModel');
-const BranchModel = require('../models/branchModel');
 
 class CategoryController {
 	// Display category management page
@@ -42,18 +41,16 @@ class CategoryController {
 			}
 
 			const user_id = req.session.user_id || req.user?.user_id;
+			const branch_id = req.session?.branch_id || req.body?.BRANCH_ID || req.query?.branch_id || null;
 
-			// Categories are shared across branches; assign a fallback branch id only if required by schema
-			let branchId = req.session?.branch_id || req.body.BRANCH_ID || req.query.branch_id || req.user?.branch_id || null;
-			if (!branchId) {
-				const branches = await BranchModel.getAll();
-				branchId = branches.length > 0 ? branches[0].IDNo : null;
+			if (!user_id) {
+				return res.status(400).json({ error: 'User ID is required' });
 			}
 
 			const categoryId = await CategoryModel.create({
-				BRANCH_ID: branchId,
 				CAT_NAME,
 				CAT_DESC,
+				BRANCH_ID: branch_id,
 				user_id
 			});
 
