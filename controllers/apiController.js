@@ -74,9 +74,9 @@ class ApiController {
 				}
 
 				if (isValid) {
-					// Check if user has PERMISSIONS = 2 (Tablet), 14 (Waiter), or 16 (Kitchen)
-					// Allow tablet, waiter, and kitchen users to login via API
-					const allowedPermissions = [2, 14, 16]; // 2 = Tablet, 14 = Waiter, 16 = Kitchen
+					// Check if user has PERMISSIONS = 2 (Tablet), 14 (Waiter), 15 (Cashier), or 16 (Kitchen)
+					// Allow tablet, waiter, cashier, and kitchen users to login via API
+					const allowedPermissions = [2, 14, 15, 16]; // 2 = Tablet, 14 = Waiter, 15 = Cashier, 16 = Kitchen
 					const userPermissions = parseInt(user.PERMISSIONS, 10); // Convert to integer for comparison
 					
 					// Debug logging
