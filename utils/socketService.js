@@ -52,6 +52,13 @@ function initializeSocket(server) {
   return io;
 }
 
+function isConfirmedStatus(orderData) {
+  const rawStatus = orderData?.status ?? orderData?.STATUS;
+  if (rawStatus == null) return false;
+  const status = typeof rawStatus === 'string' ? parseInt(rawStatus, 10) : rawStatus;
+  return status === 2;
+}
+
 // Emit order update event
 function emitOrderUpdate(orderId, orderData) {
   if (!io) {
@@ -66,8 +73,10 @@ function emitOrderUpdate(orderId, orderData) {
     timestamp: new Date().toISOString()
   };
   
-  // Emit to order room
-  io.to(room).emit('order_updated', payload);
+  // Emit to order room unless status is CONFIRMED (2)
+  if (!isConfirmedStatus(orderData)) {
+    io.to(room).emit('order_updated', payload);
+  }
   // Also emit to kitchen room
   io.to('kitchen').emit('order_updated', payload);
 
@@ -88,8 +97,10 @@ function emitOrderCreated(orderId, orderData) {
     timestamp: new Date().toISOString()
   };
 
-  // Emit to order room
-  io.to(room).emit('order_created', payload);
+  // Emit to order room unless status is CONFIRMED (2)
+  if (!isConfirmedStatus(orderData)) {
+    io.to(room).emit('order_created', payload);
+  }
   // Also emit to kitchen room (NEW ORDERS)
   io.to('kitchen').emit('order_created', payload);
   // Also emit globally for safety
@@ -112,8 +123,10 @@ function emitOrderItemsAdded(orderId, orderData) {
     timestamp: new Date().toISOString()
   };
 
-  // Emit to order room
-  io.to(room).emit('order_items_added', payload);
+  // Emit to order room unless status is CONFIRMED (2)
+  if (!isConfirmedStatus(orderData)) {
+    io.to(room).emit('order_items_added', payload);
+  }
   // Also emit to kitchen room
   io.to('kitchen').emit('order_items_added', payload);
 
