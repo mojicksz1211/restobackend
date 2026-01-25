@@ -882,6 +882,16 @@
 		"failed_to_load_employees": "Failed to load employees. Please refresh the page.",
 		"delete_confirmation_title": "Are you sure?",
 		"delete_confirmation_text": "You won't be able to revert this!",
-		"delete_confirm_button": "Yes, delete it!"
+		"delete_confirm_button": "Yes, delete it!",
+		"pagination": {
+			"showing": "Showing",
+			"to": "to",
+			"of": "of",
+			"entries": "entries",
+			"previous": "Previous",
+			"next": "Next",
+			"search": "Search",
+			"search_placeholder": "Search..."
+		}
 	}
 }

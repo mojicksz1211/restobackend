@@ -127,6 +127,14 @@ function initializeDataTable() {
 		return;
 	}
 
+	// Get pagination translations
+	const paginationTrans = manageTableTranslations.pagination || {};
+	const showingText = paginationTrans.showing || 'Showing';
+	const toText = paginationTrans.to || 'to';
+	const ofText = paginationTrans.of || 'of';
+	const entriesText = paginationTrans.entries || 'entries';
+	const searchText = paginationTrans.search || 'Search';
+
 	manageTableDataTable = $table.DataTable({
 		responsive: true,
 		lengthChange: false,
@@ -160,7 +168,19 @@ function initializeDataTable() {
 				orderable: false,
 				searchable: false
 			}
-		]
+		],
+		language: {
+			lengthMenu: showingText + " _MENU_ " + entriesText,
+			info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+			infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+			infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+			search: searchText + ":",
+			searchPlaceholder: paginationTrans.search_placeholder || "Search...",
+			paginate: {
+				previous: paginationTrans.previous || 'Previous',
+				next: paginationTrans.next || 'Next'
+			}
+		}
 	});
 }
 

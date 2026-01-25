@@ -9,6 +9,7 @@ A comprehensive restaurant management system built with Node.js, Express, and My
 - **Table Management** - Manage restaurant table assignments
 - **User Management** - Admin user accounts and role management
 - **Multi-language Support** - Support for English, Japanese, Korean, and Chinese
+- **Auto Translation** - Automatic translation of menu names and categories using Google Cloud Translation API
 - **Dashboard** - Comprehensive admin dashboard with analytics
 - **API Endpoints** - RESTful API for external integrations
 - **Authentication** - Secure user authentication and session management
@@ -50,7 +51,27 @@ DB_PASSWORD=your_password
 DB_NAME=restaurant_db
 SESSION_SECRET=your_secret_key
 JWT_SECRET=your_jwt_secret
+
+# Google Cloud Translation API (Optional - for auto-translation of menu names and categories)
+# Option 1: Path to service account JSON key file
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+
+# Option 2: Project ID (if using default credentials)
+GOOGLE_CLOUD_PROJECT_ID=your-project-id
 ```
+
+**Note:** To enable auto-translation for menu names and categories, see the detailed setup guide: [GOOGLE_TRANSLATION_SETUP.md](./GOOGLE_TRANSLATION_SETUP.md)
+
+**Quick Setup (API Key method - simplest):**
+1. Enable Cloud Translation API in Google Cloud Console
+2. Create an API key in "APIs & Services" > "Credentials"
+3. Add to `.env`: `GOOGLE_TRANSLATE_API_KEY=your-api-key-here`
+
+**Alternative (Service Account - recommended for production):**
+1. Create a service account and download JSON key file
+2. Add to `.env`: `GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json`
+
+The API endpoints `/api/menu` and `/api/categories` will automatically translate Korean text to the requested language using the `lang` or `language` query parameter (e.g., `?lang=en`, `?lang=ja`, `?lang=zh`)
 
 4. Set up the database:
 Import the SQL schema file from the `sql/` directory into your MySQL database.

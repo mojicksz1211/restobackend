@@ -16,6 +16,7 @@ const argon2 = require('argon2');
 const crypto = require('crypto');
 const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
 const socketService = require('../utils/socketService');
+const TranslationService = require('../utils/translationService');
 
 // Helper function to check if password is Argon2 hash
 function isArgonHash(hash) {
@@ -182,22 +183,77 @@ class ApiController {
 		const timestamp = new Date().toISOString();
 		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
 		const userAgent = req.headers['user-agent'] || 'Unknown';
+		const targetLanguage = req.query.lang || req.query.language || 'en'; // Default to English
 
 		try {
 			// Log request
-			console.log(`[${timestamp}] [API REQUEST] GET /api/categories - IP: ${clientIp}, User-Agent: ${userAgent}`);
+			console.log(`[${timestamp}] [API REQUEST] GET /api/categories - IP: ${clientIp}, Language: ${targetLanguage}, User-Agent: ${userAgent}`);
 
 			const categories = await CategoryModel.getAll();
 			
 			// Format response for Android app
-			const formattedCategories = categories.map(cat => ({
+			let formattedCategories = categories.map(cat => ({
 				id: cat.IDNo,
 				name: cat.CAT_NAME,
 				description: cat.CAT_DESC || null
 			}));
 
+			// Apply translation - Descriptions ALWAYS translate, Category names only if not Korean
+			if (TranslationService.isAvailable()) {
+				// First, translate descriptions (always, regardless of target language)
+				try {
+					const descTextsToTranslate = [];
+					const descTextMapping = [];
+					
+					formattedCategories.forEach(cat => {
+						if (cat.description) {
+							descTextsToTranslate.push(cat.description);
+							descTextMapping.push({ cat: cat });
+						}
+					});
+					
+					if (descTextsToTranslate.length > 0) {
+						const descTranslations = await TranslationService.translateBatch(descTextsToTranslate, targetLanguage);
+						descTranslations.forEach((translation, index) => {
+							if (descTextMapping[index]) {
+								descTextMapping[index].cat.description = translation || descTextMapping[index].cat.description;
+							}
+						});
+					}
+				} catch (descError) {
+					console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate category descriptions:`, descError);
+				}
+				
+				// Then, translate category names (only if not Korean)
+				if (targetLanguage !== 'ko') {
+					try {
+						const textsToTranslate = [];
+						const textMapping = [];
+						
+						formattedCategories.forEach(cat => {
+							if (cat.name && targetLanguage !== 'ko') {
+								textsToTranslate.push(cat.name);
+								textMapping.push({ type: 'name', cat: cat });
+							}
+						});
+
+						if (textsToTranslate.length > 0) {
+							const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
+							translations.forEach((translation, index) => {
+								const mapping = textMapping[index];
+								if (mapping && mapping.type === 'name') {
+									mapping.cat.name = translation || mapping.cat.name;
+								}
+							});
+						}
+					} catch (nameError) {
+						console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate category names:`, nameError);
+					}
+				}
+			}
+
 			// Log success
-			console.log(`[${timestamp}] [API SUCCESS] GET /api/categories - IP: ${clientIp}, Categories returned: ${formattedCategories.length}`);
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/categories - IP: ${clientIp}, Categories returned: ${formattedCategories.length}, Language: ${targetLanguage}`);
 
 			res.json({
 				success: true,
@@ -263,10 +319,11 @@ class ApiController {
 		const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
 		const userAgent = req.headers['user-agent'] || 'Unknown';
 		const categoryId = req.query.category_id || null;
+		const targetLanguage = req.query.lang || req.query.language || 'en'; // Default to English
 
 		try {
 			// Log request
-			console.log(`[${timestamp}] [API REQUEST] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, User-Agent: ${userAgent}`);
+			console.log(`[${timestamp}] [API REQUEST] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, Language: ${targetLanguage}, User-Agent: ${userAgent}`);
 
 			// Get branch_id from query or user context
 			const branchId = req.query.branch_id || req.user?.branch_id || null;
@@ -279,7 +336,7 @@ class ApiController {
 			if (req.get('x-forwarded-proto') === 'https' || req.get('host').includes('resto-admin.3core21.com')) {
 				baseUrl = 'https://' + req.get('host');
 			}
-			const formattedMenus = menus.map(menu => ({
+			let formattedMenus = menus.map(menu => ({
 				id: menu.IDNo,
 				category_id: menu.CATEGORY_ID,
 				category_name: menu.CATEGORY_NAME || null,
@@ -290,9 +347,86 @@ class ApiController {
 				is_available: menu.IS_AVAILABLE === 1
 			}));
 
+			// Apply translation - Descriptions ALWAYS translate, Menu/Category names only if not Korean
+			if (TranslationService.isAvailable()) {
+				console.log(`[${timestamp}] [TRANSLATION] Starting translation for ${formattedMenus.length} menus to ${targetLanguage}`);
+				
+				// First, translate descriptions (always, regardless of target language)
+				try {
+					const descTextsToTranslate = [];
+					const descTextMapping = [];
+					
+					formattedMenus.forEach(menu => {
+						if (menu.description) {
+							descTextsToTranslate.push(menu.description);
+							descTextMapping.push({ menu: menu });
+						}
+					});
+					
+					if (descTextsToTranslate.length > 0) {
+						console.log(`[${timestamp}] [TRANSLATION] Translating ${descTextsToTranslate.length} descriptions...`);
+						const descTranslations = await TranslationService.translateBatch(descTextsToTranslate, targetLanguage);
+						descTranslations.forEach((translation, index) => {
+							if (descTextMapping[index]) {
+								descTextMapping[index].menu.description = translation || descTextMapping[index].menu.description;
+							}
+						});
+						console.log(`[${timestamp}] [TRANSLATION] Descriptions translated successfully`);
+					}
+				} catch (descError) {
+					console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate descriptions:`, descError);
+				}
+				
+				// Then, translate menu names and category names
+				// If Korean is selected: translate English text to Korean, keep Korean text as is
+				// If other language is selected: translate to that language
+				try {
+					const textsToTranslate = [];
+					const textMapping = [];
+					
+					formattedMenus.forEach(menu => {
+						// Menu names: always translate (auto-detect will handle Korean vs English)
+						if (menu.name) {
+							textsToTranslate.push(menu.name);
+							textMapping.push({ type: 'name', menu: menu });
+						}
+						// Category names: always translate (auto-detect will handle Korean vs English)
+						if (menu.category_name) {
+							textsToTranslate.push(menu.category_name);
+							textMapping.push({ type: 'category', menu: menu });
+						}
+					});
+
+					if (textsToTranslate.length > 0) {
+						console.log(`[${timestamp}] [TRANSLATION] Translating ${textsToTranslate.length} menu/category names to ${targetLanguage}...`);
+						// Translate in batch - auto-detect source language (handles both Korean and English)
+						// This will translate English to Korean when Korean is selected
+						// And translate Korean to other languages when other languages are selected
+						const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
+						console.log(`[${timestamp}] [TRANSLATION] Received ${translations.length} translations`);
+						
+						translations.forEach((translation, index) => {
+							const mapping = textMapping[index];
+							if (mapping) {
+								if (mapping.type === 'name') {
+									mapping.menu.name = translation || mapping.menu.name;
+								} else if (mapping.type === 'category') {
+									mapping.menu.category_name = translation || mapping.menu.category_name;
+								}
+							}
+						});
+						console.log(`[${timestamp}] [TRANSLATION] Menu/Category names translated successfully`);
+					}
+				} catch (nameError) {
+					console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate menu/category names:`, nameError);
+				}
+			} else {
+				console.log(`[${timestamp}] [TRANSLATION] Translation service not available. isAvailable(): ${TranslationService.isAvailable()}`);
+			}
+
 			// Log success with details
 			const availableCount = formattedMenus.filter(m => m.is_available).length;
-			console.log(`[${timestamp}] [API SUCCESS] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, Total items: ${formattedMenus.length}, Available: ${availableCount}`);
+			console.log(`[${timestamp}] [API SUCCESS] GET /api/menu - IP: ${clientIp}, Category ID: ${categoryId || 'All'}, Total items: ${formattedMenus.length}, Available: ${availableCount}, Language: ${targetLanguage}`);
 
 			res.json({
 				success: true,

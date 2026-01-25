@@ -883,6 +883,16 @@
 		"failed_to_load_employees": "従業員の読み込みに失敗しました。ページを更新してください。",
 		"delete_confirmation_title": "本当によろしいですか？",
 		"delete_confirmation_text": "元に戻すことはできません！",
-		"delete_confirm_button": "はい、削除します"
+		"delete_confirm_button": "はい、削除します",
+		"pagination": {
+			"showing": "表示",
+			"to": "から",
+			"of": "の",
+			"entries": "件",
+			"previous": "前へ",
+			"next": "次へ",
+			"search": "検索",
+			"search_placeholder": "検索..."
+		}
 	}
 }

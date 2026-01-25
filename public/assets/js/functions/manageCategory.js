@@ -178,9 +178,16 @@ function reloadCategoryData() {
 		return;
 	}
 	
+	// Get current language from cookie or default to 'en'
+	var currentLang = document.cookie.split('; ').find(row => row.startsWith('lang='));
+	currentLang = currentLang ? currentLang.split('=')[1] : 'en';
+	
 	$.ajax({
 		url: '/categories_list',
 		method: 'GET',
+		data: {
+			lang: currentLang
+		},
 		success: function (data) {
 			categoryDataTable.clear();
 			

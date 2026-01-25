@@ -40,7 +40,17 @@ $(document).ready(function () {
 			delete_confirmation_text: $transEl.data('delete-confirmation-text') || "You won't be able to revert this!",
 			delete_confirm_button: $transEl.data('delete-confirm-button') || 'Yes, delete it!',
 			active: $transEl.data('active') || 'ACTIVE',
-			inactive: $transEl.data('inactive') || 'INACTIVE'
+			inactive: $transEl.data('inactive') || 'INACTIVE',
+			pagination: {
+				showing: $transEl.data('pagination-showing') || 'Showing',
+				to: $transEl.data('pagination-to') || 'to',
+				of: $transEl.data('pagination-of') || 'of',
+				entries: $transEl.data('pagination-entries') || 'entries',
+				previous: $transEl.data('pagination-previous') || 'Previous',
+				next: $transEl.data('pagination-next') || 'Next',
+				search: $transEl.data('pagination-search') || 'Search',
+				search_placeholder: $transEl.data('pagination-search-placeholder') || 'Search...'
+			}
 		};
 	}
 
@@ -51,6 +61,14 @@ $(document).ready(function () {
 			employeeDataTable = null;
 		}
 
+		// Get pagination translations
+		const paginationTrans = manageEmployeeTranslations.pagination || {};
+		const showingText = paginationTrans.showing || 'Showing';
+		const toText = paginationTrans.to || 'to';
+		const ofText = paginationTrans.of || 'of';
+		const entriesText = paginationTrans.entries || 'entries';
+		const searchText = paginationTrans.search || 'Search';
+
 		employeeDataTable = $('#employeeTable').DataTable({
 			columnDefs: [
 				{ targets: [0, 1, 2, 3, 4, 5], className: 'text-left' },
@@ -59,7 +77,19 @@ $(document).ready(function () {
 			order: [[0, 'asc']],
 			pageLength: 10,
 			responsive: true,
-			lengthChange: false
+			lengthChange: false,
+			language: {
+				lengthMenu: showingText + " _MENU_ " + entriesText,
+				info: showingText + " _START_ " + toText + " _END_ " + ofText + " _TOTAL_ " + entriesText,
+				infoEmpty: showingText + " 0 " + toText + " 0 " + ofText + " 0 " + entriesText,
+				infoFiltered: "(" + searchText + " " + ofText + " _MAX_ " + entriesText + ")",
+				search: searchText + ":",
+				searchPlaceholder: paginationTrans.search_placeholder || "Search...",
+				paginate: {
+					previous: paginationTrans.previous || 'Previous',
+					next: paginationTrans.next || 'Next'
+				}
+			}
 		});
 		
 		reloadEmployeeData();

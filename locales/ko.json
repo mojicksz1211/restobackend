@@ -885,6 +885,16 @@
 		"failed_to_load_employees": "직원을 불러오지 못했습니다. 페이지를 새로고침하세요.",
 		"delete_confirmation_title": "정말로 하시겠습니까?",
 		"delete_confirmation_text": "되돌릴 수 없습니다!",
-		"delete_confirm_button": "예, 삭제합니다"
+		"delete_confirm_button": "예, 삭제합니다",
+		"pagination": {
+			"showing": "표시",
+			"to": "부터",
+			"of": "중",
+			"entries": "개 항목",
+			"previous": "이전",
+			"next": "다음",
+			"search": "검색",
+			"search_placeholder": "검색..."
+		}
 	}
 }
