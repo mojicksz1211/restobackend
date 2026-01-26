@@ -61,57 +61,53 @@ class CategoryController {
 					console.error('[CATEGORY CONTROLLER] Description translation error:', descError.message);
 				}
 				
-				// Then, translate category names (only if not Korean)
-				// This handles both Korean-to-other-languages AND English-to-other-languages
-				if (targetLanguage !== 'ko') {
-					try {
-						// Collect all texts to translate (category names only)
-						// Include both Korean and English category names - auto-detect will handle it
-						const textsToTranslate = [];
-						const textMapping = []; // Track which field each text belongs to
-						
-						categories.forEach(cat => {
-							// Category names: translate to target language (handles both Korean and English source)
-							// Auto-detect will determine if source is Korean or English
-							if (cat.CAT_NAME && targetLanguage !== 'ko') {
-								textsToTranslate.push(cat.CAT_NAME);
-								textMapping.push({ type: 'name', cat: cat });
-							}
-						});
-						
-						if (textsToTranslate.length > 0) {
-							console.log(`[CATEGORY CONTROLLER] Translating ${textsToTranslate.length} category names to ${targetLanguage}`);
-							console.log(`[CATEGORY CONTROLLER] Sample texts:`, textsToTranslate.slice(0, 3));
-							
-							// Translate in batch - auto-detect source language
-							// This handles both Korean-to-other-languages AND English-to-other-languages
-							// Google Translate will auto-detect if the source is Korean or English
-							const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
-							
-							console.log(`[CATEGORY CONTROLLER] Received ${translations.length} translations`);
-							console.log(`[CATEGORY CONTROLLER] Sample translations:`, translations.slice(0, 3));
-							
-							// Map translations back to categories
-							translations.forEach((translation, index) => {
-								const mapping = textMapping[index];
-								if (mapping && mapping.type === 'name') {
-									const originalText = mapping.cat.CAT_NAME;
-									mapping.cat.CAT_NAME = translation || mapping.cat.CAT_NAME;
-									if (translation && translation !== originalText) {
-										console.log(`[CATEGORY CONTROLLER] Translated: "${originalText}" → "${translation}"`);
-									}
-								}
-							});
-						} else {
-							console.log(`[CATEGORY CONTROLLER] No category names to translate (targetLanguage: ${targetLanguage})`);
-						}
-					} catch (nameError) {
-						console.error('[CATEGORY CONTROLLER] Category name translation error:', nameError.message);
-						console.error('[CATEGORY CONTROLLER] Error stack:', nameError.stack);
+			// Then, translate category names (always translate to target language)
+			// This handles both Korean-to-other-languages AND English-to-other-languages
+			try {
+				// Collect all texts to translate (category names only)
+				// Include both Korean and English category names - auto-detect will handle it
+				const textsToTranslate = [];
+				const textMapping = []; // Track which field each text belongs to
+				
+				categories.forEach(cat => {
+					// Category names: translate to target language (handles both Korean and English source)
+					// Auto-detect will determine if source is Korean or English
+					if (cat.CAT_NAME) {
+						textsToTranslate.push(cat.CAT_NAME);
+						textMapping.push({ type: 'name', cat: cat });
 					}
+				});
+				
+				if (textsToTranslate.length > 0) {
+					console.log(`[CATEGORY CONTROLLER] Translating ${textsToTranslate.length} category names to ${targetLanguage}`);
+					console.log(`[CATEGORY CONTROLLER] Sample texts:`, textsToTranslate.slice(0, 3));
+					
+					// Translate in batch - auto-detect source language
+					// This handles both Korean-to-other-languages AND English-to-other-languages
+					// Google Translate will auto-detect if the source is Korean or English
+					const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
+					
+					console.log(`[CATEGORY CONTROLLER] Received ${translations.length} translations`);
+					console.log(`[CATEGORY CONTROLLER] Sample translations:`, translations.slice(0, 3));
+					
+					// Map translations back to categories
+					translations.forEach((translation, index) => {
+						const mapping = textMapping[index];
+						if (mapping && mapping.type === 'name') {
+							const originalText = mapping.cat.CAT_NAME;
+							mapping.cat.CAT_NAME = translation || mapping.cat.CAT_NAME;
+							if (translation && translation !== originalText) {
+								console.log(`[CATEGORY CONTROLLER] Translated: "${originalText}" → "${translation}"`);
+							}
+						}
+					});
 				} else {
-					console.log(`[CATEGORY CONTROLLER] Skipping category name translation (targetLanguage is Korean)`);
+					console.log(`[CATEGORY CONTROLLER] No category names to translate (targetLanguage: ${targetLanguage})`);
 				}
+			} catch (nameError) {
+				console.error('[CATEGORY CONTROLLER] Category name translation error:', nameError.message);
+				console.error('[CATEGORY CONTROLLER] Error stack:', nameError.stack);
+			}
 			}
 			
 			res.json(categories);

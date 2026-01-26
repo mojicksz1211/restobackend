@@ -198,7 +198,7 @@ class ApiController {
 				description: cat.CAT_DESC || null
 			}));
 
-			// Apply translation - Descriptions ALWAYS translate, Category names only if not Korean
+			// Apply translation - Descriptions ALWAYS translate, Category names translate to target language
 			if (TranslationService.isAvailable()) {
 				// First, translate descriptions (always, regardless of target language)
 				try {
@@ -224,31 +224,29 @@ class ApiController {
 					console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate category descriptions:`, descError);
 				}
 				
-				// Then, translate category names (only if not Korean)
-				if (targetLanguage !== 'ko') {
-					try {
-						const textsToTranslate = [];
-						const textMapping = [];
-						
-						formattedCategories.forEach(cat => {
-							if (cat.name && targetLanguage !== 'ko') {
-								textsToTranslate.push(cat.name);
-								textMapping.push({ type: 'name', cat: cat });
+				// Then, translate category names to target language
+				try {
+					const textsToTranslate = [];
+					const textMapping = [];
+					
+					formattedCategories.forEach(cat => {
+						if (cat.name) {
+							textsToTranslate.push(cat.name);
+							textMapping.push({ type: 'name', cat: cat });
+						}
+					});
+
+					if (textsToTranslate.length > 0) {
+						const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
+						translations.forEach((translation, index) => {
+							const mapping = textMapping[index];
+							if (mapping && mapping.type === 'name') {
+								mapping.cat.name = translation || mapping.cat.name;
 							}
 						});
-
-						if (textsToTranslate.length > 0) {
-							const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
-							translations.forEach((translation, index) => {
-								const mapping = textMapping[index];
-								if (mapping && mapping.type === 'name') {
-									mapping.cat.name = translation || mapping.cat.name;
-								}
-							});
-						}
-					} catch (nameError) {
-						console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate category names:`, nameError);
 					}
+				} catch (nameError) {
+					console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate category names:`, nameError);
 				}
 			}
 
