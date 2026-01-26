@@ -96,7 +96,30 @@ $(document).ready(function () {
 		order: [[dateIdx, 'desc']],
 		columnDefs: [
 			{ targets: [statusIdx, dateIdx, actionsIdx], className: 'text-center' },
-			{ targets: actionsIdx, orderable: false }
+			{ targets: actionsIdx, orderable: false },
+			{ 
+				targets: dateIdx, 
+				type: 'num',
+				render: function (data, type, row) {
+					// data is the timestamp we passed
+					if (type === 'display' || type === 'type') {
+						// Format the timestamp for display
+						if (!data || data === 0) {
+							return window.orderTranslations?.n_a || 'N/A';
+						}
+						const date = new Date(data);
+						return date.toLocaleString('en-US', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit'
+						});
+					}
+					// Return raw timestamp for sorting
+					return data || 0;
+				}
+			}
 		],
 		pageLength: 10,
 		language: {
@@ -210,6 +233,16 @@ function loadOrders() {
 					: n_a;
 				const encodedByLabel = row.ENCODED_BY_NAME || row.ENCODED_BY || '-';
 
+				// Get timestamp for date column sorting
+				let dateTimestamp = 0;
+				if (row.ENCODED_DT) {
+					const date = new Date(row.ENCODED_DT);
+					dateTimestamp = date.getTime();
+					if (Number.isNaN(dateTimestamp)) {
+						dateTimestamp = 0;
+					}
+				}
+
 				const baseRow = [
 					row.ORDER_NO || n_a,
 					showBranchColumn ? branchLabel : null,
@@ -221,7 +254,7 @@ function loadOrders() {
 					formatCurrency(row.SERVICE_CHARGE),
 					formatCurrency(row.DISCOUNT_AMOUNT),
 					formatCurrency(row.GRAND_TOTAL),
-					formatDateColumn(row.ENCODED_DT),
+					dateTimestamp, // Pass timestamp for sorting
 					encodedByLabel,
 					renderActionButtons(row)
 				];

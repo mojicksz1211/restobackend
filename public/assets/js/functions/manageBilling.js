@@ -100,7 +100,30 @@ $(document).ready(function () {
 		order: [[dateIdx, 'desc']],
 		columnDefs: [
 			{ targets: [statusIdx, dateIdx, paymentsIdx, actionsIdx], className: 'text-center' },
-			{ targets: [paymentsIdx, actionsIdx], orderable: false }
+			{ targets: [paymentsIdx, actionsIdx], orderable: false },
+			{ 
+				targets: dateIdx, 
+				type: 'num',
+				render: function (data, type, row) {
+					// data is the timestamp we passed
+					if (type === 'display' || type === 'type') {
+						// Format the timestamp for display
+						if (!data || data === 0) {
+							return billingTranslations.n_a || 'N/A';
+						}
+						const date = new Date(data);
+						return date.toLocaleString('en-US', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit'
+						});
+					}
+					// Return raw timestamp for sorting
+					return data || 0;
+				}
+			}
 		],
 		pageLength: 10,
 		language: {
@@ -192,6 +215,17 @@ function loadBillingData() {
 				const n_a = billingTranslations.n_a || 'N/A';
 				const branchLabel = row.BRANCH_NAME || row.BRANCH_LABEL || n_a;
 				const encodedByLabel = row.ENCODED_BY_NAME || row.ENCODED_BY || '-';
+				
+				// Get timestamp for date column sorting
+				let dateTimestamp = 0;
+				if (row.ENCODED_DT) {
+					const date = new Date(row.ENCODED_DT);
+					dateTimestamp = date.getTime();
+					if (Number.isNaN(dateTimestamp)) {
+						dateTimestamp = 0;
+					}
+				}
+				
 				const baseRow = [
 					row.ORDER_NO || n_a,
 					showBranchColumn ? branchLabel : null,
@@ -200,7 +234,7 @@ function loadBillingData() {
 					formatCurrency(row.AMOUNT_PAID),
 					row.PAYMENT_REF || '-',
 					formatBillingStatus(row.STATUS),
-					formatDate(row.ENCODED_DT),
+					dateTimestamp, // Pass timestamp for sorting
 					encodedByLabel,
 					paymentsBtn,
 					actions
