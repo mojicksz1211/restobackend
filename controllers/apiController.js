@@ -199,7 +199,9 @@ class ApiController {
 			}));
 
 			// Apply translation - Descriptions ALWAYS translate, Category names translate to target language
-			if (TranslationService.isAvailable()) {
+			const translationAvailable = TranslationService.isAvailable();
+			console.log(`[${timestamp}] [TRANSLATION] Categories translation available=${translationAvailable}, lang=${targetLanguage}`);
+			if (translationAvailable) {
 				// First, translate descriptions (always, regardless of target language)
 				try {
 					const descTextsToTranslate = [];
@@ -219,6 +221,7 @@ class ApiController {
 								descTextMapping[index].cat.description = translation || descTextMapping[index].cat.description;
 							}
 						});
+						console.log(`[${timestamp}] [TRANSLATION] Category descriptions translated: ${descTranslations.length}`);
 					}
 				} catch (descError) {
 					console.error(`[${timestamp}] [TRANSLATION ERROR] Failed to translate category descriptions:`, descError);
@@ -238,6 +241,9 @@ class ApiController {
 
 					if (textsToTranslate.length > 0) {
 						const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
+						if (translations.length > 0) {
+							console.log(`[${timestamp}] [TRANSLATION] Category name sample "${textsToTranslate[0]}" -> "${translations[0]}"`);
+						}
 						translations.forEach((translation, index) => {
 							const mapping = textMapping[index];
 							if (mapping && mapping.type === 'name') {
