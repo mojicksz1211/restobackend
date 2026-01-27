@@ -1,10 +1,3 @@
-// ============================================
-// BRANCH MODEL
-// ============================================
-// File: models/branchModel.js
-// Description: Database operations for branches
-// ============================================
-
 const pool = require('../config/db');
 
 class BranchModel {
@@ -21,7 +14,7 @@ class BranchModel {
 				CREATED_DT
 			FROM branches
 			WHERE ACTIVE = 1
-			ORDER BY BRANCH_NAME ASC
+			ORDER BY IDNo ASC
 		`;
 		const [rows] = await pool.execute(query);
 		return rows;

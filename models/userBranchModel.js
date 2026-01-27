@@ -1,10 +1,3 @@
-// ============================================
-// USER BRANCH MODEL
-// ============================================
-// File: models/userBranchModel.js
-// Description: Database operations for user-branch relationships
-// ============================================
-
 const pool = require('../config/db');
 
 class UserBranchModel {
@@ -96,23 +89,6 @@ class UserBranchModel {
 		return true;
 	}
 
-	// Replace all users for a branch
-	static async setBranchUsers(branchId, userIds) {
-		// First, remove all existing associations
-		await pool.execute('DELETE FROM user_branches WHERE BRANCH_ID = ?', [branchId]);
-		
-		// Then add new associations
-		if (userIds && userIds.length > 0) {
-			const values = userIds.map(userId => [userId, branchId]);
-			const query = `
-				INSERT INTO user_branches (USER_ID, BRANCH_ID)
-				VALUES ?
-			`;
-			await pool.query(query, [values]);
-		}
-		
-		return true;
-	}
 }
 
 module.exports = UserBranchModel;

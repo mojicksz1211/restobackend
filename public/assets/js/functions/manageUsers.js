@@ -65,9 +65,9 @@ $(document).ready(function () {
 			},
 			...(IS_ADMIN_VIEW ? [{
 				targets: 2,
-				createdCell: function (cell) {
-					$(cell).removeClass('text-center');
-				}
+							createdCell: function (cell) {
+								$(cell).removeClass('text-center');
+							}
 			}] : [])
 		],
 		pageLength: 10,
@@ -113,7 +113,7 @@ $(document).ready(function () {
 	$('#edit_user').submit(function (event) {
 		event.preventDefault();
 		var $form = $(this);
-		
+
 		$.ajax({
 			url: '/user/' + user_id,
 			type: 'PUT',
@@ -172,7 +172,7 @@ $(document).ready(function () {
 	$('#modal-new_user').on('shown.bs.modal', function () {
 		loadBranchesForNewUser();
 	});
-	
+
 	// User Roles Translations
 	var $userRolesTransEl = $('#userRolesTranslations');
 	if ($userRolesTransEl.length) {
@@ -328,8 +328,8 @@ function populateTableSelect(selector, selectedId = null) {
 	$select.empty().append('<option value="">Select Table</option>');
 
 	const selected = (selectedId !== null && selectedId !== undefined && selectedId !== '') 
-		? parseInt(selectedId) 
-		: null;
+			? parseInt(selectedId)
+			: null;
 
 	(tablesList || []).forEach(function (t) {
 		const tid = parseInt(t.IDNo);
@@ -450,8 +450,8 @@ function reloadUserData() {
 			
 			data.forEach(function (row) {
 				const isActive = row.ACTIVE && row.ACTIVE.data
-					? parseInt(row.ACTIVE.data[0]) === 1
-					: parseInt(row.ACTIVE) === 1;
+						? parseInt(row.ACTIVE.data[0]) === 1
+						: parseInt(row.ACTIVE) === 1;
 				const status = isActive 
 					? `<span class="css-blue">${activeText}</span>`
 					: `<span class="css-red">${inactiveText}</span>`;
@@ -472,7 +472,7 @@ function reloadUserData() {
 				</div>`;
 
 				const fullName = `${row.FIRSTNAME || ''} ${row.LASTNAME || ''}`.trim();
-				
+
 				if (IS_ADMIN_VIEW) {
 					const branchLabel = row.BRANCH_LABEL || row.BRANCHES || '';
 					rows.push([fullName, row.USERNAME, branchLabel, row.role, status, btn]);

@@ -1,10 +1,3 @@
-// ============================================
-// BRANCH CONTROLLER
-// ============================================
-// File: controllers/branchController.js
-// Description: Handles branch-related business logic
-// ============================================
-
 const BranchModel = require('../models/branchModel');
 const UserBranchModel = require('../models/userBranchModel');
 const AuditLogModel = require('../models/auditLogModel');
@@ -155,26 +148,18 @@ class BranchController {
 	static async getById(req, res) {
 		try {
 			const { id } = req.params;
-			console.log('[BRANCH GET] Requested ID:', id, typeof id);
-
 			let branch = null;
 			const branchIdInt = parseInt(id);
 			if (!isNaN(branchIdInt)) {
 				branch = await BranchModel.getById(branchIdInt);
 			} else {
-				// Allow lookup by branch code for convenience
 				branch = await BranchModel.getByCode(String(id || '').trim());
 			}
-
-			console.log('[BRANCH GET] Result:', branch ? 'Found' : 'Not found');
 			
 			if (!branch) {
-				// Get all branches for debugging
-				const allBranches = await BranchModel.getAll();
 				return res.status(404).json({ 
 					error: 'Branch not found',
-					requested: id,
-					available_branches: allBranches.map(b => ({ id: b.IDNo, code: b.BRANCH_CODE, name: b.BRANCH_NAME }))
+					requested: id
 				});
 			}
 			res.json(branch);
