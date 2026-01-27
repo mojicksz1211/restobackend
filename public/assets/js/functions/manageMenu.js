@@ -309,6 +309,25 @@ $(document).ready(function () {
 			}
 		});
 	});
+
+	// When New Menu modal is closed, clear last selected values
+	$('#modal-new_menu').on('hidden.bs.modal', function () {
+		const $form = $('#add_new_menu');
+		if ($form.length) {
+			$form[0].reset();
+
+			// Clear Select2 category selection back to placeholder
+			$('#category_id').val(null).trigger('change');
+
+			// Ensure defaults for price and availability
+			$('input[name="MENU_PRICE"]', $form).val(0);
+			$('select[name="IS_AVAILABLE"]', $form).val('1');
+
+			// Clear file input and preview
+			$('#menu_image').val('');
+			$('#preview_new').hide();
+		}
+	});
 });
 
 // ============================================
@@ -422,6 +441,24 @@ function add_menu_modal() {
 	if (requireBranchSelection('Please select a specific branch in the top bar before adding a menu.')) {
 		return;
 	}
+
+	// Reset form fields each time modal is opened
+	const $form = $('#add_new_menu');
+	if ($form.length) {
+		$form[0].reset();
+
+		// Reset Select2 category dropdown to placeholder (no selection)
+		$('#category_id').val(null).trigger('change');
+
+		// Ensure default values for numeric / availability fields
+		$('input[name="MENU_PRICE"]', $form).val(0);
+		$('select[name="IS_AVAILABLE"]', $form).val('1');
+
+		// Clear file input and preview
+		$('#menu_image').val('');
+		$('#preview_new').hide();
+	}
+
 	$('#modal-new_menu').modal('show');
 }
 
