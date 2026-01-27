@@ -8,8 +8,8 @@
 const pool = require('../config/db');
 
 class CategoryModel {
-	// Get all active categories
-	static async getAll() {
+	// Get all active categories, optionally filtered by branch
+	static async getAll(branchId = null) {
 		let query = `
 			SELECT 
 				IDNo,
@@ -24,9 +24,17 @@ class CategoryModel {
 			WHERE ACTIVE = 1
 		`;
 
+		const params = [];
+
+		// Apply branch filter only when branchId is explicitly provided (can be 0)
+		if (branchId !== null && branchId !== undefined) {
+			query += ` AND BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
 		query += ` ORDER BY IDNo ASC`;
 
-		const [rows] = await pool.execute(query);
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 

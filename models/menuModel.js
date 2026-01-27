@@ -36,7 +36,8 @@ class MenuModel {
 		`;
 
 		const params = [];
-		if (branchId) {
+		// Apply branch filter only when branchId is explicitly provided (can be 0)
+		if (branchId !== null && branchId !== undefined) {
 			query += ` AND m.BRANCH_ID = ?`;
 			params.push(branchId);
 		}
@@ -158,17 +159,25 @@ class MenuModel {
 		return result.affectedRows > 0;
 	}
 
-	// Get all categories for dropdown
-	static async getCategories() {
+	// Get all categories for dropdown, optionally filtered by branch
+	static async getCategories(branchId = null) {
 		let query = `
 			SELECT IDNo, CAT_NAME AS CATEGORY_NAME 
 			FROM categories 
 			WHERE ACTIVE = 1 
 		`;
 
+		const params = [];
+
+		// Apply branch filter only when branchId is explicitly provided (can be 0)
+		if (branchId !== null && branchId !== undefined) {
+			query += ` AND BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
 		query += ` ORDER BY CAT_NAME`;
 
-		const [rows] = await pool.execute(query);
+		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
 
@@ -196,7 +205,8 @@ class MenuModel {
 			params.push(categoryId);
 		}
 
-		if (branchId) {
+		// Apply branch filter only when branchId is explicitly provided (can be 0)
+		if (branchId !== null && branchId !== undefined) {
 			query += ` AND m.BRANCH_ID = ?`;
 			params.push(branchId);
 		}

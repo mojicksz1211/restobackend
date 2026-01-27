@@ -115,7 +115,10 @@ class MenuController {
 	// Get all categories for dropdown
 	static async getCategories(req, res) {
 		try {
-			const categories = await MenuModel.getCategories();
+			// Prioritize session branch_id for filtering categories by branch
+			const branchId = req.session?.branch_id || req.query.branch_id || req.body?.branch_id || req.user?.branch_id || null;
+
+			const categories = await MenuModel.getCategories(branchId);
 			
 			// Get target language from query parameter, cookie, or default to 'en'
 			const targetLanguage = req.query.lang || req.query.language || req.cookies?.lang || 'en';

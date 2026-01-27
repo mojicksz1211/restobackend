@@ -24,7 +24,10 @@ class CategoryController {
 	// Get all categories
 	static async getAll(req, res) {
 		try {
-			const categories = await CategoryModel.getAll();
+			// Prioritize session branch_id, but allow overrides from query/body if needed
+			const branchId = req.session?.branch_id || req.query.branch_id || req.body?.branch_id || req.user?.branch_id || null;
+
+			const categories = await CategoryModel.getAll(branchId);
 			
 			// Get target language from query parameter, cookie, or default to 'en'
 			const targetLanguage = req.query.lang || req.query.language || req.cookies?.lang || 'en';
@@ -61,9 +64,9 @@ class CategoryController {
 					console.error('[CATEGORY CONTROLLER] Description translation error:', descError.message);
 				}
 				
-			// Then, translate category names (always translate to target language)
-			// This handles both Korean-to-other-languages AND English-to-other-languages
-			try {
+				// Then, translate category names (always translate to target language)
+				// This handles both Korean-to-other-languages AND English-to-other-languages
+				try {
 				// Collect all texts to translate (category names only)
 				// Include both Korean and English category names - auto-detect will handle it
 				const textsToTranslate = [];
