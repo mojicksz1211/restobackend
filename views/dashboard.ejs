@@ -153,7 +153,7 @@
                </style>
                               <!-- CARDS -->
                <form id="expense-form" action="/insert-dash-history" method="POST">
-                  <% if (permissions !== 1) { %>
+                  <% if (permissions !== 1 && !isKimsBrothersDashboard) { %>
                   <div class="row">
                      <div class="col-md-12 col-lg-12">
                         <div class="row row-cols-1">
@@ -261,6 +261,162 @@
                            </div>
                         </div>
                      </div>
+                  </div>
+                  <% } %>
+                  <% if (isKimsBrothersDashboard) { %>
+                  <!-- Kim's Brothers custom dashboard (static preview) -->
+                  <div class="kb-sales-container">
+                  <div class="row mt-4 mb-3 align-items-center kb-sales-header">
+                     <div class="col-md-4 mb-2 mb-md-0">
+                        <h4 class="mb-0">Sales Summary</h4>
+                        <small class="text-muted">
+                           Kim's Brothers branch · static preview
+                        </small>
+                     </div>
+                     <div class="col-md-8 d-flex flex-wrap justify-content-md-end gap-2 kb-sales-filters">
+                        <button type="button" id="kb-date-range-button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 kb-filter-btn">
+                           <i class="far fa-calendar"></i>
+                           <span id="kb-date-range-label">29 Dec 2025 - 27 Jan 2026</span>
+                        </button>
+                        <input type="text" id="kb-date-range-input" class="d-none" />
+                        <div class="kb-time-filter">
+                           <button type="button" id="kb-time-filter-btn" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 kb-filter-btn">
+                              <i class="far fa-clock"></i>
+                              <span id="kb-time-filter-label">All day long</span>
+                              <i class="fas fa-chevron-down small ms-1"></i>
+                           </button>
+                           <div class="kb-time-menu card shadow-sm" id="kb-time-menu">
+                              <div class="kb-time-option">
+                                 <label class="d-flex align-items-center gap-2 px-3 py-2 mb-0">
+                                    <input type="radio" name="kb-time-mode" value="all_day" class="form-check-input" checked />
+                                    <span>All day long</span>
+                                 </label>
+                              </div>
+                              <div class="kb-time-option border-top">
+                                 <label class="d-flex align-items-center gap-2 px-3 py-2 mb-0">
+                                    <input type="radio" name="kb-time-mode" value="custom" class="form-check-input" />
+                                    <span>Custom period</span>
+                                 </label>
+                                 <div class="kb-time-custom d-none px-3 pb-3" id="kb-time-custom-row">
+                                    <div class="d-flex justify-content-between gap-2 mt-2">
+                                       <div class="flex-fill">
+                                          <small class="text-muted d-block mb-1">start</small>
+                                          <select id="kb-time-start" class="form-select form-select-sm"></select>
+                                       </div>
+                                       <div class="flex-fill">
+                                          <small class="text-muted d-block mb-1">end</small>
+                                          <select id="kb-time-end" class="form-select form-select-sm"></select>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm kb-filter-btn">
+                           All employees
+                        </button>
+                     </div>
+                  </div>
+
+                  <div class="row g-3 mb-3 kb-summary-row">
+                     <div class="col-md-3">
+                        <div class="card kb-summary-card h-100">
+                           <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                 <span class="text-muted small">Total sales</span>
+                              </div>
+                              <div class="fs-4 fw-bold text-dark" id="kb-total-sales">₱5,072,900.00</div>
+                              <small class="text-danger">-₱685,700.00 (-11.91%)</small>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col-md-2">
+                        <div class="card kb-summary-card h-100">
+                           <div class="card-body">
+                              <span class="text-muted small d-block mb-1">refund</span>
+                              <div class="fs-5 fw-bold text-dark" id="kb-refund">₱280.00</div>
+                              <small class="text-muted">₱0.00 (0%)</small>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col-md-2">
+                        <div class="card kb-summary-card h-100">
+                           <div class="card-body">
+                              <span class="text-muted small d-block mb-1">discount</span>
+                              <div class="fs-5 fw-bold text-dark" id="kb-discount">₱17,180.00</div>
+                              <small class="text-success">₱280.80 (1.61%)</small>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col-md-2">
+                        <div class="card kb-summary-card h-100">
+                           <div class="card-body">
+                              <span class="text-muted small d-block mb-1">Net sales</span>
+                              <div class="fs-5 fw-bold text-dark" id="kb-net-sales">₱5,055,440.00</div>
+                              <small class="text-danger">-₱685,419.20 (-11.94%)</small>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col-md-3">
+                        <div class="card kb-summary-card h-100">
+                           <div class="card-body">
+                              <span class="text-muted small d-block mb-1">Gross profit</span>
+                              <div class="fs-5 fw-bold text-dark" id="kb-gross-profit">₱5,055,440.00</div>
+                              <small class="text-danger">-₱685,269.20 (-11.94%)</small>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="card mb-3">
+                     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                           <h6 class="mb-0">Total sales</h6>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                           <select class="form-select form-select-sm" id="kb-chart-type" style="width: 140px;">
+                              <option value="bar" selected>Bar chart</option>
+                              <option value="line">Line graph</option>
+                           </select>
+                           <select class="form-select form-select-sm" id="kb-view-mode" style="width: 130px;">
+                              <option value="glance" selected>glance</option>
+                              <option value="weekly">Weekly</option>
+                              <option value="monthly">monthly</option>
+                              <option value="quarterly">Quarterly</option>
+                              <option value="yearly">By year</option>
+                           </select>
+                        </div>
+                     </div>
+                     <div class="card-body">
+                        <div id="kb-sales-chart" style="min-height: 260px;"></div>
+                     </div>
+                  </div>
+
+                  <div class="card">
+                     <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">EXPORT</h6>
+                     </div>
+                     <div class="card-body p-0">
+                        <div class="table-responsive">
+                           <table class="table table-striped mb-0">
+                              <thead class="table-light">
+                                 <tr>
+                                    <th>date</th>
+                                    <th class="text-end">Total sales</th>
+                                    <th class="text-end">refund</th>
+                                    <th class="text-end">discount</th>
+                                    <th class="text-end">Net sales</th>
+                                    <th class="text-end">Product unit price</th>
+                                    <th class="text-end">Gross profit</th>
+                                 </tr>
+                              </thead>
+                              <tbody id="kb-sales-table-body">
+                                 <!-- Filled by static JS below -->
+                              </tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </div>
                   </div>
                   <% } %>
                   <% if (permissions === 1) {
@@ -950,6 +1106,354 @@
 
 
                                                    <script>
+                                                      // Kim's Brothers static dashboard behaviours
+                                                      (function () {
+                                                         if (!window.ApexCharts) return;
+                                                         if (typeof isKimsBrothersDashboard === 'undefined' && !document.getElementById('kb-sales-chart')) {
+                                                            return;
+                                                         }
+
+                                                         const kbData = {
+                                                            labels: [
+                                                               '29 Dec', '30 Dec', '31 Dec',
+                                                               '01 Jan', '02 Jan', '03 Jan', '04 Jan',
+                                                               '05 Jan', '06 Jan', '07 Jan', '08 Jan', '09 Jan', '10 Jan',
+                                                               '11 Jan', '12 Jan', '13 Jan', '14 Jan', '15 Jan',
+                                                               '16 Jan', '17 Jan', '18 Jan', '19 Jan', '20 Jan',
+                                                               '21 Jan', '22 Jan', '23 Jan', '24 Jan', '25 Jan', '26 Jan', '27 Jan'
+                                                            ],
+                                                            sales: [
+                                                               205000, 207000, 65000,
+                                                               0, 150000, 212000, 215000,
+                                                               135000, 140000, 168000, 178000, 145000, 220000,
+                                                               205000, 130000, 145000, 170000, 220000,
+                                                               180000, 195000, 205000, 150000, 160000,
+                                                               175000, 210000, 245000, 230000, 190000, 62000
+                                                            ]
+                                                         };
+
+                                                         const chartEl = document.getElementById('kb-sales-chart');
+                                                         if (!chartEl) return;
+
+                                                         const baseOptions = {
+                                                            series: [{
+                                                               name: 'Total sales',
+                                                               data: kbData.sales
+                                                            }],
+                                                            chart: {
+                                                               type: 'bar',
+                                                               height: 280,
+                                                               toolbar: { show: false },
+                                                               zoom: { enabled: false },
+                                                               fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+                                                            },
+                                                            plotOptions: {
+                                                               bar: {
+                                                                  columnWidth: '55%',
+                                                                  borderRadius: 6,
+                                                                  borderRadiusApplication: 'end',
+                                                                  distributed: false
+                                                               }
+                                                            },
+                                                            stroke: {
+                                                               show: true,
+                                                               width: 2,
+                                                               colors: ['#ffffff']
+                                                            },
+                                                            dataLabels: { enabled: false },
+                                                            colors: ['#22c55e'],
+                                                            fill: {
+                                                               type: 'gradient',
+                                                               gradient: {
+                                                                  shade: 'light',
+                                                                  type: 'vertical',
+                                                                  shadeIntensity: 0.25,
+                                                                  gradientToColors: ['#16a34a'],
+                                                                  opacityFrom: 0.9,
+                                                                  opacityTo: 0.95,
+                                                                  stops: [0, 40, 100]
+                                                               }
+                                                            },
+                                                            grid: {
+                                                               borderColor: '#e5e7eb',
+                                                               strokeDashArray: 4,
+                                                               yaxis: { lines: { show: true } },
+                                                               xaxis: { lines: { show: false } }
+                                                            },
+                                                            xaxis: {
+                                                               categories: kbData.labels,
+                                                               axisBorder: { show: false },
+                                                               axisTicks: { show: false },
+                                                               labels: {
+                                                                  rotate: -45,
+                                                                  style: {
+                                                                     colors: '#9ca3af',
+                                                                     fontSize: '11px'
+                                                                  }
+                                                               }
+                                                            },
+                                                            yaxis: {
+                                                               labels: {
+                                                                  style: {
+                                                                     colors: '#9ca3af',
+                                                                     fontSize: '11px'
+                                                                  },
+                                                                  formatter: function (val) {
+                                                                     return '₱' + Number(val).toLocaleString();
+                                                                  }
+                                                               }
+                                                            },
+                                                            tooltip: {
+                                                               theme: 'light',
+                                                               y: {
+                                                                  formatter: function (val) {
+                                                                     return '₱' + Number(val).toLocaleString();
+                                                                  }
+                                                               }
+                                                            }
+                                                         };
+
+                                                         let kbChart = new ApexCharts(chartEl, baseOptions);
+                                                         kbChart.render();
+
+                                                         const tableBody = document.getElementById('kb-sales-table-body');
+                                                         if (tableBody) {
+                                                            const rows = [
+                                                               {
+                                                                  date: '27 Jan 2026',
+                                                                  totalSales: 62330,
+                                                                  refund: 0,
+                                                                  discount: 0,
+                                                                  netSales: 62330,
+                                                                  unitPrice: 0,
+                                                                  grossProfit: 62330
+                                                               },
+                                                               {
+                                                                  date: '26 Jan 2026',
+                                                                  totalSales: 194760,
+                                                                  refund: 0,
+                                                                  discount: 648,
+                                                                  netSales: 194112,
+                                                                  unitPrice: 0,
+                                                                  grossProfit: 194112
+                                                               }
+                                                            ];
+
+                                                            tableBody.innerHTML = rows.map(r => `
+                                                               <tr>
+                                                                  <td>${r.date}</td>
+                                                                  <td class="text-end">₱${r.totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                                                                  <td class="text-end">₱${r.refund.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                                                                  <td class="text-end">₱${r.discount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                                                                  <td class="text-end">₱${r.netSales.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                                                                  <td class="text-end">₱${r.unitPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                                                                  <td class="text-end">₱${r.grossProfit.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                                                               </tr>
+                                                            `).join('');
+                                                         }
+
+                                                         const chartTypeSelect = document.getElementById('kb-chart-type');
+                                                         if (chartTypeSelect) {
+                                                            chartTypeSelect.addEventListener('change', function () {
+                                                               const isLine = this.value === 'line';
+
+                                                               if (isLine) {
+                                                                  kbChart.updateOptions({
+                                                                     chart: { type: 'line' },
+                                                                     stroke: {
+                                                                        curve: 'smooth',
+                                                                        width: 3.2,
+                                                                        colors: ['#16a34a']
+                                                                     },
+                                                                     markers: {
+                                                                        size: 3,
+                                                                        strokeWidth: 2,
+                                                                        strokeColors: '#ffffff',
+                                                                        colors: ['#16a34a'],
+                                                                        hover: {
+                                                                           sizeOffset: 1.5
+                                                                        }
+                                                                     },
+                                                                     // Solid line, walang area fill para super klaro
+                                                                     fill: {
+                                                                        type: 'solid',
+                                                                        opacity: 1
+                                                                     },
+                                                                     plotOptions: { bar: { columnWidth: '55%', borderRadius: 0 } }
+                                                                  }, false, true);
+                                                               } else {
+                                                                  kbChart.updateOptions({
+                                                                     chart: { type: 'bar' },
+                                                                     stroke: baseOptions.stroke,
+                                                                     markers: { size: 0 },
+                                                                     fill: baseOptions.fill,
+                                                                     plotOptions: baseOptions.plotOptions
+                                                                  }, false, true);
+                                                               }
+                                                            });
+                                                         }
+                                                         // DATE RANGE PICKER FOR KIM'S BROTHERS (tries DateRangePicker, falls back to Flatpickr)
+                                                         (function () {
+                                                            const dateBtnEl = document.getElementById('kb-date-range-button');
+                                                            const dateLabelEl = document.getElementById('kb-date-range-label');
+                                                            const dateInputEl = document.getElementById('kb-date-range-input');
+
+                                                            if (!dateBtnEl || !dateLabelEl) return;
+
+                                                            // Shared default range
+                                                            const defaultStart = '2025-12-29';
+                                                            const defaultEnd = '2026-01-27';
+
+                                                            // --- Try DateRangePicker first (with presets) ---
+                                                            const $ = window.jQuery || window.$;
+                                                            const hasDR =
+                                                               $ && $.fn && typeof $.fn.daterangepicker === 'function' && window.moment;
+
+                                                            function setLabelText(startText, endText) {
+                                                               dateLabelEl.textContent = `${startText} - ${endText}`;
+                                                            }
+
+                                                            if (hasDR) {
+                                                               const start = moment(defaultStart, 'YYYY-MM-DD');
+                                                               const end = moment(defaultEnd, 'YYYY-MM-DD');
+
+                                                               $(dateBtnEl).daterangepicker(
+                                                                  {
+                                                                     startDate: start,
+                                                                     endDate: end,
+                                                                     opens: 'left',
+                                                                     ranges: {
+                                                                        'today': [moment(), moment()],
+                                                                        'yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                                                                        'This week': [moment().startOf('week'), moment().endOf('week')],
+                                                                        'Last week': [
+                                                                           moment().subtract(1, 'week').startOf('week'),
+                                                                           moment().subtract(1, 'week').endOf('week')
+                                                                        ],
+                                                                        'This month': [moment().startOf('month'), moment().endOf('month')],
+                                                                        'Last month': [
+                                                                           moment().subtract(1, 'month').startOf('month'),
+                                                                           moment().subtract(1, 'month').endOf('month')
+                                                                        ],
+                                                                        'Last 7 days': [moment().subtract(6, 'days'), moment()],
+                                                                        'Last 30 days': [moment().subtract(29, 'days'), moment()]
+                                                                     },
+                                                                     locale: {
+                                                                        format: 'DD MMM YYYY',
+                                                                        applyLabel: 'COMPLETE!',
+                                                                        cancelLabel: 'CANCELLATION'
+                                                                     }
+                                                                  },
+                                                                  function (startDate, endDate) {
+                                                                     setLabelText(
+                                                                        startDate.format('DD MMM YYYY'),
+                                                                        endDate.format('DD MMM YYYY')
+                                                                     );
+                                                                  }
+                                                               );
+
+                                                               // initial text
+                                                               setLabelText(start.format('DD MMM YYYY'), end.format('DD MMM YYYY'));
+                                                               return; // done
+                                                            }
+
+                                                            // --- Fallback: Flatpickr range picker ---
+                                                            if (window.flatpickr && dateInputEl) {
+                                                               const fp = flatpickr(dateInputEl, {
+                                                                  mode: 'range',
+                                                                  defaultDate: [defaultStart, defaultEnd],
+                                                                  dateFormat: 'd M Y',
+                                                                  appendTo: dateBtnEl.parentNode,
+                                                                  positionElement: dateBtnEl,
+                                                                  onClose: function (selectedDates) {
+                                                                     if (selectedDates.length === 2) {
+                                                                        const opts = {
+                                                                           day: '2-digit',
+                                                                           month: 'short',
+                                                                           year: 'numeric'
+                                                                        };
+                                                                        const startText = selectedDates[0].toLocaleDateString('en-US', opts);
+                                                                        const endText = selectedDates[1].toLocaleDateString('en-US', opts);
+                                                                        setLabelText(startText, endText);
+                                                                     }
+                                                                  }
+                                                               });
+
+                                                               dateBtnEl.addEventListener('click', function () {
+                                                                  fp.open();
+                                                               });
+                                                            }
+                                                         })();
+
+                                                         // TIME FILTER DROPDOWN (All day long / Custom period)
+                                                         (function () {
+                                                            const btn = document.getElementById('kb-time-filter-btn');
+                                                            const menu = document.getElementById('kb-time-menu');
+                                                            const label = document.getElementById('kb-time-filter-label');
+                                                            const customRow = document.getElementById('kb-time-custom-row');
+                                                            const startSelect = document.getElementById('kb-time-start');
+                                                            const endSelect = document.getElementById('kb-time-end');
+                                                            if (!btn || !menu || !label || !customRow || !startSelect || !endSelect) return;
+
+                                                            // Populate time options (00:00 - 23:00)
+                                                            const times = [];
+                                                            for (let h = 0; h < 24; h++) {
+                                                               const t = String(h).padStart(2, '0') + ':00';
+                                                               times.push(t);
+                                                            }
+                                                            function appendOptions(selectEl) {
+                                                               selectEl.innerHTML = '';
+                                                               times.forEach((t) => {
+                                                                  const opt = document.createElement('option');
+                                                                  opt.value = t;
+                                                                  opt.textContent = t;
+                                                                  selectEl.appendChild(opt);
+                                                               });
+                                                            }
+                                                            appendOptions(startSelect);
+                                                            appendOptions(endSelect);
+                                                            startSelect.value = '00:00';
+                                                            endSelect.value = '23:00';
+
+                                                            let mode = 'all_day';
+
+                                                            btn.addEventListener('click', function (e) {
+                                                               e.stopPropagation();
+                                                               menu.classList.toggle('show');
+                                                            });
+
+                                                            document.addEventListener('click', function (e) {
+                                                               if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                                                                  menu.classList.remove('show');
+                                                               }
+                                                            });
+
+                                                            function updateLabel() {
+                                                               if (mode === 'all_day') {
+                                                                  label.textContent = 'All day long';
+                                                               } else {
+                                                                  label.textContent = `${startSelect.value} - ${endSelect.value}`;
+                                                               }
+                                                            }
+
+                                                            const modeRadios = menu.querySelectorAll('input[name="kb-time-mode"]');
+                                                            modeRadios.forEach((radio) => {
+                                                               radio.addEventListener('change', function () {
+                                                                  mode = this.value;
+                                                                  if (mode === 'custom') {
+                                                                     customRow.classList.remove('d-none');
+                                                                  } else {
+                                                                     customRow.classList.add('d-none');
+                                                                  }
+                                                                  updateLabel();
+                                                               });
+                                                            });
+
+                                                            startSelect.addEventListener('change', updateLabel);
+                                                            endSelect.addEventListener('change', updateLabel);
+                                                         })();
+                                                      })();
+
                                                       // ─────────────────────────────────────────────────────────────────────────────
                                                       // ACTIVITY LOGS SCRIPT
                                                       // ─────────────────────────────────────────────────────────────────────────────
@@ -1363,5 +1867,249 @@
                                                       #next-week-btn:focus {
                                                          box-shadow: none;
                                                          outline: none;
+                                                      }
+
+                                                      /* Kim's Brothers Sales Summary spacing & filters */
+                                                      .kb-sales-container {
+                                                         padding-top: 26px;
+                                                         padding-bottom: 8px;
+                                                      }
+
+                                                      .kb-sales-header {
+                                                         margin-top: 12px;
+                                                      }
+
+                                                      .kb-sales-header h4 {
+                                                         font-weight: 700;
+                                                         letter-spacing: 0.01em;
+                                                         color: #111827;
+                                                      }
+
+                                                      .kb-sales-header small {
+                                                         font-size: 0.8rem;
+                                                         color: #6b7280;
+                                                      }
+
+                                                      .kb-filter-btn {
+                                                         border-radius: 999px;
+                                                         padding-inline: 0.95rem;
+                                                         font-size: 0.78rem;
+                                                         border-color: rgba(148, 163, 184, 0.6);
+                                                         color: #111827;
+                                                         background-color: #f9fafb;
+                                                         box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.02);
+                                                      }
+
+                                                      .kb-filter-btn i {
+                                                         font-size: 0.8rem;
+                                                      }
+
+                                                      .kb-filter-btn:hover {
+                                                         background: #eef2ff;
+                                                         border-color: #4f46e5;
+                                                         color: #111827;
+                                                         box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+                                                      }
+
+                                                      .kb-sales-filters {
+                                                         justify-content: flex-end;
+                                                         gap: 0.5rem;
+                                                      }
+
+                                                      .kb-summary-row {
+                                                         margin-top: 6px;
+                                                      }
+
+                                                      .kb-summary-card {
+                                                         border-radius: 14px;
+                                                         border: 1px solid rgba(148, 163, 184, 0.24);
+                                                         background: #ffffff;
+                                                         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+                                                         transition: transform 0.16s ease, box-shadow 0.16s ease;
+                                                      }
+
+                                                      .kb-summary-card .card-body {
+                                                         padding: 1.25rem 1.4rem;
+                                                      }
+
+                                                      .kb-summary-card .fs-4,
+                                                      .kb-summary-card .fs-5 {
+                                                         letter-spacing: 0.01em;
+                                                      }
+
+                                                      .kb-summary-card:hover {
+                                                         transform: translateY(-1px);
+                                                         box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+                                                      }
+
+                                                      .kb-summary-card small {
+                                                         font-size: 0.78rem;
+                                                      }
+
+                                                      /* Per-card accent colors for metric tiles */
+                                                      .kb-summary-row > div:nth-child(1) .kb-summary-card {
+                                                         border-color: rgba(22, 163, 74, 0.35);
+                                                         background: radial-gradient(circle at top left, #dcfce7 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(1) .kb-summary-card .fs-4,
+                                                      .kb-summary-row > div:nth-child(1) .kb-summary-card .fs-5 {
+                                                         color: #166534;
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(2) .kb-summary-card {
+                                                         border-color: rgba(59, 130, 246, 0.3);
+                                                         background: radial-gradient(circle at top left, #e0f2fe 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(2) .kb-summary-card .fs-5 {
+                                                         color: #1d4ed8;
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(3) .kb-summary-card {
+                                                         border-color: rgba(249, 115, 22, 0.3);
+                                                         background: radial-gradient(circle at top left, #ffedd5 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(3) .kb-summary-card .fs-5 {
+                                                         color: #ea580c;
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(4) .kb-summary-card {
+                                                         border-color: rgba(99, 102, 241, 0.3);
+                                                         background: radial-gradient(circle at top left, #e0e7ff 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(4) .kb-summary-card .fs-5 {
+                                                         color: #4f46e5;
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(5) .kb-summary-card {
+                                                         border-color: rgba(13, 148, 136, 0.35);
+                                                         background: radial-gradient(circle at top left, #ccfbf1 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(5) .kb-summary-card .fs-5 {
+                                                         color: #0f766e;
+                                                      }
+
+                                                      .kb-sales-container .card.mb-3 {
+                                                         border-radius: 18px;
+                                                         border: 1px solid rgba(22, 163, 74, 0.25);
+                                                         box-shadow: 0 18px 40px rgba(22, 163, 74, 0.12);
+                                                         background: radial-gradient(circle at top left, #dcfce7 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-sales-container .card.mb-3 .card-header {
+                                                         border-bottom: 0;
+                                                         padding: 0.85rem 1.4rem 0.15rem;
+                                                         display: flex;
+                                                         align-items: center;
+                                                         justify-content: space-between;
+                                                      }
+
+                                                      .kb-sales-container .card.mb-3 .card-header h6 {
+                                                         font-weight: 600;
+                                                         letter-spacing: 0.04em;
+                                                         text-transform: uppercase;
+                                                         font-size: 0.8rem;
+                                                         color: #14532d;
+                                                      }
+
+                                                      .kb-sales-container .card.mb-3 .card-body {
+                                                         padding-top: 0.6rem;
+                                                         padding-bottom: 1.3rem;
+                                                      }
+
+                                                      /* Time filter dropdown */
+                                                      .kb-time-filter {
+                                                         position: relative;
+                                                      }
+
+                                                      .kb-time-menu {
+                                                         position: absolute;
+                                                         top: 110%;
+                                                         right: 0;
+                                                         min-width: 260px;
+                                                         z-index: 1050;
+                                                         display: none;
+                                                         border-radius: 12px;
+                                                      }
+
+                                                      .kb-time-menu.show {
+                                                         display: block;
+                                                      }
+
+                                                      .kb-time-option + .kb-time-option {
+                                                         border-top: 1px solid rgba(229, 231, 235, 0.8);
+                                                      }
+
+                                                      .kb-sales-container .card:last-of-type {
+                                                         border-radius: 14px;
+                                                         border: 1px solid rgba(148, 163, 184, 0.2);
+                                                         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+                                                         background: #ffffff;
+                                                      }
+
+                                                      .kb-sales-container .table thead th {
+                                                         font-size: 0.78rem;
+                                                         text-transform: uppercase;
+                                                         letter-spacing: 0.06em;
+                                                         color: #6b7280;
+                                                         border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+                                                         background: linear-gradient(90deg, #f9fafb, #eef2ff);
+                                                      }
+
+                                                      .kb-sales-container .table tbody td {
+                                                         font-size: 0.82rem;
+                                                         vertical-align: middle;
+                                                         border-bottom: 1px solid rgba(243, 244, 246, 1);
+                                                      }
+
+                                                      .kb-sales-container .table tbody tr {
+                                                         transition: background-color 0.15s ease, transform 0.15s ease;
+                                                      }
+
+                                                      .kb-sales-container .table tbody tr:nth-child(odd) {
+                                                         background: linear-gradient(90deg, rgba(239, 246, 255, 0.55), #ffffff);
+                                                      }
+
+                                                      .kb-sales-container .table tbody tr:nth-child(even) {
+                                                         background: #ffffff;
+                                                      }
+
+                                                      .kb-sales-container .table tbody tr:hover {
+                                                         background: linear-gradient(90deg, #eef2ff, #e0f2fe);
+                                                         transform: translateY(-1px);
+                                                      }
+
+                                                      /* Accent colors for numeric columns */
+                                                      .kb-sales-container .table tbody td.text-end:nth-child(2) {
+                                                         color: #16a34a; /* total sales */
+                                                         font-weight: 600;
+                                                      }
+
+                                                      .kb-sales-container .table tbody td.text-end:nth-child(4) {
+                                                         color: #f97316; /* discount */
+                                                      }
+
+                                                      .kb-sales-container .table tbody td.text-end:nth-child(5),
+                                                      .kb-sales-container .table tbody td.text-end:nth-child(7) {
+                                                         color: #0f766e; /* net & gross profit */
+                                                         font-weight: 600;
+                                                      }
+
+                                                      @media (max-width: 768px) {
+                                                         .kb-sales-header {
+                                                            align-items: flex-start !important;
+                                                         }
+
+                                                         .kb-sales-filters {
+                                                            justify-content: flex-start !important;
+                                                         }
+
+                                                         .kb-summary-card .card-body {
+                                                            padding: 1.05rem 1.1rem;
+                                                         }
                                                       }
                                                    </style>
