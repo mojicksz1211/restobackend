@@ -24,9 +24,11 @@ class DashboardController {
 			const stats = await DashboardModel.getDashboardStats(branchId);
 
 			// Detect if current branch is Kim's Brothers
+			// Check for Kim's Brothers if user has selected a specific branch (not "All branches")
 			let currentBranch = null;
 			let isKimsBrothersDashboard = false;
 
+			// Check for Kim's Brothers if a specific branch is selected (works for both admin and non-admin)
 			if (branchId) {
 				currentBranch = await BranchModel.getById(branchId);
 

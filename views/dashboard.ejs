@@ -153,7 +153,8 @@
                </style>
                               <!-- CARDS -->
                <form id="expense-form" action="/insert-dash-history" method="POST">
-                  <% if (permissions !== 1 && !isKimsBrothersDashboard) { %>
+                  <!-- Regular branch dashboard (slider cards) - shown for non-admin users on non-Kim's Brothers branches, OR admin viewing a specific non-Kim's Brothers branch -->
+                  <% if ((permissions !== 1 && !isKimsBrothersDashboard) || (permissions === 1 && currentBranch && !isKimsBrothersDashboard)) { %>
                   <div class="row">
                      <div class="col-md-12 col-lg-12">
                         <div class="row row-cols-1">
@@ -263,14 +264,16 @@
                      </div>
                   </div>
                   <% } %>
+                  <!-- Kim's Brothers custom dashboard - shown when Kim's Brothers branch is selected (works for both admin and non-admin) -->
                   <% if (isKimsBrothersDashboard) { %>
                   <!-- Kim's Brothers custom dashboard (static preview) -->
                   <div class="kb-sales-container">
-                  <div class="row mt-4 mb-3 align-items-center kb-sales-header">
+                  <!-- Dashboard Header Section -->
+                  <div class="row mt-4 mb-4 align-items-center kb-sales-header">
                      <div class="col-md-4 mb-2 mb-md-0">
-                        <h4 class="mb-0">Sales Summary</h4>
-                        <small class="text-muted">
-                           Kim's Brothers branch · static preview
+                        <h4 class="mb-1 kb-dashboard-title">Sales Summary</h4>
+                        <small class="text-muted kb-dashboard-subtitle">
+                           <i class="fas fa-store me-1"></i>Kim's Brothers branch · static preview
                         </small>
                      </div>
                      <div class="col-md-8 d-flex flex-wrap justify-content-md-end gap-2 kb-sales-filters">
@@ -318,60 +321,113 @@
                      </div>
                   </div>
 
-                  <div class="row g-3 mb-3 kb-summary-row">
-                     <div class="col-md-3">
-                        <div class="card kb-summary-card h-100">
-                           <div class="card-body">
-                              <div class="d-flex justify-content-between align-items-center mb-1">
-                                 <span class="text-muted small">Total sales</span>
+                  <!-- Summary Metrics Cards -->
+                  <div class="row g-3 mb-4 kb-summary-row">
+                     <div class="col-md-2">
+                        <div class="card kb-summary-card h-100 kb-card-primary">
+                           <div class="card-body d-flex flex-column">
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                 <span class="text-muted small fw-medium">Total sales</span>
+                                 <i class="fas fa-chart-line text-success opacity-75"></i>
                               </div>
-                              <div class="fs-4 fw-bold text-dark" id="kb-total-sales">₱5,072,900.00</div>
-                              <small class="text-danger">-₱685,700.00 (-11.91%)</small>
+                              <div class="fs-3 fw-bold mb-1" id="kb-total-sales">₱5,072,900.00</div>
+                              <small class="text-danger d-flex align-items-center gap-1 mb-2">
+                                 <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
+                                 -₱685,700.00 (-11.91%)
+                              </small>
+                              <div class="mt-auto d-flex justify-content-end">
+                                 <button type="button"
+                                         class="btn btn-sm kb-summary-view-btn"
+                                         data-bs-toggle="modal"
+                                         data-bs-target="#kb-total-sales-modal">
+                                    View
+                                 </button>
+                              </div>
                            </div>
                         </div>
                      </div>
                      <div class="col-md-2">
-                        <div class="card kb-summary-card h-100">
+                        <div class="card kb-summary-card h-100 kb-card-blue">
                            <div class="card-body">
-                              <span class="text-muted small d-block mb-1">refund</span>
-                              <div class="fs-5 fw-bold text-dark" id="kb-refund">₱280.00</div>
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                 <span class="text-muted small fw-medium">refund</span>
+                                 <i class="fas fa-undo-alt text-primary opacity-75"></i>
+                              </div>
+                              <div class="fs-4 fw-bold mb-1" id="kb-refund">₱280.00</div>
                               <small class="text-muted">₱0.00 (0%)</small>
                            </div>
                         </div>
                      </div>
                      <div class="col-md-2">
-                        <div class="card kb-summary-card h-100">
+                        <div class="card kb-summary-card h-100 kb-card-orange">
                            <div class="card-body">
-                              <span class="text-muted small d-block mb-1">discount</span>
-                              <div class="fs-5 fw-bold text-dark" id="kb-discount">₱17,180.00</div>
-                              <small class="text-success">₱280.80 (1.61%)</small>
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                 <span class="text-muted small fw-medium">discount</span>
+                                 <i class="fas fa-tag text-warning opacity-75"></i>
+                              </div>
+                              <div class="fs-4 fw-bold mb-1" id="kb-discount">₱17,180.00</div>
+                              <small class="text-success d-flex align-items-center gap-1">
+                                 <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
+                                 ₱280.80 (1.61%)
+                              </small>
                            </div>
                         </div>
                      </div>
                      <div class="col-md-2">
-                        <div class="card kb-summary-card h-100">
+                        <div class="card kb-summary-card h-100 kb-card-indigo">
                            <div class="card-body">
-                              <span class="text-muted small d-block mb-1">Net sales</span>
-                              <div class="fs-5 fw-bold text-dark" id="kb-net-sales">₱5,055,440.00</div>
-                              <small class="text-danger">-₱685,419.20 (-11.94%)</small>
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                 <span class="text-muted small fw-medium">Net sales</span>
+                                 <i class="fas fa-calculator text-info opacity-75"></i>
+                              </div>
+                              <div class="fs-4 fw-bold mb-1" id="kb-net-sales">₱5,055,440.00</div>
+                              <small class="text-danger d-flex align-items-center gap-1">
+                                 <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
+                                 -₱685,419.20 (-11.94%)
+                              </small>
                            </div>
                         </div>
                      </div>
-                     <div class="col-md-3">
-                        <div class="card kb-summary-card h-100">
+                     <!-- Expense card (static data) -->
+                     <div class="col-md-2">
+                        <div class="card kb-summary-card h-100 kb-card-expense">
                            <div class="card-body">
-                              <span class="text-muted small d-block mb-1">Gross profit</span>
-                              <div class="fs-5 fw-bold text-dark" id="kb-gross-profit">₱5,055,440.00</div>
-                              <small class="text-danger">-₱685,269.20 (-11.94%)</small>
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                 <span class="text-muted small fw-medium">expense</span>
+                                 <i class="fas fa-receipt text-danger opacity-75"></i>
+                              </div>
+                              <div class="fs-4 fw-bold mb-1" id="kb-expense">₱120,500.00</div>
+                              <small class="text-danger d-flex align-items-center gap-1">
+                                 <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
+                                 +₱10,200.00 (+9.25%)
+                              </small>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-2">
+                        <div class="card kb-summary-card h-100 kb-card-teal">
+                           <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                 <span class="text-muted small fw-medium">Gross profit</span>
+                                 <i class="fas fa-coins text-success opacity-75"></i>
+                              </div>
+                              <div class="fs-4 fw-bold mb-1" id="kb-gross-profit">₱5,055,440.00</div>
+                              <small class="text-danger d-flex align-items-center gap-1">
+                                 <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
+                                 -₱685,269.20 (-11.94%)
+                              </small>
                            </div>
                         </div>
                      </div>
                   </div>
 
-                  <div class="card mb-3">
+                  <!-- Total Sales Chart Section -->
+                  <div class="card mb-4 kb-chart-card">
                      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                        <div>
-                           <h6 class="mb-0">Total sales</h6>
+                        <div class="d-flex align-items-center gap-2">
+                           <i class="fas fa-chart-bar text-success"></i>
+                           <h6 class="mb-0 fw-semibold">Total sales</h6>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                            <select class="form-select form-select-sm" id="kb-chart-type" style="width: 140px;">
@@ -392,34 +448,168 @@
                      </div>
                   </div>
 
-                  <div class="card">
-                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">EXPORT</h6>
-                     </div>
-                     <div class="card-body p-0">
-                        <div class="table-responsive">
-                           <table class="table table-striped mb-0">
-                              <thead class="table-light">
-                                 <tr>
-                                    <th>date</th>
-                                    <th class="text-end">Total sales</th>
-                                    <th class="text-end">refund</th>
-                                    <th class="text-end">discount</th>
-                                    <th class="text-end">Net sales</th>
-                                    <th class="text-end">Product unit price</th>
-                                    <th class="text-end">Gross profit</th>
-                                 </tr>
-                              </thead>
-                              <tbody id="kb-sales-table-body">
-                                 <!-- Filled by static JS below -->
-                              </tbody>
-                           </table>
+                 <!-- Products Analysis Section -->
+                 <div class="row g-3 mb-4">
+                 <!-- Left: Top 5 Products card -->
+                 <div class="col-lg-4">
+                    <div class="card h-100 kb-products-card">
+                       <div class="card-header">
+                          <div class="d-flex align-items-center gap-2">
+                             <i class="fas fa-trophy text-warning"></i>
+                             <h6 class="mb-0 fw-semibold">Top 5 Products</h6>
+                          </div>
+                       </div>
+                       <div class="card-body">
+                          <div id="kb-top-products-list">
+                             <!-- Filled by JS below -->
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 <!-- Right: Sales graph by product -->
+                 <div class="col-lg-8">
+                    <div class="card h-100 kb-chart-card">
+                       <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                          <div class="d-flex align-items-center gap-2">
+                             <i class="fas fa-chart-pie text-primary"></i>
+                             <h6 class="mb-0 fw-semibold">Sales graph by product</h6>
+                          </div>
+                          <div class="d-flex align-items-center gap-2">
+                             <select class="form-select form-select-sm" id="kb-product-chart-type" style="width: 140px;">
+                                <option value="bar" selected>Bar chart</option>
+                                <option value="line">Line graph</option>
+                             </select>
+                             <select class="form-select form-select-sm" id="kb-product-view-mode" style="width: 130px;">
+                                <option value="glance" selected>glance</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="yearly">By year</option>
+                             </select>
+                          </div>
+                       </div>
+                       <div class="card-body">
+                          <div id="kb-product-sales-chart" style="min-height: 300px;"></div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <!-- Payment Method Export Summary -->
+              <div class="card kb-export-card mt-3">
+                 <div class="card-header d-flex align-items-center gap-2">
+                    <i class="fas fa-table text-success"></i>
+                    <h6 class="mb-0 fw-semibold">EXPORT</h6>
+                 </div>
+                 <div class="card-body p-0">
+                    <div class="table-responsive">
+                       <table class="table table-striped mb-0">
+                          <thead class="table-light">
+                             <tr>
+                                <th>payment method</th>
+                                <th class="text-end">Payment Transaction</th>
+                                <th class="text-end">Payment amount</th>
+                                <th class="text-end">refund transaction</th>
+                                <th class="text-end">Refund amount</th>
+                                <th class="text-end">net amount</th>
+                             </tr>
+                          </thead>
+                          <tbody>
+                             <tr>
+                                <td>Credit card</td>
+                                <td class="text-end">32</td>
+                                <td class="text-end">₱117,384.00</td>
+                                <td class="text-end">0</td>
+                                <td class="text-end">₱0.00</td>
+                                <td class="text-end">₱117,384.00</td>
+                             </tr>
+                             <tr>
+                                <td>Gcash</td>
+                                <td class="text-end">178</td>
+                                <td class="text-end">₱540,968.00</td>
+                                <td class="text-end">1</td>
+                                <td class="text-end">₱280.00</td>
+                                <td class="text-end">₱540,688.00</td>
+                             </tr>
+                             <tr>
+                                <td>Utang</td>
+                                <td class="text-end">1</td>
+                                <td class="text-end">₱2,390.00</td>
+                                <td class="text-end">0</td>
+                                <td class="text-end">₱0.00</td>
+                                <td class="text-end">₱2,390.00</td>
+                             </tr>
+                             <tr>
+                                <td>cash</td>
+                                <td class="text-end">1,145</td>
+                                <td class="text-end">₱4,321,394.00</td>
+                                <td class="text-end">0</td>
+                                <td class="text-end">₱0.00</td>
+                                <td class="text-end">₱4,321,394.00</td>
+                             </tr>
+                             <tr class="fw-semibold">
+                                <td>total</td>
+                                <td class="text-end">1,356</td>
+                                <td class="text-end">₱4,982,136.00</td>
+                                <td class="text-end">1</td>
+                                <td class="text-end">₱280.00</td>
+                                <td class="text-end">₱4,981,856.00</td>
+                             </tr>
+                          </tbody>
+                       </table>
+                    </div>
+                 </div>
+              </div>
+
+                  <!-- Total sales detail modal (shown from "View" button) -->
+                  <div class="modal fade" id="kb-total-sales-modal" tabindex="-1" aria-labelledby="kbTotalSalesModalLabel" aria-hidden="true">
+                     <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                              <h5 class="modal-title" id="kbTotalSalesModalLabel">Total sales detail</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                           </div>
+                           <div class="modal-body p-0">
+                              <div class="card mb-0 kb-export-card border-0 rounded-0">
+                                 <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                       <i class="fas fa-table text-info"></i>
+                                       <h6 class="mb-0 fw-semibold">EXPORT</h6>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                       <i class="fas fa-download me-1"></i>Export
+                                    </button>
+                                 </div>
+                                 <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                       <table class="table table-striped mb-0">
+                                          <thead class="table-light">
+                                             <tr>
+                                                <th>date</th>
+                                                <th class="text-end">Total sales</th>
+                                                <th class="text-end">refund</th>
+                                                <th class="text-end">discount</th>
+                                                <th class="text-end">Net sales</th>
+                                                <th class="text-end">Product unit price</th>
+                                                <th class="text-end">Gross profit</th>
+                                             </tr>
+                                          </thead>
+                                          <tbody id="kb-sales-table-body">
+                                             <!-- Filled by static JS below -->
+                                          </tbody>
+                                       </table>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
                         </div>
                      </div>
                   </div>
                   </div>
                   <% } %>
-                  <% if (permissions === 1) {
+                  <!-- Admin dashboard - only shown when admin is viewing "All branches" (no specific branch selected) -->
+                  <% if (permissions === 1 && !currentBranch) {
                      const adminBranches = [
                         {
                            key: 'main',
@@ -1454,6 +1644,132 @@
                                                          })();
                                                       })();
 
+                                                      (function () {
+                                                      if (!document.getElementById('kb-top-products-list') || !document.getElementById('kb-product-sales-chart')) return;
+
+                                                      // Static data for Top 5 Products
+                                                      const topProducts = [
+                                                      { name: 'S2 Premium Set B (4Pax)', sales: 1100160, color: '#78909c' },
+                                                      { name: 'I1 Iberico Kkot Moksal', sales: 756432, color: '#9ccc65' },
+                                                      { name: 'S1 Premium Set A (2Pax)', sales: 592000, color: '#42a5f5' },
+                                                      { name: 'K1 Handon KKotsamgyeopsal', sales: 405840, color: '#ec407a' },
+                                                      { name: 'Chamisul', sales: 319928, color: '#ffee58' }
+                                                      ];
+
+                                                         const productsListEl = document.getElementById('kb-top-products-list');
+                                                         if (productsListEl) {
+                                                            const itemsHtml = topProducts.map((p, idx) => `
+                                                               <div class="d-flex align-items-center justify-content-between kb-top-product-row ${idx < topProducts.length - 1 ? 'border-bottom' : ''}">
+                                                                  <div class="d-flex align-items-center gap-2">
+                                                                     <div class="kb-top-product-dot" style="background-color: ${p.color};"></div>
+                                                                     <span class="kb-top-product-name">${p.name}</span>
+                                                                  </div>
+                                                                  <span class="kb-top-product-value">₱${p.sales.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                                               </div>
+                                                            `).join('');
+
+                                                            productsListEl.innerHTML = `
+                                                               <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                  <span class="text-muted small"></span>
+                                                                  <span class="text-muted small fw-medium">Net sales</span>
+                                                               </div>
+                                                               ${itemsHtml}
+                                                            `;
+                                                         }
+
+                                                         // Generate date labels (30 Dec - 28 Jan)
+                                                         const dateLabels = [];
+                                                         const startDate = new Date('2025-12-30');
+                                                         const endDate = new Date('2026-01-28');
+                                                         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                                                            const opts = { day: '2-digit', month: 'short' };
+                                                            dateLabels.push(d.toLocaleDateString('en-US', opts));
+                                                         }
+
+                                                         // Static stacked data (simplified - each product contributes to daily totals)
+                                                         const stackedData = {
+                                                         'S2 Premium Set B (4Pax)': Array(30).fill(0).map(() => Math.floor(Math.random() * 50000) + 20000),
+                                                         'I1 Iberico Kkot Moksal': Array(30).fill(0).map(() => Math.floor(Math.random() * 40000) + 15000),
+                                                         'S1 Premium Set A (2Pax)': Array(30).fill(0).map(() => Math.floor(Math.random() * 30000) + 10000),
+                                                         'K1 Handon KKotsamgyeopsal': Array(30).fill(0).map(() => Math.floor(Math.random() * 20000) + 8000),
+                                                         'Chamisul': Array(30).fill(0).map(() => Math.floor(Math.random() * 15000) + 5000)
+                                                         };
+
+                                                         // Create stacked bar chart
+                                                         const chartEl = document.getElementById('kb-product-sales-chart');
+                                                         if (chartEl && typeof ApexCharts !== 'undefined') {
+                                                         const productColors = ['#78909c', '#9ccc65', '#42a5f5', '#ec407a', '#ffee58'];
+                                                         const series = topProducts.map((p, idx) => ({
+                                                         name: p.name,
+                                                         data: stackedData[p.name],
+                                                         color: productColors[idx]
+                                                         }));
+
+                                                            const productChartOptions = {
+                                                               series: series,
+                                                               chart: {
+                                                                  type: 'bar',
+                                                                  height: 300,
+                                                                  stacked: true,
+                                                                  toolbar: { show: false }
+                                                               },
+                                                               plotOptions: {
+                                                                  bar: {
+                                                                     horizontal: false,
+                                                                     columnWidth: '55%',
+                                                                     borderRadius: 4
+                                                                  }
+                                                               },
+                                                               dataLabels: { enabled: false },
+                                                               xaxis: {
+                                                                  categories: dateLabels,
+                                                                  labels: {
+                                                                     rotate: -45,
+                                                                     style: { colors: '#6c757d', fontSize: '11px' }
+                                                                  }
+                                                               },
+                                                               yaxis: {
+                                                                  labels: {
+                                                                     formatter: function (val) {
+                                                                        return '₱' + Number(val).toLocaleString();
+                                                                     },
+                                                                     style: { colors: '#6c757d' }
+                                                                  },
+                                                                  max: 300000
+                                                               },
+                                                               tooltip: {
+                                                                  y: {
+                                                                     formatter: function (val) {
+                                                                        return '₱' + Number(val).toLocaleString();
+                                                                     }
+                                                                  }
+                                                               },
+                                                               legend: { show: false },
+                                                               grid: {
+                                                                  borderColor: '#e5e7eb',
+                                                                  strokeDashArray: 3,
+                                                                  xaxis: { lines: { show: false } },
+                                                                  yaxis: { lines: { show: true } }
+                                                               }
+                                                            };
+
+                                                            let productChart = new ApexCharts(chartEl, productChartOptions);
+                                                            productChart.render();
+
+                                                            // Chart type switcher
+                                                            const productChartTypeSelect = document.getElementById('kb-product-chart-type');
+                                                            if (productChartTypeSelect) {
+                                                               productChartTypeSelect.addEventListener('change', function () {
+                                                                  const type = this.value === 'line' ? 'line' : 'bar';
+                                                                  productChart.updateOptions({
+                                                                     chart: { type },
+                                                                     plotOptions: type === 'bar' ? productChartOptions.plotOptions : {}
+                                                                  }, false, true);
+                                                               });
+                                                            }
+                                                         }
+                                                      })();
+
                                                       // ─────────────────────────────────────────────────────────────────────────────
                                                       // ACTIVITY LOGS SCRIPT
                                                       // ─────────────────────────────────────────────────────────────────────────────
@@ -1871,23 +2187,32 @@
 
                                                       /* Kim's Brothers Sales Summary spacing & filters */
                                                       .kb-sales-container {
-                                                         padding-top: 26px;
-                                                         padding-bottom: 8px;
+                                                         padding-top: 28px;
+                                                         padding-bottom: 12px;
                                                       }
 
                                                       .kb-sales-header {
                                                          margin-top: 12px;
+                                                         margin-bottom: 24px;
                                                       }
 
-                                                      .kb-sales-header h4 {
+                                                      .kb-dashboard-title {
                                                          font-weight: 700;
-                                                         letter-spacing: 0.01em;
+                                                         letter-spacing: -0.02em;
                                                          color: #111827;
+                                                         font-size: 1.75rem;
+                                                         margin-bottom: 0.25rem;
                                                       }
 
-                                                      .kb-sales-header small {
-                                                         font-size: 0.8rem;
+                                                      .kb-dashboard-subtitle {
+                                                         font-size: 0.85rem;
                                                          color: #6b7280;
+                                                         display: flex;
+                                                         align-items: center;
+                                                      }
+
+                                                      .kb-dashboard-subtitle i {
+                                                         font-size: 0.75rem;
                                                       }
 
                                                       .kb-filter-btn {
@@ -1917,24 +2242,112 @@
                                                       }
 
                                                       .kb-summary-row {
-                                                         margin-top: 6px;
+                                                         margin-top: 8px;
+                                                         margin-bottom: 24px;
                                                       }
 
+                                                      /* Section spacing improvements */
+                                                      .kb-sales-container > .row.g-3 {
+                                                         margin-bottom: 24px !important;
+                                                      }
+
+                                                      /* Icon improvements */
+                                                      .kb-summary-card i {
+                                                         opacity: 0.7;
+                                                         transition: opacity 0.2s ease;
+                                                      }
+
+                                                      .kb-summary-card:hover i {
+                                                         opacity: 1;
+                                                      }
+
+                                                      /* Smooth animations */
+                                                      @keyframes fadeInUp {
+                                                         from {
+                                                            opacity: 0;
+                                                            transform: translateY(10px);
+                                                         }
+                                                         to {
+                                                            opacity: 1;
+                                                            transform: translateY(0);
+                                                         }
+                                                      }
+
+                                                      .kb-summary-card,
+                                                      .kb-chart-card,
+                                                      .kb-products-card,
+                                                      .kb-export-card {
+                                                         animation: fadeInUp 0.5s ease-out;
+                                                      }
+
+                                                      .kb-summary-card:nth-child(1) { animation-delay: 0.1s; }
+                                                      .kb-summary-card:nth-child(2) { animation-delay: 0.2s; }
+                                                      .kb-summary-card:nth-child(3) { animation-delay: 0.3s; }
+                                                      .kb-summary-card:nth-child(4) { animation-delay: 0.4s; }
+                                                      .kb-summary-card:nth-child(5) { animation-delay: 0.5s; }
+
                                                       .kb-summary-card {
-                                                         border-radius: 14px;
-                                                         border: 1px solid rgba(148, 163, 184, 0.24);
+                                                         border-radius: 16px;
+                                                         border: 1px solid rgba(148, 163, 184, 0.2);
                                                          background: #ffffff;
-                                                         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-                                                         transition: transform 0.16s ease, box-shadow 0.16s ease;
+                                                         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+                                                         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                                         position: relative;
+                                                         overflow: hidden;
+                                                         min-height: 135px; /* more compact cards */
+                                                      }
+
+                                                      .kb-summary-card::before {
+                                                         content: '';
+                                                         position: absolute;
+                                                         top: 0;
+                                                         left: 0;
+                                                         width: 4px;
+                                                         height: 100%;
+                                                         background: transparent;
+                                                         transition: all 0.3s ease;
+                                                      }
+
+                                                      .kb-summary-card:hover {
+                                                         transform: translateY(-4px);
+                                                         box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
                                                       }
 
                                                       .kb-summary-card .card-body {
-                                                         padding: 1.25rem 1.4rem;
+                                                         padding: 0.95rem 1.15rem; /* tighter padding for shorter card */
+                                                         position: relative;
+                                                         z-index: 1;
+                                                      }
+
+                                                      /* Card accent colors */
+                                                      .kb-card-primary::before {
+                                                         background: linear-gradient(180deg, #22c55e, #16a34a);
+                                                      }
+
+                                                      .kb-card-blue::before {
+                                                         background: linear-gradient(180deg, #3b82f6, #2563eb);
+                                                      }
+
+                                                      .kb-card-orange::before {
+                                                         background: linear-gradient(180deg, #f97316, #ea580c);
+                                                      }
+
+                                                      .kb-card-indigo::before {
+                                                         background: linear-gradient(180deg, #6366f1, #4f46e5);
+                                                      }
+
+                                                      .kb-card-teal::before {
+                                                         background: linear-gradient(180deg, #14b8a6, #0d9488);
                                                       }
 
                                                       .kb-summary-card .fs-4,
                                                       .kb-summary-card .fs-5 {
                                                          letter-spacing: 0.01em;
+                                                         font-size: 1rem;
+                                                      }
+
+                                                      .kb-summary-card .fs-3 {
+                                                         font-size: 1.3rem;
                                                       }
 
                                                       .kb-summary-card:hover {
@@ -1944,6 +2357,41 @@
 
                                                       .kb-summary-card small {
                                                          font-size: 0.78rem;
+                                                      }
+
+                                                      #kb-top-products-list {
+                                                         padding-top: 0.25rem;
+                                                      }
+
+                                                      .kb-top-product-row {
+                                                         padding: 1rem 0;
+                                                         font-size: 0.95rem;
+                                                      }
+
+                                                      .kb-top-product-dot {
+                                                         width: 14px;
+                                                         height: 14px;
+                                                         border-radius: 50%;
+                                                         margin-right: 8px;
+                                                         box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px rgba(148, 163, 184, 0.6);
+                                                         flex: 0 0 auto;
+                                                         display: inline-block;
+                                                      }
+
+                                                      .kb-top-product-name {
+                                                         display: inline-block;
+                                                         white-space: normal;
+                                                         max-width: 180px;
+                                                         overflow: hidden;
+                                                         text-overflow: ellipsis;
+                                                         color: #111827;
+                                                         font-weight: 500;
+                                                      }
+
+                                                      .kb-top-product-value {
+                                                         margin-left: 6px;
+                                                         font-weight: 600;
+                                                         color: #111827;
                                                       }
 
                                                       /* Per-card accent colors for metric tiles */
@@ -1985,15 +2433,86 @@
                                                       }
 
                                                       .kb-summary-row > div:nth-child(5) .kb-summary-card {
-                                                         border-color: rgba(13, 148, 136, 0.35);
-                                                         background: radial-gradient(circle at top left, #ccfbf1 0, #ffffff 55%);
+                                                      border-color: rgba(239, 68, 68, 0.35);
+                                                      background: radial-gradient(circle at top left, #fee2e2 0, #ffffff 55%);
                                                       }
 
-                                                      .kb-summary-row > div:nth-child(5) .kb-summary-card .fs-5 {
-                                                         color: #0f766e;
+                                                      .kb-summary-row > div:nth-child(5) .kb-summary-card .fs-5,
+                                                      .kb-summary-row > div:nth-child(5) .kb-summary-card .fs-4 {
+                                                      color: #b91c1c;
                                                       }
 
-                                                      .kb-sales-container .card.mb-3 {
+                                                      .kb-summary-row > div:nth-child(6) .kb-summary-card {
+                                                      border-color: rgba(13, 148, 136, 0.35);
+                                                      background: radial-gradient(circle at top left, #ccfbf1 0, #ffffff 55%);
+                                                      }
+
+                                                      .kb-summary-row > div:nth-child(6) .kb-summary-card .fs-5,
+                                                      .kb-summary-row > div:nth-child(6) .kb-summary-card .fs-4 {
+                                                      color: #0f766e;
+                                                      }
+
+                                                      .kb-chart-card {
+                                                         border-radius: 18px;
+                                                         border: 1px solid rgba(148, 163, 184, 0.2);
+                                                         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+                                                         background: #ffffff;
+                                                         transition: all 0.3s ease;
+                                                      }
+
+                                                      .kb-chart-card:hover {
+                                                         box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+                                                      }
+
+                                                      .kb-chart-card .card-header {
+                                                         background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+                                                         border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+                                                         padding: 1rem 1.5rem;
+                                                      }
+
+                                                      .kb-chart-card .card-header h6 {
+                                                         color: #111827;
+                                                         font-size: 0.95rem;
+                                                      }
+
+                                                      .kb-chart-card .card-header i {
+                                                         font-size: 1rem;
+                                                      }
+
+                                                      .kb-products-card {
+                                                         border-radius: 18px;
+                                                         border: 1px solid rgba(148, 163, 184, 0.2);
+                                                         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+                                                         background: #ffffff;
+                                                      }
+
+                                                      .kb-products-card .card-header {
+                                                         background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+                                                         border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+                                                         padding: 1rem 1.5rem;
+                                                      }
+
+                                                      .kb-products-card .card-body {
+                                                         padding: 1.1rem 1.7rem 1.3rem;
+                                                         display: flex;
+                                                         flex-direction: column;
+                                                         justify-content: space-between;
+                                                      }
+
+                                                      .kb-export-card {
+                                                         border-radius: 18px;
+                                                         border: 1px solid rgba(148, 163, 184, 0.2);
+                                                         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+                                                         background: #ffffff;
+                                                      }
+
+                                                      .kb-export-card .card-header {
+                                                      background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+                                                      border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+                                                      padding: 1rem 1.5rem;
+                                                      }
+
+                                                      .kb-sales-container .card.mb-4 {
                                                          border-radius: 18px;
                                                          border: 1px solid rgba(22, 163, 74, 0.25);
                                                          box-shadow: 0 18px 40px rgba(22, 163, 74, 0.12);
@@ -2019,6 +2538,25 @@
                                                       .kb-sales-container .card.mb-3 .card-body {
                                                          padding-top: 0.6rem;
                                                          padding-bottom: 1.3rem;
+                                                      }
+
+                                                      /* "View" button inside Total sales card */
+                                                      .kb-summary-view-btn {
+                                                         padding-inline: 0.9rem;
+                                                         padding-block: 0.25rem;
+                                                         border-radius: 999px;
+                                                         font-size: 0.72rem;
+                                                         font-weight: 500;
+                                                         border: 1px solid rgba(22, 163, 74, 0.7);
+                                                         color: #166534;
+                                                         background-color: #ecfdf3;
+                                                         box-shadow: 0 1px 2px rgba(16, 185, 129, 0.25);
+                                                      }
+
+                                                      .kb-summary-view-btn:hover {
+                                                         background-color: #bbf7d0;
+                                                         border-color: #16a34a;
+                                                         color: #14532d;
                                                       }
 
                                                       /* Time filter dropdown */
@@ -2049,6 +2587,30 @@
                                                          border: 1px solid rgba(148, 163, 184, 0.2);
                                                          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
                                                          background: #ffffff;
+                                                      }
+
+                                                      /* Fine-tuning layout for a more "premium" Kim's Brothers dashboard */
+                                                      .kb-sales-container {
+                                                         gap: 1.25rem;
+                                                      }
+
+                                                      .kb-sales-container .kb-summary-row {
+                                                         margin-bottom: 1.5rem;
+                                                      }
+
+                                                      .kb-sales-container .kb-chart-card {
+                                                         margin-bottom: 1.25rem;
+                                                      }
+
+                                                      .kb-sales-container > .kb-export-card {
+                                                         margin-top: 1.5rem;
+                                                      }
+
+                                                      .kb-export-card .card-header h6,
+                                                      .kb-chart-card .card-header h6 {
+                                                         letter-spacing: 0.04em;
+                                                         text-transform: uppercase;
+                                                         font-size: 0.78rem;
                                                       }
 
                                                       .kb-sales-container .table thead th {
