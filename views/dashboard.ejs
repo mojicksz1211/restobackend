@@ -548,8 +548,8 @@
                                 <td class="text-end">₱0.00</td>
                                 <td class="text-end">₱4,321,394.00</td>
                              </tr>
-                             <tr class="fw-semibold">
-                                <td>total</td>
+                             <tr class="kb-export-total-row fw-semibold">
+                                <td>Total</td>
                                 <td class="text-end">1,356</td>
                                 <td class="text-end">₱4,982,136.00</td>
                                 <td class="text-end">1</td>
@@ -2643,6 +2643,18 @@
                                                       .kb-sales-container .table tbody tr:hover {
                                                          background: linear-gradient(90deg, #eef2ff, #e0f2fe);
                                                          transform: translateY(-1px);
+                                                      }
+
+                                                      /* Highlight total row differently */
+                                                      .kb-export-total-row td {
+                                                         background: #f3f4ff !important;
+                                                         border-top: 2px solid #4f46e5;
+                                                         font-weight: 700;
+                                                      }
+
+                                                      .kb-export-total-row td:first-child {
+                                                         font-weight: 800;
+                                                         text-transform: uppercase;
                                                       }
 
                                                       /* Accent colors for numeric columns */
