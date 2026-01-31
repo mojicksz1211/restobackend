@@ -79,6 +79,7 @@
 		"manage_menu": "メニュー管理",
 		"manage_table": "テーブル管理",
 		"manage_employee": "従業員管理",
+		"manage_branches": "支店管理",
 		"settings": "設定",
 		"telegram_API": "テレグラムAPI",
 		"Change_Game_No": "ゲーム番号の変更"
@@ -783,6 +784,7 @@
 		"all": "すべて",
 		"image": "画像",
 		"menu_name": "メニュー名",
+		"branch": "支店",
 		"description": "説明",
 		"price": "価格",
 		"action": "アクション",
@@ -857,8 +859,8 @@
 			"search": "検索",
 			"search_placeholder": "検索..."
 		},
-		"branch": "table.branch",
-		"actions": "table.actions"
+		"branch": "支店",
+		"actions": "アクション"
 	},
 	"employee": {
 		"manage_employee": "従業員管理",
@@ -894,5 +896,58 @@
 			"search": "検索",
 			"search_placeholder": "検索..."
 		}
+	},
+	"branch": {
+		"manage_branches": "支店管理",
+		"new_branch": "新しい支店",
+		"code": "コード",
+		"name": "名前",
+		"address": "住所",
+		"phone": "電話番号",
+		"status": "ステータス",
+		"action": "アクション",
+		"active": "アクティブ",
+		"inactive": "非アクティブ",
+		"edit": "編集",
+		"delete": "削除",
+		"success": "成功！",
+		"branch_created_successfully": "支店が正常に作成されました",
+		"branch_updated_successfully": "支店が正常に更新されました",
+		"branch_deleted_successfully": "支店が削除されました",
+		"error": "エラー！",
+		"failed_to_create_branch": "支店の作成に失敗しました",
+		"failed_to_update_branch": "支店の更新に失敗しました",
+		"failed_to_delete_branch": "支店の削除に失敗しました",
+		"delete_confirmation_title": "本当に削除しますか？",
+		"delete_confirmation_text": "この支店を削除してもよろしいですか？",
+		"delete_confirm_button": "はい、削除します！",
+		"pagination": {
+			"showing": "表示中",
+			"to": "から",
+			"of": "の",
+			"entries": "件",
+			"previous": "前へ",
+			"next": "次へ",
+			"search": "検索",
+			"search_placeholder": "検索..."
+		}
+	},
+	"modal_new_branch": {
+		"new_branch": "新しい支店",
+		"branch_code": "支店コード",
+		"branch_name": "支店名",
+		"address": "住所",
+		"phone": "電話番号",
+		"save": "保存",
+		"close": "閉じる"
+	},
+	"modal_edit_branch": {
+		"edit_branch": "支店の編集",
+		"branch_code": "支店コード",
+		"branch_name": "支店名",
+		"address": "住所",
+		"phone": "電話番号",
+		"save_changes": "変更を保存",
+		"close": "閉じる"
 	}
 }

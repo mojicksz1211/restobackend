@@ -79,6 +79,7 @@
 		"manage_menu": "Manage Menu",
 		"manage_table": "Manage Tables",
 		"manage_employee": "Manage Employee",
+		"manage_branches": "Manage Branches",
 		"settings": "Settings",
 		"telegram_API": "Telegram API",
 		"Change_Game_No": "Modify Game Number",
@@ -782,6 +783,7 @@
 		"all": "All",
 		"image": "Image",
 		"menu_name": "Menu Name",
+		"branch": "Branch",
 		"description": "Description",
 		"price": "Price",
 		"action": "Action",
@@ -856,8 +858,8 @@
 			"search": "Search",
 			"search_placeholder": "Search..."
 		},
-		"branch": "table.branch",
-		"actions": "table.actions"
+		"branch": "Branch",
+		"actions": "Actions"
 	},
 	"employee": {
 		"manage_employee": "Manage Employee",
@@ -893,5 +895,58 @@
 			"search": "Search",
 			"search_placeholder": "Search..."
 		}
+	},
+	"branch": {
+		"manage_branches": "Manage Branches",
+		"new_branch": "New Branch",
+		"code": "Code",
+		"name": "Name",
+		"address": "Address",
+		"phone": "Phone",
+		"status": "Status",
+		"action": "Action",
+		"active": "Active",
+		"inactive": "Inactive",
+		"edit": "Edit",
+		"delete": "Delete",
+		"success": "Success!",
+		"branch_created_successfully": "Branch created successfully",
+		"branch_updated_successfully": "Branch updated successfully",
+		"branch_deleted_successfully": "Branch deleted successfully",
+		"error": "Error!",
+		"failed_to_create_branch": "Failed to create branch",
+		"failed_to_update_branch": "Failed to update branch",
+		"failed_to_delete_branch": "Failed to delete branch",
+		"delete_confirmation_title": "Are you sure?",
+		"delete_confirmation_text": "Are you sure you want to delete this branch?",
+		"delete_confirm_button": "Yes, delete it!",
+		"pagination": {
+			"showing": "Showing",
+			"to": "to",
+			"of": "of",
+			"entries": "entries",
+			"previous": "Previous",
+			"next": "Next",
+			"search": "Search",
+			"search_placeholder": "Search..."
+		}
+	},
+	"modal_new_branch": {
+		"new_branch": "New Branch",
+		"branch_code": "Branch Code",
+		"branch_name": "Branch Name",
+		"address": "Address",
+		"phone": "Phone",
+		"save": "Save",
+		"close": "Close"
+	},
+	"modal_edit_branch": {
+		"edit_branch": "Edit Branch",
+		"branch_code": "Branch Code",
+		"branch_name": "Branch Name",
+		"address": "Address",
+		"phone": "Phone",
+		"save_changes": "Save Changes",
+		"close": "Close"
 	}
 }

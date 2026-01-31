@@ -79,6 +79,7 @@
 		"manage_menu": "메뉴 관리",
 		"manage_table": "테이블 관리",
 		"manage_employee": "직원 관리",
+		"manage_branches": "지점 관리",
 		"settings": "설정",
 		"telegram_API": "텔레그램 API",
 		"Change_Game_No": "게임 번호 변경",
@@ -785,6 +786,7 @@
 		"all": "전체",
 		"image": "이미지",
 		"menu_name": "메뉴 이름",
+		"branch": "지점",
 		"description": "설명",
 		"price": "가격",
 		"action": "작업",
@@ -859,8 +861,8 @@
 			"search": "검색",
 			"search_placeholder": "검색..."
 		},
-		"branch": "table.branch",
-		"actions": "table.actions"
+		"branch": "지점",
+		"actions": "작업"
 	},
 	"employee": {
 		"manage_employee": "직원 관리",
@@ -896,5 +898,58 @@
 			"search": "검색",
 			"search_placeholder": "검색..."
 		}
+	},
+	"branch": {
+		"manage_branches": "지점 관리",
+		"new_branch": "새 지점",
+		"code": "코드",
+		"name": "이름",
+		"address": "주소",
+		"phone": "전화번호",
+		"status": "상태",
+		"action": "작업",
+		"active": "활성",
+		"inactive": "비활성",
+		"edit": "편집",
+		"delete": "삭제",
+		"success": "성공!",
+		"branch_created_successfully": "지점이 성공적으로 생성되었습니다",
+		"branch_updated_successfully": "지점이 성공적으로 업데이트되었습니다",
+		"branch_deleted_successfully": "지점이 삭제되었습니다",
+		"error": "오류!",
+		"failed_to_create_branch": "지점 생성에 실패했습니다",
+		"failed_to_update_branch": "지점 업데이트에 실패했습니다",
+		"failed_to_delete_branch": "지점 삭제에 실패했습니다",
+		"delete_confirmation_title": "정말로 삭제하시겠습니까?",
+		"delete_confirmation_text": "이 지점을 삭제하시겠습니까?",
+		"delete_confirm_button": "예, 삭제합니다!",
+		"pagination": {
+			"showing": "표시 중",
+			"to": "부터",
+			"of": "중",
+			"entries": "개 항목",
+			"previous": "이전",
+			"next": "다음",
+			"search": "검색",
+			"search_placeholder": "검색..."
+		}
+	},
+	"modal_new_branch": {
+		"new_branch": "새 지점",
+		"branch_code": "지점 코드",
+		"branch_name": "지점 이름",
+		"address": "주소",
+		"phone": "전화번호",
+		"save": "저장",
+		"close": "닫기"
+	},
+	"modal_edit_branch": {
+		"edit_branch": "지점 편집",
+		"branch_code": "지점 코드",
+		"branch_name": "지점 이름",
+		"address": "주소",
+		"phone": "전화번호",
+		"save_changes": "변경 사항 저장",
+		"close": "닫기"
 	}
 }

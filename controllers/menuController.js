@@ -123,24 +123,32 @@ class MenuController {
 			// Get target language from query parameter, cookie, or default to 'en'
 			const targetLanguage = req.query.lang || req.query.language || req.cookies?.lang || 'en';
 			
-			// Apply translation if target language is not Korean (ko) and translation service is available
-			if (targetLanguage !== 'ko' && TranslationService.isAvailable()) {
+			// Apply translation for all languages (auto-detect will handle Korean vs English source)
+			// This will translate English categories to Korean/Japanese/Chinese when those languages are selected
+			// And translate Korean categories to English/Japanese/Chinese when those languages are selected
+			if (TranslationService.isAvailable()) {
 				try {
 					// Collect all texts to translate
 					const textsToTranslate = [];
+					const textMapping = []; // Track which category each text belongs to
+					
 					categories.forEach(cat => {
-						if (cat.CATEGORY_NAME) textsToTranslate.push(cat.CATEGORY_NAME);
+						if (cat.CATEGORY_NAME) {
+							textsToTranslate.push(cat.CATEGORY_NAME);
+							textMapping.push({ cat: cat });
+						}
 					});
 
 					if (textsToTranslate.length > 0) {
 						// Translate in batch - auto-detect source language (handles both Korean and English)
+						// Google Translate will auto-detect if the source is Korean or English
 						const translations = await TranslationService.translateBatch(textsToTranslate, targetLanguage);
 						
 						// Map translations back to categories
-						let translationIndex = 0;
-						categories.forEach(cat => {
-							if (cat.CATEGORY_NAME) {
-								cat.CATEGORY_NAME = translations[translationIndex++] || cat.CATEGORY_NAME;
+						translations.forEach((translation, index) => {
+							const mapping = textMapping[index];
+							if (mapping && mapping.cat) {
+								mapping.cat.CATEGORY_NAME = translation || mapping.cat.CATEGORY_NAME;
 							}
 						});
 					}
