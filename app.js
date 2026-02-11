@@ -19,7 +19,16 @@ app.use(compression());
 
 // Move CORS to the top to handle preflight requests immediately
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://192.168.1.43:3000'
+  ];
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   if (req.method === 'OPTIONS') {
@@ -56,24 +65,13 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Static file serving with cache headers
+// Serve API info page (simple HTML for browser access)
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1y', // Cache for 1 year
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, filePath) => {
-    // Set proper Content-Type for WebP images
-    if (filePath.endsWith('.webp')) {
-      res.setHeader('Content-Type', 'image/webp');
-    }
-    // Cache images aggressively
-    if (filePath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-  }
+	maxAge: '1h',
+	etag: true
 }));
 
-// Serve uploaded images with CORS and cache headers
+// Serve uploaded menu images only (needed for API)
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
   maxAge: '1y',
   etag: true,
@@ -99,6 +97,7 @@ app.use(session({
     secure: false,
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24,
+    sameSite: 'lax', // so cookie is sent on GET from frontend (e.g. localhost:3000 -> localhost:2000)
   }
 }));
 app.use(flash());
@@ -107,20 +106,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Make ?error=... available to login.ejs (fallback when session/flash can't be used)
+// Session middleware for API routes (if needed)
+// Note: Pure REST API - no EJS views, session mainly for backward compatibility
 app.use((req, res, next) => {
-  res.locals.queryError = req.query?.error;
-  next();
-});
-
-// Make session values available to ALL EJS views (sidebar/topbar needs permissions everywhere)
-app.use((req, res, next) => {
-  res.locals.permissions = req.session?.permissions;
-  res.locals.username = req.session?.username;
-  res.locals.firstname = req.session?.firstname;
-  res.locals.lastname = req.session?.lastname;
-  res.locals.user_id = req.session?.user_id;
-  res.locals.branch_id = req.session?.branch_id ?? null; // null = ALL
+  // Session data available for API routes if needed
   next();
 });
 
@@ -128,22 +117,65 @@ app.use((req, res, next) => {
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Set the view engine and routes
+// Set port
 app.set('port', process.env.PORT || 4004);
-app.set('views', path.join(__dirname, 'views'));
-app.set("view engine", "ejs");
+// EJS view engine removed - pure REST API backend
 
-// Serve static files (images, CSS, JS, etc.)
-app.use('/login/images/flags', express.static(path.join(__dirname, 'public/login/images/flags')));
-
-// Language switch route
-app.get('/change-lang', (req, res) => {
+// Static files removed - frontend should serve its own assets
+// Language switch moved to API endpoint if needed
+app.get('/api/change-lang', (req, res) => {
   const lang = req.query.lang;
   if (['en', 'ko', 'ja', 'zh'].includes(lang)) {
-    res.cookie('lang', lang); // Set the selected language in the cookie
-    i18n.setLocale(req, lang); // Apply language immediately after cookie update
+    res.cookie('lang', lang);
+    i18n.setLocale(req, lang);
   }
-  res.redirect('back'); // Redirect back to the previous page
+  res.json({ success: true, language: lang });
+});
+
+// Root route - API server info
+// Returns HTML page if browser requests HTML, JSON otherwise
+app.get('/', (req, res) => {
+	const accepts = req.headers.accept || '';
+	
+	// If browser requests HTML, serve info page
+	if (accepts.includes('text/html')) {
+		return res.sendFile(path.join(__dirname, 'public', 'api-info.html'));
+	}
+	
+	// Otherwise return JSON (API clients, Postman, etc.)
+	res.json({
+		success: true,
+		message: 'Restaurant Management System API',
+		version: '2.0.0',
+		documentation: '/api',
+		endpoints: {
+			auth: '/api/login',
+			dashboard: '/dashboard/stats',
+			orders: '/orders/data',
+			menu: '/menus',
+			categories: '/categories_list',
+			tables: '/restaurant_tables',
+			billing: '/billing/data',
+			employees: '/employees_list',
+			branches: '/branch'
+		},
+		authentication: {
+			methods: ['JWT', 'Session'],
+			jwt: 'Authorization: Bearer <token>',
+			session: 'Cookie-based (backward compatible)'
+		}
+	});
+});
+
+// Handle favicon requests (common browser request)
+app.get('/favicon.ico', (req, res) => {
+	res.status(204).end(); // No content
+});
+
+// Handle robots.txt (common crawler request)
+app.get('/robots.txt', (req, res) => {
+	res.type('text/plain');
+	res.send('User-agent: *\nDisallow: /');
 });
 
 // Register API routes with /api prefix (public endpoints for Android app)
@@ -156,9 +188,32 @@ app.use('/branch', require('./routes/branchRoutes'));
 // Register other routes
 routes.forEach(router => app.use('/', router));
 
+// 404 Handler - API endpoint not found
+app.use((req, res) => {
+	res.status(404).json({
+		success: false,
+		error: 'Endpoint not found',
+		path: req.path,
+		method: req.method,
+		message: 'This is a REST API server. Please check the API documentation for available endpoints.'
+	});
+});
+
+// Error Handler - Global error handler
+app.use((err, req, res, next) => {
+	console.error('Error:', err);
+	res.status(err.status || 500).json({
+		success: false,
+		error: err.message || 'Internal server error',
+		...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+	});
+});
+
 // Start the server
 const server = app.listen(app.get('port'), function () {
   console.log('Server started on port ' + app.get('port'));
+  console.log('API Server running at http://localhost:' + app.get('port'));
+  console.log('Root endpoint: http://localhost:' + app.get('port') + '/');
 });
 
 // Initialize Socket.io

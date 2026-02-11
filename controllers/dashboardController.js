@@ -7,75 +7,58 @@
 
 const DashboardModel = require('../models/dashboardModel');
 const BranchModel = require('../models/branchModel');
+const ApiResponse = require('../utils/apiResponse');
 
 class DashboardController {
-	// Display dashboard page
-	static async showPage(req, res) {
-		const permissions = req.session.permissions;
-		if (permissions === undefined) {
-			console.error("Permissions are undefined");
-			return res.status(500).send("Permissions are undefined");
-		}
-
-		const branchId = req.session.branch_id || null; // null = ALL branches (admin)
-
+	// Get dashboard statistics
+	static async getStats(req, res) {
 		try {
+			const permissions = req.session?.permissions || req.user?.permissions;
+			if (permissions === undefined) {
+				return ApiResponse.error(res, 'Permissions are undefined', 500);
+			}
+
+			const branchId = req.session?.branch_id || req.user?.branch_id || req.query.branch_id || null;
+
 			// Fetch all dashboard statistics (generic cards)
 			const stats = await DashboardModel.getDashboardStats(branchId);
 
 			// Detect if current branch is Kim's Brothers
-			// Check for Kim's Brothers if user has selected a specific branch (not "All branches")
 			let currentBranch = null;
 			let isKimsBrothersDashboard = false;
 
-			// Check for Kim's Brothers if a specific branch is selected (works for both admin and non-admin)
 			if (branchId) {
 				currentBranch = await BranchModel.getById(branchId);
-
 				if (currentBranch) {
 					const name = (currentBranch.BRANCH_NAME || '').trim().toLowerCase();
 					const code = (currentBranch.BRANCH_CODE || '').trim().toUpperCase();
-
 					if (code === 'BR002' || name === "kim's brothers") {
 						isKimsBrothersDashboard = true;
 					}
 				}
 			}
 
-			res.render('dashboard', {
-				username: req.session.username,
-				firstname: req.session.firstname,
-				lastname: req.session.lastname,
-				user_id: req.session.user_id,
-				currentPage: 'dashboard',
-				permissions,
-				todaysRevenue: stats.todaysRevenue,
-				totalOrders: stats.totalOrders,
-				activeTables: stats.activeTables,
-				pendingOrders: stats.pendingOrders,
-				popularItems: stats.popularItems,
+			return ApiResponse.success(res, {
+				stats: {
+					todaysRevenue: stats.todaysRevenue || 0,
+					totalOrders: stats.totalOrders || 0,
+					activeTables: stats.activeTables || 0,
+					pendingOrders: stats.pendingOrders || 0,
+					popularItems: stats.popularItems || 0
+				},
 				currentBranch,
-				isKimsBrothersDashboard
-			});
+				isKimsBrothersDashboard,
+				permissions,
+				user: {
+					username: req.session?.username || req.user?.username,
+					firstname: req.session?.firstname || req.user?.firstname,
+					lastname: req.session?.lastname || req.user?.lastname,
+					user_id: req.session?.user_id || req.user?.user_id
+				}
+			}, 'Dashboard statistics retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching dashboard data:', error);
-
-			// Fallback values with safe branch detection disabled
-			res.render('dashboard', {
-				username: req.session.username,
-				firstname: req.session.firstname,
-				lastname: req.session.lastname,
-				user_id: req.session.user_id,
-				currentPage: 'dashboard',
-				permissions,
-				todaysRevenue: 0,
-				totalOrders: 0,
-				activeTables: 0,
-				pendingOrders: 0,
-				popularItems: 0,
-				currentBranch: null,
-				isKimsBrothersDashboard: false
-			});
+			return ApiResponse.error(res, 'Failed to fetch dashboard statistics', 500, error.message);
 		}
 	}
 }

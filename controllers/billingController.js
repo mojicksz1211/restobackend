@@ -10,29 +10,19 @@ const OrderModel = require('../models/orderModel');
 const TableModel = require('../models/tableModel');
 const OrderItemsModel = require('../models/orderItemsModel');
 const socketService = require('../utils/socketService');
+const ApiResponse = require('../utils/apiResponse');
 
 class BillingController {
-	static showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'billing'
-		};
-
-		res.render('billing/manageBilling', sessions);
-	}
 
 	static async getAll(req, res) {
 		try {
 			// Prioritize session branch_id
 			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
 			const billings = await BillingModel.getAll(branchId);
-			res.json(billings);
+			return ApiResponse.success(res, billings, 'Billing records retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching billing records:', error);
-			res.status(500).json({ error: 'Failed to fetch billing records' });
+			return ApiResponse.error(res, 'Failed to fetch billing records', 500, error.message);
 		}
 	}
 
@@ -41,12 +31,12 @@ class BillingController {
 			const { orderId } = req.params;
 			const billing = await BillingModel.getByOrderId(orderId);
 			if (!billing) {
-				return res.status(404).json({ error: 'Billing record not found' });
+				return ApiResponse.notFound(res, 'Billing record');
 			}
-			res.json(billing);
+			return ApiResponse.success(res, billing, 'Billing record retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching billing record:', error);
-			res.status(500).json({ error: 'Failed to fetch billing record' });
+			return ApiResponse.error(res, 'Failed to fetch billing record', 500, error.message);
 		}
 	}
 
@@ -54,10 +44,10 @@ class BillingController {
 		try {
 			const { orderId } = req.params;
 			const rows = await BillingModel.getPaymentHistory(orderId);
-			res.json(rows);
+			return ApiResponse.success(res, rows, 'Payment history retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching payment history:', error);
-			res.status(500).json({ error: 'Failed to fetch payment history' });
+			return ApiResponse.error(res, 'Failed to fetch payment history', 500, error.message);
 		}
 	}
 
@@ -72,7 +62,7 @@ class BillingController {
 
 			const billing = await BillingModel.getByOrderId(id);
 			if (!billing) {
-				return res.status(404).json({ error: 'Billing record not found' });
+				return ApiResponse.notFound(res, 'Billing record');
 			}
 
 			const amountPaidNow = parseFloat(amount_paid) || 0;
@@ -133,10 +123,10 @@ class BillingController {
 				});
 			}
 
-			res.json({ success: true, status: newStatus });
+			return ApiResponse.success(res, { status: newStatus }, 'Billing record updated successfully');
 		} catch (error) {
 			console.error('Error updating billing record:', error);
-			res.status(500).json({ error: 'Failed to update billing record' });
+			return ApiResponse.error(res, 'Failed to update billing record', 500, error.message);
 		}
 	}
 }

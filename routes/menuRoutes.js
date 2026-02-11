@@ -7,7 +7,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { checkSession } = require('./authRoutes');
+const { authenticate } = require('../middleware/unifiedAuth');
 const MenuController = require('../controllers/menuController');
 const { upload, convertToWebp } = require('../middleware/upload');
 
@@ -15,35 +15,34 @@ const { upload, convertToWebp } = require('../middleware/upload');
 // GET ROUTES
 // ============================================
 
-// GET - Display menu management page
-router.get("/manageMenu", checkSession, MenuController.showPage);
+// Menu management page route removed - use API endpoints instead
 
 // GET - Fetch all menus (for DataTables)
-router.get("/menus", checkSession, MenuController.getAll);
+router.get("/menus", authenticate, MenuController.getAll);
 
 // GET - Fetch all categories (for dropdown)
-router.get("/categories", checkSession, MenuController.getCategories);
+router.get("/categories", authenticate, MenuController.getCategories);
 
 // ============================================
 // POST ROUTES
 // ============================================
 
 // POST - Create new menu (with file upload and WebP conversion)
-router.post("/menu", checkSession, upload.single('MENU_IMG'), convertToWebp, MenuController.create);
+router.post("/menu", authenticate, upload.single('MENU_IMG'), convertToWebp, MenuController.create);
 
 // ============================================
 // PUT ROUTES
 // ============================================
 
 // PUT - Update menu (with optional file upload and WebP conversion)
-router.put("/menu/:id", checkSession, upload.single('MENU_IMG'), convertToWebp, MenuController.update);
+router.put("/menu/:id", authenticate, upload.single('MENU_IMG'), convertToWebp, MenuController.update);
 
 // ============================================
 // DELETE ROUTES
 // ============================================
 
 // DELETE - Soft delete menu
-router.delete("/menu/:id", checkSession, MenuController.delete);
+router.delete("/menu/:id", authenticate, MenuController.delete);
 
 // ============================================
 // EXPORT

@@ -7,13 +7,13 @@
 
 const express = require('express');
 const router = express.Router();
-const { checkSession } = require('./authRoutes');
+const { authenticate } = require('../middleware/unifiedAuth');
 const BillingController = require('../controllers/billingController');
 
-router.get('/billing', checkSession, BillingController.showPage);
-router.get('/billing/data', checkSession, BillingController.getAll);
-router.get('/billing/:orderId/payments', checkSession, BillingController.getPaymentHistory);
-router.get('/billing/:orderId', checkSession, BillingController.getByOrderId);
-router.put('/billing/:id', checkSession, BillingController.updateBilling);
+// Billing page route removed - use API endpoints instead
+router.get('/billing/data', authenticate, BillingController.getAll);
+router.get('/billing/:orderId/payments', authenticate, BillingController.getPaymentHistory);
+router.get('/billing/:orderId', authenticate, BillingController.getByOrderId);
+router.put('/billing/:id', authenticate, BillingController.updateBilling);
 
 module.exports = router;

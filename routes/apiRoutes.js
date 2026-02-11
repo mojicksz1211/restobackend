@@ -9,6 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const ApiController = require('../controllers/apiController');
+const UserManagementController = require('../controllers/userManagementController');
 const { authenticateJWT, optionalJWT } = require('../middleware/jwtAuth');
 
 // ============================================
@@ -131,6 +132,40 @@ router.post("/orders/:order_id/items", authenticateJWT, ApiController.addItemsTo
 // }
 // Response: { success: true, data: { order_id, order_no, items_count, new_grand_total } }
 router.put("/orders/:order_id/items", authenticateJWT, ApiController.replaceOrderItems);
+
+// ============================================
+// USER MANAGEMENT (restoadmin User & Access)
+// ============================================
+
+// GET - List users for User Management page
+// URL: /api/user-management/users
+// Headers: Authorization: Bearer <accessToken>
+// Response: { success: true, data: [{ id, name, email, roleId, roleName, lastActive, avatar }] }
+router.get("/user-management/users", authenticateJWT, UserManagementController.getUsers);
+
+// GET - List roles for Roles & Permissions tab
+// URL: /api/user-management/roles
+// Headers: Authorization: Bearer <accessToken>
+// Response: { success: true, data: [{ id, name, description, permissions }] }
+router.get("/user-management/roles", authenticateJWT, UserManagementController.getRoles);
+
+// POST - Create user (restoadmin Invite User)
+router.post("/user-management/users", authenticateJWT, UserManagementController.createUser);
+
+// PUT - Update user
+router.put("/user-management/users/:id", authenticateJWT, UserManagementController.updateUser);
+
+// DELETE - Soft-delete user (archive)
+router.delete("/user-management/users/:id", authenticateJWT, UserManagementController.deleteUser);
+
+// POST - Create role (restoadmin Create Role)
+router.post("/user-management/roles", authenticateJWT, UserManagementController.createRole);
+
+// PUT - Update role
+router.put("/user-management/roles/:id", authenticateJWT, UserManagementController.updateRole);
+
+// DELETE - Soft-delete role (archive)
+router.delete("/user-management/roles/:id", authenticateJWT, UserManagementController.deleteRole);
 
 // ============================================
 // EXPORT

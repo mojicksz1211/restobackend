@@ -2,20 +2,9 @@ const BranchModel = require('../models/branchModel');
 const UserBranchModel = require('../models/userBranchModel');
 const AuditLogModel = require('../models/auditLogModel');
 const pool = require('../config/db');
+const ApiResponse = require('../utils/apiResponse');
 
 class BranchController {
-	// Display branch management page
-	static async showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'manageBranch',
-			permissions: req.session.permissions
-		};
-		res.render("branch/manageBranch", sessions);
-	}
 
 	// Get all branches
 	static async getAll(req, res) {
@@ -37,10 +26,10 @@ class BranchController {
 			}
 			
 			
-			res.json(branches);
+			return ApiResponse.success(res, branches, 'Branches retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching branches:', error);
-			res.status(500).json({ error: 'Failed to fetch branches', details: error.message });
+			return ApiResponse.error(res, 'Failed to fetch branches', 500, error.message);
 		}
 	}
 
@@ -73,15 +62,14 @@ class BranchController {
 				});
 			});
 
-			return res.json({
-				success: true,
+			return ApiResponse.success(res, {
 				permissions: perm,
 				current: current === null ? 'ALL' : String(current),
 				options
-			});
+			}, 'Branch options retrieved successfully');
 		} catch (error) {
 			console.error('Error getting branch options:', error);
-			return res.status(500).json({ error: 'Failed to get branch options' });
+			return ApiResponse.error(res, 'Failed to get branch options', 500, error.message);
 		}
 	}
 
@@ -93,7 +81,7 @@ class BranchController {
 			const branch_id = req.body?.branch_id ?? req.body?.branchId ?? req.body?.BRANCH_ID;
 
 			if (!branch_id) {
-				return res.status(400).json({ error: 'branch_id is required' });
+				return ApiResponse.badRequest(res, 'branch_id is required');
 			}
 
 			// Admin: allow ALL or specific branch
@@ -102,45 +90,45 @@ class BranchController {
 					req.session.branch_id = null;
 					req.session.branch_name = null;
 					req.session.branch_code = null;
-					return res.json({ success: true, current: 'ALL' });
+					return ApiResponse.success(res, { current: 'ALL' }, 'Branch set to ALL');
 				}
 
 				const bid = parseInt(branch_id);
 				if (isNaN(bid)) {
-					return res.status(400).json({ error: 'Invalid branch_id' });
+					return ApiResponse.badRequest(res, 'Invalid branch_id');
 				}
 
 				const branch = await BranchModel.getById(bid);
 				if (!branch) {
-					return res.status(404).json({ error: 'Branch not found' });
+					return ApiResponse.notFound(res, 'Branch');
 				}
 
 				req.session.branch_id = bid;
 				req.session.branch_name = branch.BRANCH_NAME;
 				req.session.branch_code = branch.BRANCH_CODE;
-				return res.json({ success: true, current: String(bid) });
+				return ApiResponse.success(res, { current: String(bid) }, 'Branch set successfully');
 			}
 
 			// Non-admin: must stay on their single assigned branch
 			const assigned = await UserBranchModel.getBranchesByUserId(user_id);
 			const only = assigned?.[0];
 			if (!only) {
-				return res.status(400).json({ error: 'No branch assigned to this account' });
+				return ApiResponse.badRequest(res, 'No branch assigned to this account');
 			}
 
 			const onlyId = parseInt(only.IDNo);
 			const bid = parseInt(branch_id);
 			if (isNaN(bid) || bid !== onlyId) {
-				return res.status(403).json({ error: 'Non-admin users cannot switch branches' });
+				return ApiResponse.forbidden(res, 'Non-admin users cannot switch branches');
 			}
 
 			req.session.branch_id = onlyId;
 			req.session.branch_name = only.BRANCH_NAME;
 			req.session.branch_code = only.BRANCH_CODE;
-			return res.json({ success: true, current: String(onlyId) });
+			return ApiResponse.success(res, { current: String(onlyId) }, 'Branch set successfully');
 		} catch (error) {
 			console.error('Error setting current branch:', error);
-			return res.status(500).json({ error: 'Failed to set current branch' });
+			return ApiResponse.error(res, 'Failed to set current branch', 500, error.message);
 		}
 	}
 
@@ -157,15 +145,12 @@ class BranchController {
 			}
 			
 			if (!branch) {
-				return res.status(404).json({ 
-					error: 'Branch not found',
-					requested: id
-				});
+				return ApiResponse.notFound(res, 'Branch');
 			}
-			res.json(branch);
+			return ApiResponse.success(res, branch, 'Branch retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching branch:', error);
-			res.status(500).json({ error: 'Failed to fetch branch', details: error.message });
+			return ApiResponse.error(res, 'Failed to fetch branch', 500, error.message);
 		}
 	}
 
@@ -176,17 +161,16 @@ class BranchController {
 			const { BRANCH_CODE, BRANCH_NAME, ADDRESS, PHONE } = req.body;
 
 			if (!BRANCH_CODE || BRANCH_CODE.trim() === '') {
-				return res.status(400).json({ error: 'Branch code is required' });
+				return ApiResponse.badRequest(res, 'Branch code is required');
 			}
 
 			if (!BRANCH_NAME || BRANCH_NAME.trim() === '') {
-				return res.status(400).json({ error: 'Branch name is required' });
+				return ApiResponse.badRequest(res, 'Branch name is required');
 			}
 
-			// Check if branch code already exists
 			const existing = await BranchModel.getByCode(BRANCH_CODE);
 			if (existing) {
-				return res.status(400).json({ error: 'Branch code already exists' });
+				return ApiResponse.error(res, 'Branch code already exists', 409);
 			}
 
 			const user_id = req.session.user_id || req.user?.user_id;
@@ -214,14 +198,10 @@ class BranchController {
 				record_id: branchId
 			});
 
-			res.json({ 
-				success: true, 
-				message: 'Branch created successfully',
-				id: branchId
-			});
+			return ApiResponse.created(res, { id: branchId }, 'Branch created successfully');
 		} catch (error) {
 			console.error('Error creating branch:', error);
-			res.status(500).json({ error: 'Failed to create branch' });
+			return ApiResponse.error(res, 'Failed to create branch', 500, error.message);
 		}
 	}
 
@@ -232,17 +212,16 @@ class BranchController {
 			const { BRANCH_CODE, BRANCH_NAME, ADDRESS, PHONE } = req.body;
 
 			if (!BRANCH_CODE || BRANCH_CODE.trim() === '') {
-				return res.status(400).json({ error: 'Branch code is required' });
+				return ApiResponse.badRequest(res, 'Branch code is required');
 			}
 
 			if (!BRANCH_NAME || BRANCH_NAME.trim() === '') {
-				return res.status(400).json({ error: 'Branch name is required' });
+				return ApiResponse.badRequest(res, 'Branch name is required');
 			}
 
-			// Check if branch code already exists (excluding current branch)
 			const existing = await BranchModel.getByCode(BRANCH_CODE);
 			if (existing && existing.IDNo != id) {
-				return res.status(400).json({ error: 'Branch code already exists' });
+				return ApiResponse.error(res, 'Branch code already exists', 409);
 			}
 
 			const user_id = req.session.user_id || req.user?.user_id;
@@ -254,10 +233,9 @@ class BranchController {
 			});
 
 			if (!updated) {
-				return res.status(404).json({ error: 'Branch not found' });
+				return ApiResponse.notFound(res, 'Branch');
 			}
 
-			// Log audit
 			await AuditLogModel.create({
 				user_id,
 				branch_id: id,
@@ -266,10 +244,10 @@ class BranchController {
 				record_id: id
 			});
 
-			res.json({ success: true, message: 'Branch updated successfully' });
+			return ApiResponse.success(res, null, 'Branch updated successfully');
 		} catch (error) {
 			console.error('Error updating branch:', error);
-			res.status(500).json({ error: 'Failed to update branch' });
+			return ApiResponse.error(res, 'Failed to update branch', 500, error.message);
 		}
 	}
 
@@ -282,10 +260,9 @@ class BranchController {
 			const deleted = await BranchModel.delete(id);
 
 			if (!deleted) {
-				return res.status(404).json({ error: 'Branch not found' });
+				return ApiResponse.notFound(res, 'Branch');
 			}
 
-			// Log audit
 			await AuditLogModel.create({
 				user_id,
 				branch_id: id,
@@ -294,10 +271,10 @@ class BranchController {
 				record_id: id
 			});
 
-			res.json({ success: true, message: 'Branch deleted successfully' });
+			return ApiResponse.success(res, null, 'Branch deleted successfully');
 		} catch (error) {
 			console.error('Error deleting branch:', error);
-			res.status(500).json({ error: 'Failed to delete branch' });
+			return ApiResponse.error(res, 'Failed to delete branch', 500, error.message);
 		}
 	}
 
@@ -306,10 +283,10 @@ class BranchController {
 		try {
 			const { userId } = req.params;
 			const branches = await UserBranchModel.getBranchesByUserId(userId);
-			res.json(branches);
+			return ApiResponse.success(res, branches, 'User branches retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching user branches:', error);
-			res.status(500).json({ error: 'Failed to fetch user branches' });
+			return ApiResponse.error(res, 'Failed to fetch user branches', 500, error.message);
 		}
 	}
 
@@ -318,10 +295,10 @@ class BranchController {
 		try {
 			const { branchId } = req.params;
 			const users = await UserBranchModel.getUsersByBranchId(branchId);
-			res.json(users);
+			return ApiResponse.success(res, users, 'Branch users retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching branch users:', error);
-			res.status(500).json({ error: 'Failed to fetch branch users' });
+			return ApiResponse.error(res, 'Failed to fetch branch users', 500, error.message);
 		}
 	}
 
@@ -332,14 +309,14 @@ class BranchController {
 			const currentUserId = req.session.user_id || req.user?.user_id;
 
 			if (!userId || !branchId) {
-				return res.status(400).json({ error: 'User ID and Branch ID are required' });
+				return ApiResponse.badRequest(res, 'User ID and Branch ID are required');
 			}
 
 			// Enforce: non-admin users must have exactly ONE branch
 			const [urows] = await pool.execute('SELECT PERMISSIONS FROM user_info WHERE IDNo = ? LIMIT 1', [userId]);
 			const targetPerm = urows[0]?.PERMISSIONS;
 			if (targetPerm == null) {
-				return res.status(404).json({ error: 'User not found' });
+				return ApiResponse.notFound(res, 'User');
 			}
 
 			// For non-admin, replace existing assignment with this single branch
@@ -359,10 +336,10 @@ class BranchController {
 				record_id: userId
 			});
 
-			res.json({ success: true, message: 'User assigned to branch successfully' });
+			return ApiResponse.success(res, null, 'User assigned to branch successfully');
 		} catch (error) {
 			console.error('Error assigning user to branch:', error);
-			res.status(500).json({ error: 'Failed to assign user to branch' });
+			return ApiResponse.error(res, 'Failed to assign user to branch', 500, error.message);
 		}
 	}
 
@@ -373,7 +350,7 @@ class BranchController {
 			const currentUserId = req.session.user_id || req.user?.user_id;
 
 			if (!userId || !branchId) {
-				return res.status(400).json({ error: 'User ID and Branch ID are required' });
+				return ApiResponse.badRequest(res, 'User ID and Branch ID are required');
 			}
 
 			await UserBranchModel.removeUserFromBranch(userId, branchId);
@@ -387,10 +364,10 @@ class BranchController {
 				record_id: userId
 			});
 
-			res.json({ success: true, message: 'User removed from branch successfully' });
+			return ApiResponse.success(res, null, 'User removed from branch successfully');
 		} catch (error) {
 			console.error('Error removing user from branch:', error);
-			res.status(500).json({ error: 'Failed to remove user from branch' });
+			return ApiResponse.error(res, 'Failed to remove user from branch', 500, error.message);
 		}
 	}
 
@@ -401,14 +378,14 @@ class BranchController {
 			const currentUserId = req.session.user_id || req.user?.user_id;
 
 			if (!userId) {
-				return res.status(400).json({ error: 'User ID is required' });
+				return ApiResponse.badRequest(res, 'User ID is required');
 			}
 
 			// Enforce: non-admin users must have exactly ONE branch
 			const [urows] = await pool.execute('SELECT PERMISSIONS FROM user_info WHERE IDNo = ? LIMIT 1', [userId]);
 			const targetPerm = urows[0]?.PERMISSIONS;
 			if (targetPerm == null) {
-				return res.status(404).json({ error: 'User not found' });
+				return ApiResponse.notFound(res, 'User');
 			}
 
 			const ids = Array.isArray(branchIds) ? branchIds.map(x => parseInt(x)).filter(x => !isNaN(x)) : [];
@@ -422,16 +399,12 @@ class BranchController {
 					table_name: 'user_branches',
 					record_id: userId
 				});
-				return res.json({
-					success: true,
-					message: 'Admin has ALL branches automatically (no branch assignment needed).',
-					branches_assigned: 0
-				});
+				return ApiResponse.success(res, { branches_assigned: 0 }, 'Admin has ALL branches automatically (no branch assignment needed).');
 			}
 
 			// Non-admin: must be exactly one
 			if (ids.length !== 1) {
-				return res.status(400).json({ error: 'Non-admin user must be assigned exactly ONE branch.' });
+				return ApiResponse.badRequest(res, 'Non-admin user must be assigned exactly ONE branch.');
 			}
 
 			await UserBranchModel.setUserBranches(userId, ids);
@@ -444,14 +417,10 @@ class BranchController {
 				record_id: userId
 			});
 
-			res.json({ 
-				success: true, 
-				message: 'User branches updated successfully',
-				branches_assigned: branchIds.length
-			});
+			return ApiResponse.success(res, { branches_assigned: branchIds.length }, 'User branches updated successfully');
 		} catch (error) {
 			console.error('Error setting user branches:', error);
-			res.status(500).json({ error: 'Failed to set user branches', details: error.message });
+			return ApiResponse.error(res, 'Failed to set user branches', 500, error.message);
 		}
 	}
 }

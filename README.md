@@ -76,6 +76,10 @@ The API endpoints `/api/menu` and `/api/categories` will automatically translate
 4. Set up the database:
 Import the SQL schema file from the `sql/` directory into your MySQL database.
 
+**Optional – User Management (restoadmin):** To show email/avatar and role descriptions on the User & Access page, run the migration:
+`scripts/migrations/2026-02-06-user-management-tables.sql`  
+This adds `user_info.EMAIL`, `user_info.AVATAR_URL`, and `user_role.DESCRIPTION`, `user_role.PERMISSIONS`. The API works without it (uses username as email, default role labels).
+
 5. Start the application:
 ```bash
 # Development mode

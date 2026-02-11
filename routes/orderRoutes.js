@@ -7,17 +7,17 @@
 
 const express = require('express');
 const router = express.Router();
-const { checkSession } = require('./authRoutes');
+const { authenticate } = require('../middleware/unifiedAuth');
 const OrderController = require('../controllers/orderController');
 
-router.get('/orders', checkSession, OrderController.showPage);
+// Orders page route removed - use API endpoints instead
 
-router.get('/orders/data', checkSession, OrderController.getAll);
-router.get('/orders/:id', checkSession, OrderController.getById);
-router.get('/orders/:id/items', checkSession, OrderController.getItems);
+router.get('/orders/data', authenticate, OrderController.getAll);
+router.get('/orders/:id', authenticate, OrderController.getById);
+router.get('/orders/:id/items', authenticate, OrderController.getItems);
 
-router.post('/orders', checkSession, OrderController.create);
-router.put('/orders/:id', checkSession, OrderController.update);
-router.put('/order_items/:id/status', checkSession, OrderController.updateItemStatus);
+router.post('/orders', authenticate, OrderController.create);
+router.put('/orders/:id', authenticate, OrderController.update);
+router.put('/order_items/:id/status', authenticate, OrderController.updateItemStatus);
 
 module.exports = router;

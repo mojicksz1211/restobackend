@@ -25,6 +25,9 @@ function generateAccessToken(payload) {
 			user_id: payload.user_id,
 			username: payload.username,
 			permissions: payload.permissions,
+			firstname: payload.firstname || null,
+			lastname: payload.lastname || null,
+			branch_id: payload.branch_id || null,
 			type: 'access'
 		},
 		JWT_SECRET,

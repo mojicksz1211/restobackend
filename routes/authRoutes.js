@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require('../config/db');
 const argon2 = require('argon2');
 const crypto = require('crypto');
+const { generateTokenPair } = require('../utils/jwt');
+const { authenticate, optionalAuthenticate } = require('../middleware/unifiedAuth');
 
 function isArgonHash(hash) {
     return typeof hash === 'string' && hash.startsWith('$argon2');
@@ -20,6 +22,15 @@ const checkSession = (req, res, next) => {
         next();
     }
 };
+
+const wantsJson = (req) => {
+  const accept = req.headers.accept || '';
+  const contentType = req.headers['content-type'] || '';
+  return req.xhr
+    || accept.includes('application/json')
+    || contentType.includes('application/json')
+    || req.headers['x-requested-with'] === 'XMLHttpRequest';
+};
 function sessions(req, page) {
 	return {
 		username: req.session.username,
@@ -34,14 +45,31 @@ function sessions(req, page) {
 
 
 
-router.get(["/", "/login"], (req, res) => res.render("login"));
+// Login page removed - use API endpoint /api/login for authentication
+// Frontend should handle login UI separately
 
-router.get("/userRoles", checkSession, function (req, res) {
-	res.render("user_accounts/userRoles", sessions(req, 'userRoles'));
-});
+// User management routes removed - use API endpoints instead
+// GET /api/users, POST /api/users, etc.
 
-router.get("/manageUsers", checkSession, function (req, res) {
-	res.render("user_accounts/manageUsers", sessions(req, 'manageUsers'));
+// Get current user (JWT or session) - for SPA refresh persistence. Returns 200 with data: null when not logged in (avoids 401 in console).
+router.get('/me', optionalAuthenticate, (req, res) => {
+  if (!req.user) {
+    return res.json({ success: true, data: null });
+  }
+  const u = req.user;
+  return res.json({
+    success: true,
+    data: {
+      user_id: u.user_id,
+      username: u.username || '',
+      firstname: u.firstname || null,
+      lastname: u.lastname || null,
+      permissions: u.permissions,
+      branch_id: u.branch_id || null,
+      branch_name: req.session?.branch_name || null,
+      branch_code: req.session?.branch_code || null
+    }
+  });
 });
 
 // Login route
@@ -50,6 +78,9 @@ router.post('/login', async (req, res) => {
     const query = 'SELECT * FROM user_info WHERE USERNAME = ? AND ACTIVE = 1';
   
     const safeRedirectWithError = (msg) => {
+      if (wantsJson(req)) {
+        return res.status(401).json({ success: false, error: msg });
+      }
       // connect-flash requires sessions; if session is missing, fallback to query param
       if (req.session) {
         req.flash('error', msg);
@@ -149,7 +180,37 @@ router.post('/login', async (req, res) => {
             if (err) {
               return safeRedirectWithError('Session error, please try again.');
             }
-            
+
+            if (wantsJson(req)) {
+              const tokenPayload = {
+                user_id: req.session.user_id,
+                username: req.session.username,
+                permissions: req.session.permissions,
+                firstname: req.session.firstname || null,
+                lastname: req.session.lastname || null,
+                branch_id: req.session.branch_id || null
+              };
+              const tokens = generateTokenPair(tokenPayload);
+              return res.json({
+                success: true,
+                data: {
+                  user_id: req.session.user_id,
+                  username: req.session.username,
+                  firstname: req.session.firstname,
+                  lastname: req.session.lastname,
+                  permissions: req.session.permissions,
+                  branch_id: req.session.branch_id || null,
+                  branch_name: req.session.branch_name || null,
+                  branch_code: req.session.branch_code || null,
+                  available_branches: req.session.available_branches || []
+                },
+                tokens: {
+                  accessToken: tokens.accessToken,
+                  expiresIn: tokens.expiresIn
+                }
+              });
+            }
+
             return res.redirect('/dashboard');
           });
         } else {

@@ -7,19 +7,9 @@
 
 const CategoryModel = require('../models/categoryModel');
 const TranslationService = require('../utils/translationService');
+const ApiResponse = require('../utils/apiResponse');
 
 class CategoryController {
-	// Display category management page
-	static async showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'manageCategory'
-		};
-		res.render("category/manageCategory", sessions);
-	}
 
 	// Get all categories
 	static async getAll(req, res) {
@@ -113,10 +103,10 @@ class CategoryController {
 			}
 			}
 			
-			res.json(categories);
+			return ApiResponse.success(res, categories, 'Categories retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching categories:', error);
-			res.status(500).json({ error: 'Failed to fetch categories' });
+			return ApiResponse.error(res, 'Failed to fetch categories', 500, error.message);
 		}
 	}
 
@@ -126,14 +116,14 @@ class CategoryController {
 			const { CAT_NAME, CAT_DESC } = req.body;
 
 			if (!CAT_NAME || CAT_NAME.trim() === '') {
-				return res.status(400).json({ error: 'Category name is required' });
+				return ApiResponse.badRequest(res, 'Category name is required');
 			}
 
 			const user_id = req.session.user_id || req.user?.user_id;
 			const branch_id = req.session?.branch_id || req.body?.BRANCH_ID || req.query?.branch_id || null;
 
 			if (!user_id) {
-				return res.status(400).json({ error: 'User ID is required' });
+				return ApiResponse.badRequest(res, 'User ID is required');
 			}
 
 			const categoryId = await CategoryModel.create({
@@ -143,14 +133,10 @@ class CategoryController {
 				user_id
 			});
 
-			res.json({ 
-				success: true, 
-				message: 'Category created successfully',
-				id: categoryId
-			});
+			return ApiResponse.created(res, { id: categoryId }, 'Category created successfully');
 		} catch (error) {
 			console.error('Error creating category:', error);
-			res.status(500).json({ error: 'Failed to create category' });
+			return ApiResponse.error(res, 'Failed to create category', 500, error.message);
 		}
 	}
 
@@ -161,10 +147,10 @@ class CategoryController {
 			const { CAT_NAME, CAT_DESC } = req.body;
 
 			if (!CAT_NAME || CAT_NAME.trim() === '') {
-				return res.status(400).json({ error: 'Category name is required' });
+				return ApiResponse.badRequest(res, 'Category name is required');
 			}
 
-			const user_id = req.session.user_id;
+			const user_id = req.session.user_id || req.user?.user_id;
 			const updated = await CategoryModel.update(id, {
 				CAT_NAME,
 				CAT_DESC,
@@ -172,13 +158,13 @@ class CategoryController {
 			});
 
 			if (!updated) {
-				return res.status(404).json({ error: 'Category not found' });
+				return ApiResponse.notFound(res, 'Category');
 			}
 
-			res.json({ success: true, message: 'Category updated successfully' });
+			return ApiResponse.success(res, null, 'Category updated successfully');
 		} catch (error) {
 			console.error('Error updating category:', error);
-			res.status(500).json({ error: 'Failed to update category' });
+			return ApiResponse.error(res, 'Failed to update category', 500, error.message);
 		}
 	}
 
@@ -191,13 +177,13 @@ class CategoryController {
 			const deleted = await CategoryModel.delete(id, user_id);
 
 			if (!deleted) {
-				return res.status(404).json({ error: 'Category not found' });
+				return ApiResponse.notFound(res, 'Category');
 			}
 
-			res.json({ success: true, message: 'Category deleted successfully' });
+			return ApiResponse.success(res, null, 'Category deleted successfully');
 		} catch (error) {
 			console.error('Error deleting category:', error);
-			res.status(500).json({ error: 'Failed to delete category' });
+			return ApiResponse.error(res, 'Failed to delete category', 500, error.message);
 		}
 	}
 }

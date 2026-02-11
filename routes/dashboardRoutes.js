@@ -2,37 +2,22 @@
 // DASHBOARD ROUTES
 // ============================================
 // File: routes/dashboardRoutes.js
-// Description: Routes for dashboard endpoints
+// Description: REST API routes for dashboard endpoints
 // ============================================
 
 const express = require('express');
 const router = express.Router();
-const { checkSession } = require('./authRoutes');
+const { authenticate } = require('../middleware/unifiedAuth');
 const DashboardController = require('../controllers/dashboardController');
 
 // ============================================
 // GET ROUTES
 // ============================================
 
-// GET - Display dashboard page
-router.get("/dashboard", checkSession, DashboardController.showPage);
-
-// GET - Activity logs endpoint (casino-related, not used in restaurant system)
-router.get("/activity_logs", checkSession, async (req, res) => {
-	res.json([]);
-});
-
-// GET - Win/Loss endpoint (casino-related, not used in restaurant system)
-router.get("/get_winloss", checkSession, async (req, res) => {
-	res.json({
-		winloss: 0,
-		percentChange: 0,
-		chart: {
-			data: [],
-			labels: []
-		}
-	});
-});
+// GET - Get dashboard statistics (supports both JWT and Session auth)
+// URL: /dashboard/stats
+// Auth: JWT (Bearer token) or Session
+router.get("/dashboard/stats", authenticate, DashboardController.getStats);
 
 // ============================================
 // EXPORT

@@ -7,19 +7,9 @@
 
 const MenuModel = require('../models/menuModel');
 const TranslationService = require('../utils/translationService');
+const ApiResponse = require('../utils/apiResponse');
 
 class MenuController {
-	// Display menu management page
-	static async showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'manageMenu'
-		};
-		res.render("menu/manageMenu", sessions);
-	}
 
 	// Get all menus
 	static async getAll(req, res) {
@@ -36,7 +26,8 @@ class MenuController {
 			// Apply translation based on target language
 			// Descriptions: ALWAYS translate to selected language (English descriptions should be translated to Korean, Japanese, Chinese, etc.)
 			// Menu names & Category names: translate only if not Korean (Korean stays in Korean)
-			if (TranslationService.isAvailable()) {
+			const translateRequested = ['1', 'true', 'yes'].includes(String(req.query.translate || '').toLowerCase());
+			if (TranslationService.isAvailable() && translateRequested) {
 				// First, translate descriptions (always, regardless of target language)
 				try {
 					const descTextsToTranslate = [];
@@ -105,10 +96,10 @@ class MenuController {
 				}
 			}
 			
-			res.json(menus);
+			return ApiResponse.success(res, menus, 'Menus retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching menus:', error);
-			res.status(500).json({ error: 'Failed to fetch menus' });
+			return ApiResponse.error(res, 'Failed to fetch menus', 500, error.message);
 		}
 	}
 
@@ -126,7 +117,8 @@ class MenuController {
 			// Apply translation for all languages (auto-detect will handle Korean vs English source)
 			// This will translate English categories to Korean/Japanese/Chinese when those languages are selected
 			// And translate Korean categories to English/Japanese/Chinese when those languages are selected
-			if (TranslationService.isAvailable()) {
+			const translateRequested = ['1', 'true', 'yes'].includes(String(req.query.translate || '').toLowerCase());
+			if (TranslationService.isAvailable() && translateRequested) {
 				try {
 					// Collect all texts to translate
 					const textsToTranslate = [];
@@ -158,10 +150,10 @@ class MenuController {
 				}
 			}
 			
-			res.json(categories);
+			return ApiResponse.success(res, categories, 'Categories retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching categories:', error);
-			res.status(500).json({ error: 'Failed to fetch categories' });
+			return ApiResponse.error(res, 'Failed to fetch categories', 500, error.message);
 		}
 	}
 
@@ -186,7 +178,7 @@ class MenuController {
 			// Prioritize session branch_id
 			const branchId = req.session?.branch_id || req.body.BRANCH_ID || req.query.branch_id || req.user?.branch_id;
 			if (!branchId) {
-				return res.status(400).json({ error: 'Branch ID is required. Please select a branch first.' });
+				return ApiResponse.badRequest(res, 'Branch ID is required. Please select a branch first.');
 			}
 			const menuId = await MenuModel.create({
 				BRANCH_ID: branchId,
@@ -199,14 +191,10 @@ class MenuController {
 				user_id
 			});
 
-			res.json({ 
-				success: true, 
-				message: 'Menu created successfully',
-				id: menuId
-			});
+			return ApiResponse.created(res, { id: menuId }, 'Menu created successfully');
 		} catch (error) {
 			console.error('Error creating menu:', error);
-			res.status(500).json({ error: 'Failed to create menu' });
+			return ApiResponse.error(res, 'Failed to create menu', 500, error.message);
 		}
 	}
 
@@ -242,13 +230,13 @@ class MenuController {
 			});
 
 			if (!updated) {
-				return res.status(404).json({ error: 'Menu not found' });
+				return ApiResponse.notFound(res, 'Menu');
 			}
 
-			res.json({ success: true, message: 'Menu updated successfully' });
+			return ApiResponse.success(res, null, 'Menu updated successfully');
 		} catch (error) {
 			console.error('Error updating menu:', error);
-			res.status(500).json({ error: 'Failed to update menu' });
+			return ApiResponse.error(res, 'Failed to update menu', 500, error.message);
 		}
 	}
 
@@ -264,10 +252,10 @@ class MenuController {
 				return res.status(404).json({ error: 'Menu not found' });
 			}
 
-			res.json({ success: true, message: 'Menu deleted successfully' });
+			return ApiResponse.success(res, null, 'Menu deleted successfully');
 		} catch (error) {
 			console.error('Error deleting menu:', error);
-			res.status(500).json({ error: 'Failed to delete menu' });
+			return ApiResponse.error(res, 'Failed to delete menu', 500, error.message);
 		}
 	}
 }

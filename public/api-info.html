@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Management System - API Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .info-box h2 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        .endpoint-list {
+            list-style: none;
+        }
+        .endpoint-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .endpoint-list li:last-child {
+            border-bottom: none;
+        }
+        .endpoint {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        .method.get { background: #e3f2fd; color: #1976d2; }
+        .method.post { background: #e8f5e9; color: #388e3c; }
+        .method.put { background: #fff3e0; color: #f57c00; }
+        .method.delete { background: #ffebee; color: #d32f2f; }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #856404;
+        }
+        .note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .json-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .json-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ Restaurant Management System</h1>
+        <p class="subtitle">REST API Server - Pure Backend</p>
+        
+        <div class="info-box">
+            <h2>📡 API Endpoints</h2>
+            <ul class="endpoint-list">
+                <li>
+                    <span class="method post">POST</span>
+                    <span class="endpoint">/api/login</span>
+                    <span style="color: #666;">- Authentication</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/dashboard/stats</span>
+                    <span style="color: #666;">- Dashboard statistics</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/orders/data</span>
+                    <span style="color: #666;">- Get all orders</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/menus</span>
+                    <span style="color: #666;">- Get all menus</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/categories_list</span>
+                    <span style="color: #666;">- Get all categories</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/restaurant_tables</span>
+                    <span style="color: #666;">- Get all tables</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/billing/data</span>
+                    <span style="color: #666;">- Get billing records</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/employees_list</span>
+                    <span style="color: #666;">- Get all employees</span>
+                </li>
+                <li>
+                    <span class="method get">GET</span>
+                    <span class="endpoint">/branch</span>
+                    <span style="color: #666;">- Get branches</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <strong>ℹ️ Note:</strong>
+            This is a pure REST API backend. All endpoints return JSON responses.
+            Use Postman, curl, or a frontend application to interact with the API.
+            <br><br>
+            <strong>Authentication:</strong>
+            <ul style="margin-left: 20px; margin-top: 5px;">
+                <li>JWT Token: <code>Authorization: Bearer &lt;token&gt;</code></li>
+                <li>Session: Cookie-based (for backward compatibility)</li>
+            </ul>
+        </div>
+
+        <a href="/" class="json-link">📄 View JSON API Info →</a>
+    </div>
+</body>
+</html>
+

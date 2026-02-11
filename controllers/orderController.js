@@ -10,29 +10,18 @@ const OrderItemsModel = require('../models/orderItemsModel');
 const BillingModel = require('../models/billingModel');
 const TableModel = require('../models/tableModel');
 const socketService = require('../utils/socketService');
+const ApiResponse = require('../utils/apiResponse');
 
 class OrderController {
-	static showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'orders'
-		};
-
-		res.render('orders/manageOrders', sessions);
-	}
 
 	static async getAll(req, res) {
 		try {
-			// Get branch_id from query, body, or session (prioritize session)
 			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
 			const orders = await OrderModel.getAll(branchId);
-			res.json(orders);
+			return ApiResponse.success(res, orders, 'Orders retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching orders:', error);
-			res.status(500).json({ error: 'Failed to fetch orders' });
+			return ApiResponse.error(res, 'Failed to fetch orders', 500, error.message);
 		}
 	}
 
@@ -41,12 +30,12 @@ class OrderController {
 			const { id } = req.params;
 			const order = await OrderModel.getById(id);
 			if (!order) {
-				return res.status(404).json({ error: 'Order not found' });
+				return ApiResponse.notFound(res, 'Order');
 			}
-			res.json(order);
+			return ApiResponse.success(res, order, 'Order retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching order:', error);
-			res.status(500).json({ error: 'Failed to fetch order' });
+			return ApiResponse.error(res, 'Failed to fetch order', 500, error.message);
 		}
 	}
 
@@ -106,10 +95,10 @@ class OrderController {
 				items_count: items.length
 			});
 
-			res.json({ success: true, id: orderId });
+			return ApiResponse.created(res, { id: orderId, order_no: payload.ORDER_NO }, 'Order created successfully');
 		} catch (error) {
 			console.error('Error creating order:', error);
-			res.status(500).json({ error: 'Failed to create order' });
+			return ApiResponse.error(res, 'Failed to create order', 500, error.message);
 		}
 	}
 
@@ -193,10 +182,10 @@ class OrderController {
 				items: orderItems
 			});
 
-			res.json({ success: true });
+			return ApiResponse.success(res, null, 'Order updated successfully');
 		} catch (error) {
 			console.error('Error updating order:', error);
-			res.status(500).json({ error: 'Failed to update order' });
+			return ApiResponse.error(res, 'Failed to update order', 500, error.message);
 		}
 	}
 
@@ -204,10 +193,10 @@ class OrderController {
 		try {
 			const { id } = req.params;
 			const items = await OrderItemsModel.getByOrderId(id);
-			res.json(items);
+			return ApiResponse.success(res, items, 'Order items retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching line items:', error);
-			res.status(500).json({ error: 'Failed to fetch order items' });
+			return ApiResponse.error(res, 'Failed to fetch order items', 500, error.message);
 		}
 	}
 
@@ -243,10 +232,10 @@ class OrderController {
 				});
 			}
 
-			res.json({ success: true });
+			return ApiResponse.success(res, null, 'Item status updated successfully');
 		} catch (error) {
 			console.error('Error updating item status:', error);
-			res.status(500).json({ error: 'Failed to update item status' });
+			return ApiResponse.error(res, 'Failed to update item status', 500, error.message);
 		}
 	}
 }

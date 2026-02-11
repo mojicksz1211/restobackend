@@ -11,49 +11,31 @@ const UserBranchModel = require('../models/userBranchModel');
 const pool = require('../config/db');
 const argon2 = require('argon2');
 const crypto = require('crypto');
+const ApiResponse = require('../utils/apiResponse');
 
 class EmployeeController {
-	// Display employee management page
-	static async showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'manageEmployee',
-			permissions: req.session.permissions
-		};
-		
+	// Get employee page metadata (dropdowns, etc.)
+	static async getPageMetadata(req, res) {
 		try {
-			// Get branches for dropdown (admin sees all, others see their branch)
-			const perm = parseInt(req.session.permissions || 0);
-			const currentBranchId = req.session.branch_id || null;
+			const perm = parseInt(req.session?.permissions || req.user?.permissions || 0);
+			const currentBranchId = req.session?.branch_id || req.user?.branch_id || null;
 			
 			let branches = [];
 			if (perm === 1) {
-				// Admin can see all branches
 				branches = await BranchModel.getAll();
 			} else if (currentBranchId) {
-				// Non-admin sees only their branch
 				const branch = await BranchModel.getById(currentBranchId);
-				if (branch) {
-					branches = [branch];
-				}
+				if (branch) branches = [branch];
 			}
 
-			// Get users for USERINFO_ID dropdown
 			let users = [];
 			if (perm === 1) {
-				// Admin sees all users
 				const [allUsers] = await pool.execute(`
 					SELECT IDNo, USERNAME, FIRSTNAME, LASTNAME, CONCAT(FIRSTNAME, ' ', LASTNAME) AS FULLNAME
-					FROM user_info
-					WHERE ACTIVE = 1
-					ORDER BY LASTNAME, FIRSTNAME ASC
+					FROM user_info WHERE ACTIVE = 1 ORDER BY LASTNAME, FIRSTNAME ASC
 				`);
 				users = allUsers;
 			} else if (currentBranchId) {
-				// Non-admin sees users in their branch
 				const [branchUsers] = await pool.execute(`
 					SELECT DISTINCT u.IDNo, u.USERNAME, u.FIRSTNAME, u.LASTNAME, CONCAT(u.FIRSTNAME, ' ', u.LASTNAME) AS FULLNAME
 					FROM user_info u
@@ -64,39 +46,25 @@ class EmployeeController {
 				users = branchUsers;
 			}
 
-			// Get user roles for dropdown
 			const [roles] = await pool.execute(`
-				SELECT IDNo, ROLE
-				FROM user_role
-				WHERE ACTIVE = 1
-				ORDER BY ROLE ASC
+				SELECT IDNo, ROLE FROM user_role WHERE ACTIVE = 1 ORDER BY ROLE ASC
 			`);
 
-			// Restaurant departments
 			const departments = [
-				'Kitchen',
-				'Service',
-				'Waiter/Waitress',
-				'Cashier',
-				'Manager',
-				'Supervisor',
-				'Bartender',
-				'Cleaning',
-				'Security',
-				'Maintenance'
+				'Kitchen', 'Service', 'Waiter/Waitress', 'Cashier', 'Manager',
+				'Supervisor', 'Bartender', 'Cleaning', 'Security', 'Maintenance'
 			];
 
-			sessions.branches = branches;
-			sessions.users = users;
-			sessions.roles = roles;
-			sessions.departments = departments;
+			return ApiResponse.success(res, {
+				branches,
+				users,
+				roles,
+				departments
+			}, 'Employee page metadata retrieved successfully');
 		} catch (error) {
-			console.error('Error loading employee page data:', error);
-			sessions.branches = [];
-			sessions.users = [];
+			console.error('Error loading employee page metadata:', error);
+			return ApiResponse.error(res, 'Failed to load employee page metadata', 500, error.message);
 		}
-
-		res.render("employee/manageEmployee", sessions);
 	}
 
 	// Get all employees
@@ -106,15 +74,10 @@ class EmployeeController {
 			const branchId = perm === 1 ? (req.query.branch_id || null) : (req.session.branch_id || null);
 			
 			const employees = await EmployeeModel.getAll(branchId);
-			res.json(employees);
+			return ApiResponse.success(res, employees, 'Employees retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching employees:', error);
-			console.error('Error stack:', error.stack);
-			console.error('Error message:', error.message);
-			res.status(500).json({ 
-				error: 'Failed to fetch employees',
-				details: process.env.NODE_ENV === 'development' ? error.message : undefined
-			});
+			return ApiResponse.error(res, 'Failed to fetch employees', 500, error.message);
 		}
 	}
 
@@ -123,15 +86,13 @@ class EmployeeController {
 		try {
 			const { id } = req.params;
 			const employee = await EmployeeModel.getById(id);
-			
 			if (!employee) {
-				return res.status(404).json({ error: 'Employee not found' });
+				return ApiResponse.notFound(res, 'Employee');
 			}
-			
-			res.json(employee);
+			return ApiResponse.success(res, employee, 'Employee retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching employee:', error);
-			res.status(500).json({ error: 'Failed to fetch employee' });
+			return ApiResponse.error(res, 'Failed to fetch employee', 500, error.message);
 		}
 	}
 
@@ -157,7 +118,7 @@ class EmployeeController {
 			} = req.body;
 
 			if ((!FIRSTNAME || FIRSTNAME.trim() === '') && (!LASTNAME || LASTNAME.trim() === '')) {
-				return res.status(400).json({ error: 'First name or last name is required' });
+				return ApiResponse.badRequest(res, 'First name or last name is required');
 			}
 
 			const user_id = req.session.user_id || req.user?.user_id;
@@ -184,7 +145,7 @@ class EmployeeController {
 			}
 
 			if (!user_id) {
-				return res.status(400).json({ error: 'User ID is required' });
+				return ApiResponse.badRequest(res, 'User ID is required');
 			}
 
 			let createdUserId = null;
@@ -192,13 +153,13 @@ class EmployeeController {
 			// Create user account if requested
 			if (CREATE_USER_ACCOUNT === 'true' || CREATE_USER_ACCOUNT === true) {
 				if (!USERNAME || USERNAME.trim() === '') {
-					return res.status(400).json({ error: 'Username is required when creating user account' });
+					return ApiResponse.badRequest(res, 'Username is required when creating user account');
 				}
 				if (!PASSWORD || PASSWORD.trim() === '') {
-					return res.status(400).json({ error: 'Password is required when creating user account' });
+					return ApiResponse.badRequest(res, 'Password is required when creating user account');
 				}
 				if (PASSWORD !== PASSWORD2) {
-					return res.status(400).json({ error: 'Passwords do not match' });
+					return ApiResponse.badRequest(res, 'Passwords do not match');
 				}
 
 				// Check if username already exists
@@ -207,7 +168,7 @@ class EmployeeController {
 					[USERNAME.trim()]
 				);
 				if (existingUser.length > 0) {
-					return res.status(400).json({ error: 'Username already exists' });
+					return ApiResponse.error(res, 'Username already exists', 409);
 				}
 
 				// Hash password with argon2
@@ -260,9 +221,12 @@ class EmployeeController {
 			}
 
 			// Create employee (STATUS defaults to 1 = Active)
+			// Note: USER_INFO_ID can be null if CREATE_USER_ACCOUNT is false
+			// If the database column doesn't allow NULL, you need to run the migration:
+			// scripts/migrations/2026-02-06-employee-user-info-id-nullable.sql
 			const employeeId = await EmployeeModel.create({
 				BRANCH_ID: finalBranchId,
-				USER_INFO_ID: createdUserId,
+				USER_INFO_ID: createdUserId || null, // Explicitly set to null if no user account created
 				PHOTO: PHOTO || null,
 				FIRSTNAME: FIRSTNAME || '',
 				LASTNAME: LASTNAME || '',
@@ -277,17 +241,13 @@ class EmployeeController {
 				user_id
 			});
 
-			res.json({ 
-				success: true, 
-				message: CREATE_USER_ACCOUNT === 'true' || CREATE_USER_ACCOUNT === true 
-					? 'Employee and user account created successfully'
-					: 'Employee created successfully',
-				id: employeeId,
-				user_id: createdUserId
-			});
+			const message = CREATE_USER_ACCOUNT === 'true' || CREATE_USER_ACCOUNT === true 
+				? 'Employee and user account created successfully'
+				: 'Employee created successfully';
+			return ApiResponse.created(res, { id: employeeId, user_id: createdUserId }, message);
 		} catch (error) {
 			console.error('Error creating employee:', error);
-			res.status(500).json({ error: 'Failed to create employee: ' + error.message });
+			return ApiResponse.error(res, 'Failed to create employee', 500, error.message);
 		}
 	}
 
@@ -315,16 +275,17 @@ class EmployeeController {
 			const cleanSalary = SALARY ? SALARY.toString().replace(/,/g, '') : null;
 
 			if ((!FIRSTNAME || FIRSTNAME.trim() === '') && (!LASTNAME || LASTNAME.trim() === '')) {
-				return res.status(400).json({ error: 'First name or last name is required' });
+				return ApiResponse.badRequest(res, 'First name or last name is required');
 			}
 
-			const user_id = req.session.user_id;
-			const perm = parseInt(req.session.permissions || 0);
+			const user_id = req.session.user_id || req.user?.user_id;
+			const perm = parseInt(req.session.permissions || req.user?.permissions || 0);
 			
 			// Non-admin can only update employees in their branch
 			let finalBranchId = BRANCH_ID || null;
-			if (perm !== 1 && req.session.branch_id) {
-				finalBranchId = req.session.branch_id;
+			const currentBranchId = req.session.branch_id || req.user?.branch_id || null;
+			if (perm !== 1 && currentBranchId) {
+				finalBranchId = currentBranchId;
 			}
 
 			const updated = await EmployeeModel.update(id, {
@@ -338,20 +299,20 @@ class EmployeeController {
 				ADDRESS: ADDRESS || null,
 				DATE_STARTED: DATE_STARTED || null,
 				SALARY: cleanSalary || null,
-				STATUS: STATUS || 1,
+				STATUS: STATUS !== undefined && STATUS !== null ? parseInt(STATUS) : 1,
 				EMERGENCY_CONTACT_NAME: EMERGENCY_CONTACT_NAME || null,
 				EMERGENCY_CONTACT_PHONE: EMERGENCY_CONTACT_PHONE || null,
 				user_id
 			});
 
 			if (!updated) {
-				return res.status(404).json({ error: 'Employee not found' });
+				return ApiResponse.notFound(res, 'Employee');
 			}
 
-			res.json({ success: true, message: 'Employee updated successfully' });
+			return ApiResponse.success(res, null, 'Employee updated successfully');
 		} catch (error) {
 			console.error('Error updating employee:', error);
-			res.status(500).json({ error: 'Failed to update employee' });
+			return ApiResponse.error(res, 'Failed to update employee', 500, error.message);
 		}
 	}
 
@@ -359,18 +320,18 @@ class EmployeeController {
 	static async delete(req, res) {
 		try {
 			const { id } = req.params;
-			const user_id = req.session.user_id;
+			const user_id = req.session.user_id || req.user?.user_id;
 
 			const deleted = await EmployeeModel.delete(id, user_id);
 
 			if (!deleted) {
-				return res.status(404).json({ error: 'Employee not found' });
+				return ApiResponse.notFound(res, 'Employee');
 			}
 
-			res.json({ success: true, message: 'Employee deleted successfully' });
+			return ApiResponse.success(res, null, 'Employee deleted successfully');
 		} catch (error) {
 			console.error('Error deleting employee:', error);
-			res.status(500).json({ error: 'Failed to delete employee' });
+			return ApiResponse.error(res, 'Failed to delete employee', 500, error.message);
 		}
 	}
 }

@@ -6,19 +6,9 @@
 // ============================================
 
 const TableModel = require('../models/tableModel');
+const ApiResponse = require('../utils/apiResponse');
 
 class TableController {
-	// Display restaurant table management page
-	static async showPage(req, res) {
-		const sessions = {
-			username: req.session.username,
-			firstname: req.session.firstname,
-			lastname: req.session.lastname,
-			user_id: req.session.user_id,
-			currentPage: 'manageTable'
-		};
-		res.render("table/manageTable", sessions);
-	}
 
 	// Get all restaurant tables
 	static async getAll(req, res) {
@@ -26,10 +16,10 @@ class TableController {
 			// Prioritize session branch_id
 			const branchId = req.session?.branch_id || req.query.branch_id || req.body.branch_id || req.user?.branch_id || null;
 			const tables = await TableModel.getAll(branchId);
-			res.json(tables);
+			return ApiResponse.success(res, tables, 'Tables retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching restaurant tables:', error);
-			res.status(500).json({ error: 'Failed to fetch restaurant tables' });
+			return ApiResponse.error(res, 'Failed to fetch restaurant tables', 500, error.message);
 		}
 	}
 
@@ -43,20 +33,19 @@ class TableController {
 			} = req.body;
 
 			if (!TABLE_NUMBER || TABLE_NUMBER.trim() === '') {
-				return res.status(400).json({ error: 'Table number is required' });
+				return ApiResponse.badRequest(res, 'Table number is required');
 			}
 
 			const user_id = req.session.user_id || req.user?.user_id;
-			// Prioritize session branch_id
 			const branchId = req.session?.branch_id || req.body.BRANCH_ID || req.query.branch_id || req.user?.branch_id;
 			if (!branchId) {
-				return res.status(400).json({ error: 'Branch ID is required. Please select a branch first.' });
+				return ApiResponse.badRequest(res, 'Branch ID is required. Please select a branch first.');
 			}
 
 			const normalizedTableNumber = TABLE_NUMBER.trim();
 			const tableExists = await TableModel.existsByBranchAndNumber(branchId, normalizedTableNumber);
 			if (tableExists) {
-				return res.status(409).json({ error: 'Table number already exists for the selected branch.' });
+				return ApiResponse.error(res, 'Table number already exists for the selected branch.', 409);
 			}
 
 			const tableId = await TableModel.create({
@@ -67,14 +56,10 @@ class TableController {
 				user_id
 			});
 
-			res.json({ 
-				success: true, 
-				message: 'Restaurant table created successfully',
-				id: tableId
-			});
+			return ApiResponse.created(res, { id: tableId }, 'Restaurant table created successfully');
 		} catch (error) {
 			console.error('Error creating restaurant table:', error);
-			res.status(500).json({ error: 'Failed to create restaurant table' });
+			return ApiResponse.error(res, 'Failed to create restaurant table', 500, error.message);
 		}
 	}
 
@@ -89,7 +74,7 @@ class TableController {
 			} = req.body;
 
 			if (!TABLE_NUMBER || TABLE_NUMBER.trim() === '') {
-				return res.status(400).json({ error: 'Table number is required' });
+				return ApiResponse.badRequest(res, 'Table number is required');
 			}
 
 			const updated = await TableModel.update(id, {
@@ -99,13 +84,13 @@ class TableController {
 			});
 
 			if (!updated) {
-				return res.status(404).json({ error: 'Restaurant table not found' });
+				return ApiResponse.notFound(res, 'Restaurant table');
 			}
 
-			res.json({ success: true, message: 'Restaurant table updated successfully' });
+			return ApiResponse.success(res, null, 'Restaurant table updated successfully');
 		} catch (error) {
 			console.error('Error updating restaurant table:', error);
-			res.status(500).json({ error: 'Failed to update restaurant table' });
+			return ApiResponse.error(res, 'Failed to update restaurant table', 500, error.message);
 		}
 	}
 
@@ -117,13 +102,13 @@ class TableController {
 			const deleted = await TableModel.delete(id);
 
 			if (!deleted) {
-				return res.status(404).json({ error: 'Restaurant table not found' });
+				return ApiResponse.notFound(res, 'Restaurant table');
 			}
 
-			res.json({ success: true, message: 'Restaurant table deleted successfully' });
+			return ApiResponse.success(res, null, 'Restaurant table deleted successfully');
 		} catch (error) {
 			console.error('Error deleting restaurant table:', error);
-			res.status(500).json({ error: 'Failed to delete restaurant table' });
+			return ApiResponse.error(res, 'Failed to delete restaurant table', 500, error.message);
 		}
 	}
 
@@ -133,10 +118,10 @@ class TableController {
 			const { id } = req.params;
 			const branchId = req.query.branch_id || req.body.branch_id || req.session?.branch_id || null;
 			const transactions = await TableModel.getTransactionHistory(id, branchId);
-			res.json(transactions);
+			return ApiResponse.success(res, transactions, 'Transaction history retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching transaction history:', error);
-			res.status(500).json({ error: 'Failed to fetch transaction history' });
+			return ApiResponse.error(res, 'Failed to fetch transaction history', 500, error.message);
 		}
 	}
 }
