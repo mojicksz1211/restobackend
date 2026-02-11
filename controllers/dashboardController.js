@@ -11,6 +11,9 @@ const ApiResponse = require('../utils/apiResponse');
 
 class DashboardController {
 	// Get dashboard statistics
+	// NOTE: Dashboard is only available for Kim's Brothers branch (BR002)
+	// Frontend will handle UI restriction, but API still returns data for all branches
+	// If needed in the future, can add restriction here to return error for non-Kim's Brothers branches
 	static async getStats(req, res) {
 		try {
 			const permissions = req.session?.permissions || req.user?.permissions;
@@ -24,6 +27,7 @@ class DashboardController {
 			const stats = await DashboardModel.getDashboardStats(branchId);
 
 			// Detect if current branch is Kim's Brothers
+			// Dashboard is only available for Kim's Brothers branch (BR002 or name contains "kim's brothers")
 			let currentBranch = null;
 			let isKimsBrothersDashboard = false;
 
