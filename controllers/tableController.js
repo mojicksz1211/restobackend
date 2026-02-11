@@ -124,6 +124,36 @@ class TableController {
 			return ApiResponse.error(res, 'Failed to fetch transaction history', 500, error.message);
 		}
 	}
+
+	// Update table status directly
+	static async updateStatus(req, res) {
+		try {
+			const { id } = req.params;
+			const { status } = req.body;
+
+			if (status === undefined || status === null) {
+				return ApiResponse.badRequest(res, 'Status is required');
+			}
+
+			const table = await TableModel.getById(id);
+			if (!table) {
+				return ApiResponse.notFound(res, 'Restaurant table');
+			}
+
+			const updated = await TableModel.updateStatus(id, parseInt(status));
+			if (!updated) {
+				return ApiResponse.error(res, 'Failed to update table status', 500);
+			}
+
+			return ApiResponse.success(res, { 
+				id: parseInt(id), 
+				status: parseInt(status) 
+			}, 'Table status updated successfully');
+		} catch (error) {
+			console.error('Error updating table status:', error);
+			return ApiResponse.error(res, 'Failed to update table status', 500, error.message);
+		}
+	}
 }
 
 module.exports = TableController;

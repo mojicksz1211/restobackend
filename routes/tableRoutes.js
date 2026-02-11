@@ -43,6 +43,9 @@ router.put("/restaurant_table/:id", authenticate, TableController.update);
 // DELETE - Delete restaurant table
 router.delete("/restaurant_table/:id", authenticate, TableController.delete);
 
+// PATCH - Update table status directly
+router.patch("/restaurant_table/:id/status", authenticate, TableController.updateStatus);
+
 // ============================================
 // EXPORT
 // ============================================

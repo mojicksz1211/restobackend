@@ -20,6 +20,9 @@ const { upload, convertToWebp } = require('../middleware/upload');
 // GET - Fetch all menus (for DataTables)
 router.get("/menus", authenticate, MenuController.getAll);
 
+// GET - Fetch single menu by ID
+router.get("/menu/:id", authenticate, MenuController.getById);
+
 // GET - Fetch all categories (for dropdown)
 router.get("/categories", authenticate, MenuController.getCategories);
 

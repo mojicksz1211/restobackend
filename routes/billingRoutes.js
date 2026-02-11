@@ -14,6 +14,7 @@ const BillingController = require('../controllers/billingController');
 router.get('/billing/data', authenticate, BillingController.getAll);
 router.get('/billing/:orderId/payments', authenticate, BillingController.getPaymentHistory);
 router.get('/billing/:orderId', authenticate, BillingController.getByOrderId);
+router.post('/billing', authenticate, BillingController.create);
 router.put('/billing/:id', authenticate, BillingController.updateBilling);
 
 module.exports = router;

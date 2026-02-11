@@ -103,6 +103,29 @@ class MenuController {
 		}
 	}
 
+	// Get menu by ID
+	static async getById(req, res) {
+		try {
+			const { id } = req.params;
+			const menu = await MenuModel.getById(id);
+			
+			if (!menu) {
+				return ApiResponse.notFound(res, 'Menu');
+			}
+
+			// Format image URL if exists
+			if (menu.MENU_IMG) {
+				const baseUrl = req.protocol + '://' + req.get('host');
+				menu.MENU_IMG = menu.MENU_IMG.startsWith('http') ? menu.MENU_IMG : baseUrl + menu.MENU_IMG;
+			}
+
+			return ApiResponse.success(res, menu, 'Menu retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching menu:', error);
+			return ApiResponse.error(res, 'Failed to fetch menu', 500, error.message);
+		}
+	}
+
 	// Get all categories for dropdown
 	static async getCategories(req, res) {
 		try {

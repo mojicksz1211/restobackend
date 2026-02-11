@@ -129,6 +129,54 @@ class BillingController {
 			return ApiResponse.error(res, 'Failed to update billing record', 500, error.message);
 		}
 	}
+
+	// Create billing record manually (standalone)
+	static async create(req, res) {
+		try {
+			const {
+				order_id,
+				payment_method,
+				amount_due,
+				amount_paid,
+				payment_ref,
+				status
+			} = req.body;
+
+			if (!order_id) {
+				return ApiResponse.badRequest(res, 'Order ID is required');
+			}
+
+			// Check if billing already exists for this order
+			const existing = await BillingModel.getByOrderId(order_id);
+			if (existing) {
+				return ApiResponse.error(res, 'Billing record already exists for this order', 409);
+			}
+
+			// Get order to get branch_id
+			const order = await OrderModel.getById(order_id);
+			if (!order) {
+				return ApiResponse.notFound(res, 'Order');
+			}
+
+			const user_id = req.session.user_id || req.user?.user_id;
+
+			await BillingModel.createForOrder({
+				branch_id: order.BRANCH_ID,
+				order_id: order_id,
+				payment_method: payment_method || 'CASH',
+				amount_due: amount_due || order.GRAND_TOTAL || 0,
+				amount_paid: amount_paid || 0,
+				payment_ref: payment_ref || null,
+				status: status || 3,
+				user_id: user_id
+			});
+
+			return ApiResponse.created(res, { order_id: parseInt(order_id) }, 'Billing record created successfully');
+		} catch (error) {
+			console.error('Error creating billing record:', error);
+			return ApiResponse.error(res, 'Failed to create billing record', 500, error.message);
+		}
+	}
 }
 
 module.exports = BillingController;

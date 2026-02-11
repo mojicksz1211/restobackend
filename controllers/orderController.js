@@ -204,7 +204,7 @@ class OrderController {
 		try {
 			const { id } = req.params;
 			const { status } = req.body;
-			const user_id = req.session.user_id;
+			const user_id = req.session.user_id || req.user?.user_id;
 
 			// Get order_id before updating
 			const pool = require('../config/db');
@@ -236,6 +236,260 @@ class OrderController {
 		} catch (error) {
 			console.error('Error updating item status:', error);
 			return ApiResponse.error(res, 'Failed to update item status', 500, error.message);
+		}
+	}
+
+	// Get single order item by ID
+	static async getOrderItemById(req, res) {
+		try {
+			const { id } = req.params;
+			const pool = require('../config/db');
+			const [rows] = await pool.execute(`
+				SELECT 
+					oi.IDNo,
+					oi.ORDER_ID,
+					oi.MENU_ID,
+					m.MENU_NAME,
+					oi.QTY,
+					oi.UNIT_PRICE,
+					oi.LINE_TOTAL,
+					oi.STATUS,
+					oi.REMARKS,
+					oi.ENCODED_DT,
+					oi.EDITED_DT,
+					u.FIRSTNAME AS PREPARED_BY
+				FROM order_items oi
+				LEFT JOIN menu m ON m.IDNo = oi.MENU_ID
+				LEFT JOIN user_info u ON u.IDNo = oi.EDITED_BY
+				WHERE oi.IDNo = ?
+			`, [id]);
+
+			if (rows.length === 0) {
+				return ApiResponse.notFound(res, 'Order item');
+			}
+
+			return ApiResponse.success(res, rows[0], 'Order item retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching order item:', error);
+			return ApiResponse.error(res, 'Failed to fetch order item', 500, error.message);
+		}
+	}
+
+	// Update single order item
+	static async updateOrderItem(req, res) {
+		try {
+			const { id } = req.params;
+			const { qty, unit_price, status, remarks } = req.body;
+			const user_id = req.session.user_id || req.user?.user_id;
+
+			const pool = require('../config/db');
+			
+			// Get existing item
+			const [itemRows] = await pool.execute('SELECT * FROM order_items WHERE IDNo = ?', [id]);
+			if (itemRows.length === 0) {
+				return ApiResponse.notFound(res, 'Order item');
+			}
+
+			const existingItem = itemRows[0];
+			const orderId = existingItem.ORDER_ID;
+
+			// Calculate new line total
+			const newQty = qty !== undefined ? parseFloat(qty) : existingItem.QTY;
+			const newUnitPrice = unit_price !== undefined ? parseFloat(unit_price) : existingItem.UNIT_PRICE;
+			const newLineTotal = newQty * newUnitPrice;
+
+			// Update order item
+			const updateQuery = `
+				UPDATE order_items SET
+					QTY = ?,
+					UNIT_PRICE = ?,
+					LINE_TOTAL = ?,
+					STATUS = ?,
+					REMARKS = ?,
+					EDITED_BY = ?,
+					EDITED_DT = CURRENT_TIMESTAMP
+				WHERE IDNo = ?
+			`;
+			await pool.execute(updateQuery, [
+				newQty,
+				newUnitPrice,
+				newLineTotal,
+				status !== undefined ? status : existingItem.STATUS,
+				remarks !== undefined ? remarks : existingItem.REMARKS,
+				user_id,
+				id
+			]);
+
+			// Recalculate order totals
+			const [allItems] = await pool.execute('SELECT LINE_TOTAL FROM order_items WHERE ORDER_ID = ?', [orderId]);
+			const newSubtotal = allItems.reduce((sum, item) => sum + parseFloat(item.LINE_TOTAL || 0), 0);
+
+			const order = await OrderModel.getById(orderId);
+			const taxAmount = parseFloat(order.TAX_AMOUNT || 0);
+			const serviceCharge = parseFloat(order.SERVICE_CHARGE || 0);
+			const discountAmount = parseFloat(order.DISCOUNT_AMOUNT || 0);
+			const newGrandTotal = newSubtotal + taxAmount + serviceCharge - discountAmount;
+
+			// Update order totals
+			await OrderModel.update(orderId, {
+				TABLE_ID: order.TABLE_ID,
+				ORDER_TYPE: order.ORDER_TYPE,
+				STATUS: order.STATUS,
+				SUBTOTAL: newSubtotal,
+				TAX_AMOUNT: taxAmount,
+				SERVICE_CHARGE: serviceCharge,
+				DISCOUNT_AMOUNT: discountAmount,
+				GRAND_TOTAL: newGrandTotal,
+				user_id: user_id
+			});
+
+			// Update billing if exists
+			const BillingModel = require('../models/billingModel');
+			const existingBilling = await BillingModel.getByOrderId(orderId);
+			if (existingBilling) {
+				await BillingModel.updateForOrder(orderId, {
+					amount_due: newGrandTotal
+				});
+			}
+
+			// Emit socket event
+			const orderItems = await OrderItemsModel.getByOrderId(orderId);
+			socketService.emitOrderUpdate(orderId, {
+				order_id: orderId,
+				order_no: order.ORDER_NO,
+				table_id: order.TABLE_ID,
+				status: order.STATUS,
+				grand_total: newGrandTotal,
+				items: orderItems
+			});
+
+			return ApiResponse.success(res, { 
+				item_id: parseInt(id),
+				new_subtotal: newSubtotal,
+				new_grand_total: newGrandTotal
+			}, 'Order item updated successfully');
+		} catch (error) {
+			console.error('Error updating order item:', error);
+			return ApiResponse.error(res, 'Failed to update order item', 500, error.message);
+		}
+	}
+
+	// Delete single order item
+	static async deleteOrderItem(req, res) {
+		try {
+			const { id } = req.params;
+			const user_id = req.session.user_id || req.user?.user_id;
+
+			const pool = require('../config/db');
+			
+			// Get existing item
+			const [itemRows] = await pool.execute('SELECT * FROM order_items WHERE IDNo = ?', [id]);
+			if (itemRows.length === 0) {
+				return ApiResponse.notFound(res, 'Order item');
+			}
+
+			const existingItem = itemRows[0];
+			const orderId = existingItem.ORDER_ID;
+
+			// Delete order item
+			await pool.execute('DELETE FROM order_items WHERE IDNo = ?', [id]);
+
+			// Recalculate order totals
+			const [allItems] = await pool.execute('SELECT LINE_TOTAL FROM order_items WHERE ORDER_ID = ?', [orderId]);
+			const newSubtotal = allItems.reduce((sum, item) => sum + parseFloat(item.LINE_TOTAL || 0), 0);
+
+			const order = await OrderModel.getById(orderId);
+			const taxAmount = parseFloat(order.TAX_AMOUNT || 0);
+			const serviceCharge = parseFloat(order.SERVICE_CHARGE || 0);
+			const discountAmount = parseFloat(order.DISCOUNT_AMOUNT || 0);
+			const newGrandTotal = newSubtotal + taxAmount + serviceCharge - discountAmount;
+
+			// Update order totals
+			await OrderModel.update(orderId, {
+				TABLE_ID: order.TABLE_ID,
+				ORDER_TYPE: order.ORDER_TYPE,
+				STATUS: order.STATUS,
+				SUBTOTAL: newSubtotal,
+				TAX_AMOUNT: taxAmount,
+				SERVICE_CHARGE: serviceCharge,
+				DISCOUNT_AMOUNT: discountAmount,
+				GRAND_TOTAL: newGrandTotal,
+				user_id: user_id
+			});
+
+			// Update billing if exists
+			const BillingModel = require('../models/billingModel');
+			const existingBilling = await BillingModel.getByOrderId(orderId);
+			if (existingBilling) {
+				await BillingModel.updateForOrder(orderId, {
+					amount_due: newGrandTotal
+				});
+			}
+
+			// Emit socket event
+			const orderItems = await OrderItemsModel.getByOrderId(orderId);
+			socketService.emitOrderUpdate(orderId, {
+				order_id: orderId,
+				order_no: order.ORDER_NO,
+				table_id: order.TABLE_ID,
+				status: order.STATUS,
+				grand_total: newGrandTotal,
+				items: orderItems
+			});
+
+			return ApiResponse.success(res, null, 'Order item deleted successfully');
+		} catch (error) {
+			console.error('Error deleting order item:', error);
+			return ApiResponse.error(res, 'Failed to delete order item', 500, error.message);
+		}
+	}
+
+	// Update order status directly
+	static async updateStatus(req, res) {
+		try {
+			const { id } = req.params;
+			const { status } = req.body;
+			const user_id = req.session.user_id || req.user?.user_id;
+
+			if (!status && status !== 0) {
+				return ApiResponse.badRequest(res, 'Status is required');
+			}
+
+			const order = await OrderModel.getById(id);
+			if (!order) {
+				return ApiResponse.notFound(res, 'Order');
+			}
+
+			const updated = await OrderModel.updateStatus(id, parseInt(status), user_id);
+			if (!updated) {
+				return ApiResponse.error(res, 'Failed to update order status', 500);
+			}
+
+			// Handle table status if order is settled or cancelled
+			const TableModel = require('../models/tableModel');
+			if (parseInt(status) === 1 || parseInt(status) === -1) {
+				// Order is SETTLED (1) or CANCELLED (-1) -> Set table to AVAILABLE (1)
+				if (order.TABLE_ID) {
+					await TableModel.updateStatus(order.TABLE_ID, 1);
+				}
+			}
+
+			// Emit socket event
+			const updatedOrder = await OrderModel.getById(id);
+			const orderItems = await OrderItemsModel.getByOrderId(id);
+			socketService.emitOrderUpdate(id, {
+				order_id: id,
+				order_no: updatedOrder.ORDER_NO,
+				table_id: updatedOrder.TABLE_ID,
+				status: updatedOrder.STATUS,
+				grand_total: updatedOrder.GRAND_TOTAL,
+				items: orderItems
+			});
+
+			return ApiResponse.success(res, { order_id: parseInt(id), status: parseInt(status) }, 'Order status updated successfully');
+		} catch (error) {
+			console.error('Error updating order status:', error);
+			return ApiResponse.error(res, 'Failed to update order status', 500, error.message);
 		}
 	}
 }

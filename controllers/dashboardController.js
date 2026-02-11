@@ -61,6 +61,62 @@ class DashboardController {
 			return ApiResponse.error(res, 'Failed to fetch dashboard statistics', 500, error.message);
 		}
 	}
+
+	// Get individual dashboard stats
+	static async getRevenue(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const revenue = await DashboardModel.getTodaysRevenue(branchId);
+			return ApiResponse.success(res, { revenue }, 'Revenue retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching revenue:', error);
+			return ApiResponse.error(res, 'Failed to fetch revenue', 500, error.message);
+		}
+	}
+
+	static async getOrders(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const orders = await DashboardModel.getTotalOrders(branchId);
+			return ApiResponse.success(res, { orders }, 'Orders count retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching orders:', error);
+			return ApiResponse.error(res, 'Failed to fetch orders', 500, error.message);
+		}
+	}
+
+	static async getTables(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const tables = await DashboardModel.getActiveTables(branchId);
+			return ApiResponse.success(res, { tables }, 'Active tables count retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching tables:', error);
+			return ApiResponse.error(res, 'Failed to fetch tables', 500, error.message);
+		}
+	}
+
+	static async getPending(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const pending = await DashboardModel.getPendingOrders(branchId);
+			return ApiResponse.success(res, { pending }, 'Pending orders count retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching pending orders:', error);
+			return ApiResponse.error(res, 'Failed to fetch pending orders', 500, error.message);
+		}
+	}
+
+	static async getPopular(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const popular = await DashboardModel.getPopularItems(branchId);
+			return ApiResponse.success(res, { popular }, 'Popular items count retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching popular items:', error);
+			return ApiResponse.error(res, 'Failed to fetch popular items', 500, error.message);
+		}
+	}
 }
 
 module.exports = DashboardController;

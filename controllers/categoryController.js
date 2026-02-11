@@ -110,6 +110,23 @@ class CategoryController {
 		}
 	}
 
+	// Get category by ID
+	static async getById(req, res) {
+		try {
+			const { id } = req.params;
+			const category = await CategoryModel.getById(id);
+			
+			if (!category) {
+				return ApiResponse.notFound(res, 'Category');
+			}
+
+			return ApiResponse.success(res, category, 'Category retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching category:', error);
+			return ApiResponse.error(res, 'Failed to fetch category', 500, error.message);
+		}
+	}
+
 	// Create new category
 	static async create(req, res) {
 		try {

@@ -19,6 +19,13 @@ const DashboardController = require('../controllers/dashboardController');
 // Auth: JWT (Bearer token) or Session
 router.get("/dashboard/stats", authenticate, DashboardController.getStats);
 
+// GET - Get individual dashboard stats
+router.get("/dashboard/revenue", authenticate, DashboardController.getRevenue);
+router.get("/dashboard/orders", authenticate, DashboardController.getOrders);
+router.get("/dashboard/tables", authenticate, DashboardController.getTables);
+router.get("/dashboard/pending", authenticate, DashboardController.getPending);
+router.get("/dashboard/popular", authenticate, DashboardController.getPopular);
+
 // ============================================
 // EXPORT
 // ============================================

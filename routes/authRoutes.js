@@ -270,6 +270,137 @@ router.post('/logout', (req, res) => {
     res.redirect('/login');
 });
 
+// Password Reset - Forgot Password
+router.post('/auth/forgot-password', async (req, res) => {
+	try {
+		const { email, username } = req.body;
+
+		if (!email && !username) {
+			if (wantsJson(req)) {
+				return res.status(400).json({ success: false, error: 'Email or username is required' });
+			}
+			return res.status(400).send('Email or username is required');
+		}
+
+		// Find user by email or username
+		let query = 'SELECT * FROM user_info WHERE ACTIVE = 1';
+		const params = [];
+		
+		if (email) {
+			query += ' AND EMAIL = ?';
+			params.push(email);
+		} else {
+			query += ' AND USERNAME = ?';
+			params.push(username);
+		}
+
+		const [results] = await pool.execute(query, params);
+
+		if (results.length === 0) {
+			if (wantsJson(req)) {
+				return res.status(404).json({ success: false, error: 'User not found' });
+			}
+			return res.status(404).send('User not found');
+		}
+
+		const user = results[0];
+
+		// Generate reset token (simple implementation - in production, use crypto.randomBytes and store in database with expiry)
+		const crypto = require('crypto');
+		const resetToken = crypto.randomBytes(32).toString('hex');
+		const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+		// Store reset token in database (you may need to add RESET_TOKEN and RESET_TOKEN_EXPIRY columns)
+		// For now, we'll just return success (in production, send email with reset link)
+		try {
+			await pool.execute(
+				'UPDATE user_info SET RESET_TOKEN = ?, RESET_TOKEN_EXPIRY = ? WHERE IDNo = ?',
+				[resetToken, resetTokenExpiry, user.IDNo]
+			);
+		} catch (err) {
+			// If columns don't exist, just log and continue
+			console.log('Reset token columns may not exist, skipping token storage');
+		}
+
+		// In production, send email with reset link containing token
+		// For now, return token in response (NOT RECOMMENDED FOR PRODUCTION)
+		if (wantsJson(req)) {
+			return res.json({
+				success: true,
+				message: 'Password reset instructions sent (if email exists)',
+				// In production, remove this token from response
+				reset_token: resetToken // REMOVE IN PRODUCTION - only for testing
+			});
+		}
+		return res.send('Password reset instructions sent (if email exists)');
+	} catch (error) {
+		console.error('Error processing forgot password:', error);
+		if (wantsJson(req)) {
+			return res.status(500).json({ success: false, error: 'Internal server error' });
+		}
+		return res.status(500).send('Internal server error');
+	}
+});
+
+// Password Reset - Reset Password
+router.post('/auth/reset-password', async (req, res) => {
+	try {
+		const { token, new_password, confirm_password } = req.body;
+
+		if (!token || !new_password || !confirm_password) {
+			if (wantsJson(req)) {
+				return res.status(400).json({ success: false, error: 'Token, new password, and confirm password are required' });
+			}
+			return res.status(400).send('Token, new password, and confirm password are required');
+		}
+
+		if (new_password !== confirm_password) {
+			if (wantsJson(req)) {
+				return res.status(400).json({ success: false, error: 'Passwords do not match' });
+			}
+			return res.status(400).send('Passwords do not match');
+		}
+
+		// Find user by reset token
+		let query = 'SELECT * FROM user_info WHERE RESET_TOKEN = ? AND RESET_TOKEN_EXPIRY > NOW() AND ACTIVE = 1';
+		const [results] = await pool.execute(query, [token]);
+
+		if (results.length === 0) {
+			if (wantsJson(req)) {
+				return res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+			}
+			return res.status(400).send('Invalid or expired reset token');
+		}
+
+		const user = results[0];
+
+		// Hash new password
+		const hashedPassword = await argon2.hash(new_password);
+
+		// Update password and clear reset token
+		try {
+			await pool.execute(
+				'UPDATE user_info SET PASSWORD = ?, SALT = NULL, RESET_TOKEN = NULL, RESET_TOKEN_EXPIRY = NULL WHERE IDNo = ?',
+				[hashedPassword, user.IDNo]
+			);
+		} catch (err) {
+			// If columns don't exist, just update password
+			await pool.execute('UPDATE user_info SET PASSWORD = ?, SALT = NULL WHERE IDNo = ?', [hashedPassword, user.IDNo]);
+		}
+
+		if (wantsJson(req)) {
+			return res.json({ success: true, message: 'Password reset successfully' });
+		}
+		return res.send('Password reset successfully');
+	} catch (error) {
+		console.error('Error resetting password:', error);
+		if (wantsJson(req)) {
+			return res.status(500).json({ success: false, error: 'Internal server error' });
+		}
+		return res.status(500).send('Internal server error');
+	}
+});
+
 /// ADD USER ROLE
 router.post('/add_user_role', async (req, res) => {
 	try {
