@@ -267,7 +267,7 @@ class MenuController {
 	static async delete(req, res) {
 		try {
 			const { id } = req.params;
-			const user_id = req.session.user_id;
+			const user_id = req.session?.user_id || req.user?.user_id;
 
 			const deleted = await MenuModel.delete(id, user_id);
 
