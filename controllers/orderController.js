@@ -119,7 +119,7 @@ class OrderController {
 				SERVICE_CHARGE: parseFloat(req.body.SERVICE_CHARGE) || 0,
 				DISCOUNT_AMOUNT: parseFloat(req.body.DISCOUNT_AMOUNT) || 0,
 				GRAND_TOTAL: parseFloat(req.body.GRAND_TOTAL) || 0,
-				user_id: req.session.user_id
+				user_id: req.session?.user_id || req.user?.user_id
 			};
 
 			const updated = await OrderModel.update(id, payload);
