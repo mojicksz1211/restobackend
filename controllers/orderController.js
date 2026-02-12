@@ -9,6 +9,7 @@ const OrderModel = require('../models/orderModel');
 const OrderItemsModel = require('../models/orderItemsModel');
 const BillingModel = require('../models/billingModel');
 const TableModel = require('../models/tableModel');
+const NotificationModel = require('../models/notificationModel');
 const socketService = require('../utils/socketService');
 const ApiResponse = require('../utils/apiResponse');
 
@@ -94,6 +95,47 @@ class OrderController {
 				items: orderItems,
 				items_count: items.length
 			});
+
+			// Notify the user who created the order (branch-scoped)
+			const notifyUserId = req.session?.user_id || req.user?.user_id;
+			const branchIdForNotif = parseInt(payload.BRANCH_ID, 10);
+			const validBranchId = Number.isFinite(branchIdForNotif) ? branchIdForNotif : 1;
+			if (!notifyUserId) {
+				console.warn('[ORDER] No user_id for notification (req.user?.user_id missing?). Order #' + payload.ORDER_NO);
+			} else {
+				try {
+					const created = await NotificationModel.create({
+						user_id: notifyUserId,
+						branch_id: validBranchId,
+						title: 'New Order',
+						message: `Order #${payload.ORDER_NO} created. Total: ₱${Number(payload.GRAND_TOTAL).toLocaleString()}`,
+						type: 'order',
+						link: null
+					});
+					console.log('[ORDER] Notification created for user_id=' + notifyUserId + ', branch_id=' + validBranchId + ', order #' + payload.ORDER_NO);
+					// Real-time: emit to user's socket room so bell updates immediately
+					if (created && created.insertId) {
+						const notificationPayload = {
+							id: created.insertId,
+							userId: notifyUserId,
+							branchId: validBranchId,
+							title: 'New Order',
+							message: `Order #${payload.ORDER_NO} created. Total: ₱${Number(payload.GRAND_TOTAL).toLocaleString()}`,
+							type: 'order',
+							link: null,
+							isRead: false,
+							createdAt: (created.createdAt && created.createdAt.toISOString) ? created.createdAt.toISOString() : new Date().toISOString()
+						};
+						socketService.emitNotificationCreated(notifyUserId, notificationPayload);
+					}
+				} catch (notifErr) {
+					if (notifErr.code === 'ER_NO_SUCH_TABLE' || notifErr.errno === 1146) {
+						console.warn('[ORDER] Notifications table missing. Run: restoBackend/scripts/migrations/2026-02-11-notifications-table.sql');
+					} else {
+						console.error('[ORDER] Notification create failed:', notifErr.message || notifErr);
+					}
+				}
+			}
 
 			return ApiResponse.created(res, { id: orderId, order_no: payload.ORDER_NO }, 'Order created successfully');
 		} catch (error) {

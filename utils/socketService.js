@@ -43,6 +43,15 @@ function initializeSocket(server) {
       console.log(`[SOCKET] Client ${socket.id} joined kitchen room`);
     });
 
+    // Handle user room joining (for real-time notifications)
+    socket.on('join_user', (userId) => {
+      if (userId != null && userId !== '') {
+        const room = `user_${userId}`;
+        socket.join(room);
+        console.log(`[SOCKET] Client ${socket.id} joined user room: ${room}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`[SOCKET] Client disconnected: ${socket.id}`);
     });
@@ -152,6 +161,17 @@ function emitTableUpdated(tableData, action = 'updated') {
   console.log(`[SOCKET] Emitted table_updated (${action}) for table: ${tableId}`);
 }
 
+// Emit new notification to a specific user (restoadmin bell)
+function emitNotificationCreated(userId, notification) {
+  if (!io) {
+    console.warn('[SOCKET] Socket.io not initialized');
+    return;
+  }
+  const room = `user_${userId}`;
+  io.to(room).emit('notification_new', notification);
+  console.log(`[SOCKET] Emitted notification_new to room: ${room}`);
+}
+
 // Get socket.io instance
 function getIO() {
   return io;
@@ -163,6 +183,7 @@ module.exports = {
   emitOrderCreated,
   emitOrderItemsAdded,
   emitTableUpdated,
+  emitNotificationCreated,
   getIO
 };
 
