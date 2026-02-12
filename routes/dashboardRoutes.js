@@ -25,8 +25,9 @@ router.get("/dashboard/orders", authenticate, DashboardController.getOrders);
 router.get("/dashboard/tables", authenticate, DashboardController.getTables);
 router.get("/dashboard/pending", authenticate, DashboardController.getPending);
 router.get("/dashboard/popular", authenticate, DashboardController.getPopular);
+router.get("/dashboard/bestseller", authenticate, DashboardController.getBestsellerByPeriod);
 
-// ============================================
+// ============================================l
 // EXPORT
 // ============================================
 

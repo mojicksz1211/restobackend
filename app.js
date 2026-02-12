@@ -14,28 +14,19 @@ require('dotenv').config();
 // startTelegramBot(); // run once when server starts
 
 const compression = require('compression');
+const cors = require('cors');
 const app = express();
 app.use(compression());
 
-// Move CORS to the top to handle preflight requests immediately
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://192.168.1.43:3000'
-  ];
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// CORS configuration - must be at the top to handle preflight requests
+// TEMPORARY: Allow all origins for development - RESTRICT IN PRODUCTION!
+app.use(cors({
+  origin: true, // Allow all origins in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  optionsSuccessStatus: 200
+}));
 
 // i18n configuration
 i18n.configure({
@@ -118,7 +109,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Set port
-app.set('port', process.env.PORT || 4004);
+app.set('port', process.env.PORT || 2000);
 // EJS view engine removed - pure REST API backend
 
 // Static files removed - frontend should serve its own assets

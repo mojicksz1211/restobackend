@@ -92,6 +92,49 @@ class DashboardModel {
 		return parseInt(rows[0]?.popular_items || 0);
 	}
 
+	// Get bestseller items by AM/PM period
+	// Returns bestseller for AM (before 12:00) and PM (after 12:00) periods
+	static async getBestsellerByPeriod(branchId = null) {
+		let query = `
+			SELECT 
+				period,
+				menu_name,
+				total_sold
+			FROM (
+				SELECT 
+					CASE 
+						WHEN HOUR(oi.ENCODED_DT) < 12 THEN 'AM'
+						ELSE 'PM'
+					END AS period,
+					m.MENU_NAME as menu_name,
+					COUNT(*) AS total_sold,
+					ROW_NUMBER() OVER (
+						PARTITION BY 
+							CASE WHEN HOUR(oi.ENCODED_DT) < 12 THEN 'AM' ELSE 'PM' END
+						ORDER BY COUNT(*) DESC
+					) AS rn
+				FROM order_items oi
+				INNER JOIN menu m ON m.IDNo = oi.MENU_ID
+				INNER JOIN orders o ON oi.ORDER_ID = o.IDNo
+				WHERE oi.STATUS = 1
+					AND DATE(oi.ENCODED_DT) = CURDATE()
+		`;
+		const params = [];
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+		query += `
+				GROUP BY period, oi.MENU_ID, m.MENU_NAME
+			) ranked
+			WHERE rn = 1
+			ORDER BY period ASC
+		`;
+		
+		const [rows] = await pool.execute(query, params);
+		return rows;
+	}
+
 	// Get all dashboard statistics in one call
 	static async getDashboardStats(branchId = null) {
 		try {

@@ -93,7 +93,7 @@ class DashboardController {
 		try {
 			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
 			const tables = await DashboardModel.getActiveTables(branchId);
-			return ApiResponse.success(res, { tables }, 'Active tables count retrieved successfully');
+			return ApiResponse.success(res, { tables }, 'rlly');
 		} catch (error) {
 			console.error('Error fetching tables:', error);
 			return ApiResponse.error(res, 'Failed to fetch tables', 500, error.message);
@@ -119,6 +119,17 @@ class DashboardController {
 		} catch (error) {
 			console.error('Error fetching popular items:', error);
 			return ApiResponse.error(res, 'Failed to fetch popular items', 500, error.message);
+		}
+	}
+
+	static async getBestsellerByPeriod(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const bestsellers = await DashboardModel.getBestsellerByPeriod(branchId);
+			return ApiResponse.success(res, { bestsellers }, 'Bestseller by period retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching bestseller by period:', error);
+			return ApiResponse.error(res, 'Failed to fetch bestseller by period', 500, error.message);
 		}
 	}
 }

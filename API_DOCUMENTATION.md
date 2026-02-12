@@ -542,7 +542,7 @@ All endpoints require authentication (JWT or Session).
 #### Get Individual Stats
 - `GET /dashboard/revenue` - Today's revenue only
 - `GET /dashboard/orders` - Total orders count only
-- `GET /dashboard/tables` - Active tables count only
+- `GET /dashboard/tables` -  count only
 - `GET /dashboard/pending` - Pending orders count only
 - `GET /dashboard/popular` - Popular items count only
 
