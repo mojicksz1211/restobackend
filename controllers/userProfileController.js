@@ -25,8 +25,6 @@ class UserProfileController {
 					u.USERNAME,
 					u.FIRSTNAME,
 					u.LASTNAME,
-					u.EMAIL,
-					u.AVATAR_URL,
 					u.PERMISSIONS,
 					u.LAST_LOGIN,
 					ur.ROLE AS role_name
@@ -51,7 +49,7 @@ class UserProfileController {
 	static async updateProfile(req, res) {
 		try {
 			const userId = req.session?.user_id || req.user?.user_id;
-			const { firstname, lastname, email, avatar_url } = req.body;
+			const { firstname, lastname } = req.body;
 
 			if (!userId) {
 				return ApiResponse.badRequest(res, 'User ID is required');
@@ -67,14 +65,6 @@ class UserProfileController {
 			if (lastname !== undefined) {
 				updateFields.push('LASTNAME = ?');
 				params.push(lastname);
-			}
-			if (email !== undefined) {
-				updateFields.push('EMAIL = ?');
-				params.push(email || null);
-			}
-			if (avatar_url !== undefined) {
-				updateFields.push('AVATAR_URL = ?');
-				params.push(avatar_url || null);
 			}
 
 			if (updateFields.length === 0) {
