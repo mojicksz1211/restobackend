@@ -103,21 +103,21 @@ class DashboardModel {
 			FROM (
 				SELECT 
 					CASE 
-						WHEN HOUR(oi.ENCODED_DT) < 12 THEN 'AM'
+						WHEN HOUR(COALESCE(oi.EDITED_DT, oi.ENCODED_DT)) < 12 THEN 'AM'
 						ELSE 'PM'
 					END AS period,
 					m.MENU_NAME as menu_name,
-					COUNT(*) AS total_sold,
+					SUM(oi.QTY) AS total_sold,
 					ROW_NUMBER() OVER (
 						PARTITION BY 
-							CASE WHEN HOUR(oi.ENCODED_DT) < 12 THEN 'AM' ELSE 'PM' END
-						ORDER BY COUNT(*) DESC
+							CASE WHEN HOUR(COALESCE(oi.EDITED_DT, oi.ENCODED_DT)) < 12 THEN 'AM' ELSE 'PM' END
+						ORDER BY SUM(oi.QTY) DESC
 					) AS rn
 				FROM order_items oi
 				INNER JOIN menu m ON m.IDNo = oi.MENU_ID
 				INNER JOIN orders o ON oi.ORDER_ID = o.IDNo
-				WHERE oi.STATUS = 1
-					AND DATE(oi.ENCODED_DT) = CURDATE()
+				WHERE oi.STATUS IN (1, 2, 3)
+					AND DATE(COALESCE(oi.EDITED_DT, oi.ENCODED_DT)) = CURDATE()
 		`;
 		const params = [];
 		if (branchId) {
