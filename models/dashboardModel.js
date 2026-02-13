@@ -148,6 +148,45 @@ class DashboardModel {
 		return rows;
 	}
 
+	static async getPaymentMethodsSummary(branchId = null) {
+		let query = `
+			SELECT 
+				PAYMENT_METHOD,
+				COUNT(*) as payment_transaction,
+				COALESCE(SUM(AMOUNT_PAID), 0) as payment_amount
+			FROM billing
+			WHERE STATUS IN (1, 2)
+			AND DATE(ENCODED_DT) = CURDATE()
+		`;
+		
+		const params = [];
+		if (branchId) {
+			query += ` AND BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+		
+		query += ` GROUP BY PAYMENT_METHOD ORDER BY payment_amount DESC`;
+		
+		const [rows] = await pool.execute(query, params);
+		
+		const normalizedRows = rows.map(row => {
+			let method = (row.PAYMENT_METHOD || '').trim().toUpperCase();
+			if (method === 'CASH') method = 'Cash';
+			else if (method === 'GCASH') method = 'Gcash';
+			else if (method === 'MAYA' || method === 'PAYMAYA') method = 'Paymaya';
+			else if (method === 'CARD' || method === 'CREDIT CARD' || method === 'CREDITCARD') method = 'Credit Card';
+			else method = row.PAYMENT_METHOD;
+			
+			return {
+				payment_method: method,
+				payment_transaction: parseInt(row.payment_transaction || 0),
+				payment_amount: parseFloat(row.payment_amount || 0)
+			};
+		});
+		
+		return normalizedRows;
+	}
+
 	// Get all dashboard statistics in one call
 	static async getDashboardStats(branchId = null) {
 		try {

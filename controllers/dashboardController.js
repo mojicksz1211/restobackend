@@ -132,6 +132,17 @@ class DashboardController {
 			return ApiResponse.error(res, 'Failed to fetch bestseller by period', 500, error.message);
 		}
 	}
+
+	static async getPaymentMethodsSummary(req, res) {
+		try {
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+			const summary = await DashboardModel.getPaymentMethodsSummary(branchId);
+			return ApiResponse.success(res, { summary }, 'Payment methods summary retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching payment methods summary:', error);
+			return ApiResponse.error(res, 'Failed to fetch payment methods summary', 500, error.message);
+		}
+	}
 }
 
 module.exports = DashboardController;
