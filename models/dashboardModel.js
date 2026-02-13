@@ -92,9 +92,22 @@ class DashboardModel {
 		return parseInt(rows[0]?.popular_items || 0);
 	}
 
-	// Get bestseller items by AM/PM period
-	// Returns bestseller for AM (before 12:00) and PM (after 12:00) periods
+	// Get bestseller items by meal period (all-time)
+	// Returns bestseller for Breakfast (6:00 AM - 10:59 AM), Lunch (11:00 AM - 3:59 PM), and Dinner (4:00 PM - 11:59 PM)
+	// Best seller persists until a new item beats it
+	// Timezone: Converts to Asia/Manila (UTC+8) for accurate period classification
 	static async getBestsellerByPeriod(branchId = null) {
+		const dateField = 'COALESCE(oi.EDITED_DT, oi.ENCODED_DT)';
+		// Convert to Asia/Manila timezone (UTC+8), fallback to +8 hours if timezone tables not available
+		const localTime = `COALESCE(
+			CONVERT_TZ(${dateField}, @@session.time_zone, '+08:00'),
+			DATE_ADD(${dateField}, INTERVAL 8 HOUR)
+		)`;
+		const periodCase = `CASE 
+			WHEN HOUR(${localTime}) >= 6 AND HOUR(${localTime}) < 11 THEN 'Breakfast'
+			WHEN HOUR(${localTime}) >= 11 AND HOUR(${localTime}) < 16 THEN 'Lunch'
+			ELSE 'Dinner'
+		END`;
 		let query = `
 			SELECT 
 				period,
@@ -102,22 +115,17 @@ class DashboardModel {
 				total_sold
 			FROM (
 				SELECT 
-					CASE 
-						WHEN HOUR(COALESCE(oi.EDITED_DT, oi.ENCODED_DT)) < 12 THEN 'AM'
-						ELSE 'PM'
-					END AS period,
+					${periodCase} AS period,
 					m.MENU_NAME as menu_name,
 					SUM(oi.QTY) AS total_sold,
 					ROW_NUMBER() OVER (
-						PARTITION BY 
-							CASE WHEN HOUR(COALESCE(oi.EDITED_DT, oi.ENCODED_DT)) < 12 THEN 'AM' ELSE 'PM' END
+						PARTITION BY ${periodCase}
 						ORDER BY SUM(oi.QTY) DESC
 					) AS rn
 				FROM order_items oi
 				INNER JOIN menu m ON m.IDNo = oi.MENU_ID
 				INNER JOIN orders o ON oi.ORDER_ID = o.IDNo
 				WHERE oi.STATUS IN (1, 2, 3)
-					AND DATE(COALESCE(oi.EDITED_DT, oi.ENCODED_DT)) = CURDATE()
 		`;
 		const params = [];
 		if (branchId) {
@@ -128,7 +136,12 @@ class DashboardModel {
 				GROUP BY period, oi.MENU_ID, m.MENU_NAME
 			) ranked
 			WHERE rn = 1
-			ORDER BY period ASC
+			ORDER BY 
+				CASE period
+					WHEN 'Breakfast' THEN 1
+					WHEN 'Lunch' THEN 2
+					WHEN 'Dinner' THEN 3
+				END ASC
 		`;
 		
 		const [rows] = await pool.execute(query, params);
