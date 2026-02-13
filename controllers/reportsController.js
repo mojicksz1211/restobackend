@@ -78,6 +78,27 @@ class ReportsController {
 		}
 	}
 
+	// Get daily sales by product (for chart)
+	static async getDailySalesByProduct(req, res) {
+		try {
+			const { start_date, end_date, limit = 5 } = req.query;
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			const report = await ReportsModel.getDailySalesByProduct(start_date, end_date, branchId, parseInt(limit));
+
+			return ApiResponse.success(res, {
+				start_date: start_date || null,
+				end_date: end_date || null,
+				branch_id: branchId,
+				limit: parseInt(limit),
+				data: report
+			}, 'Daily sales by product retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching daily sales by product:', error);
+			return ApiResponse.error(res, 'Failed to fetch daily sales by product', 500, error.message);
+		}
+	}
+
 	// Get table utilization report
 	static async getTableUtilizationReport(req, res) {
 		try {

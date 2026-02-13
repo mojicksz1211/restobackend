@@ -26,6 +26,10 @@ router.get("/reports/orders", authenticate, ReportsController.getOrderReport);
 // Query: ?start_date=...&end_date=...&branch_id=...&limit=10
 router.get("/reports/menu-items", authenticate, ReportsController.getPopularMenuItems);
 
+// GET - Daily sales by product (for chart)
+// Query: ?start_date=...&end_date=...&branch_id=...&limit=5
+router.get("/reports/daily-sales-by-product", authenticate, ReportsController.getDailySalesByProduct);
+
 // GET - Table utilization report
 // Query: ?start_date=...&end_date=...&branch_id=...
 router.get("/reports/tables", authenticate, ReportsController.getTableUtilizationReport);

@@ -151,6 +151,97 @@ class ReportsModel {
 		return rows;
 	}
 
+	// Get daily sales by product for chart (last N days)
+	// Returns daily revenue breakdown for top products
+	// Includes all orders (uses same logic as getPopularMenuItems for consistency)
+	// Uses order date (o.ENCODED_DT) for daily grouping
+	static async getDailySalesByProduct(startDate = null, endDate = null, branchId = null, limit = 5) {
+		let dateFilter = '';
+		const params = [];
+
+		if (startDate && endDate) {
+			dateFilter = 'AND DATE(o.ENCODED_DT) BETWEEN ? AND ?';
+			params.push(startDate, endDate);
+		} else {
+			// Default to last 30 days
+			const end = new Date();
+			const start = new Date();
+			start.setDate(start.getDate() - 29);
+			dateFilter = 'AND DATE(o.ENCODED_DT) BETWEEN ? AND ?';
+			params.push(start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
+		}
+
+		// First, get top N products by total revenue (same logic as getPopularMenuItems)
+		let topProductsQuery = `
+			SELECT 
+				m.IDNo,
+				m.MENU_NAME
+			FROM order_items oi
+			INNER JOIN orders o ON o.IDNo = oi.ORDER_ID
+			INNER JOIN menu m ON m.IDNo = oi.MENU_ID
+			WHERE 1=1
+			${dateFilter}
+		`;
+
+		const topProductsParams = [...params];
+		if (branchId) {
+			topProductsQuery += ` AND o.BRANCH_ID = ?`;
+			topProductsParams.push(branchId);
+		}
+
+		topProductsQuery += `
+			GROUP BY m.IDNo, m.MENU_NAME
+			ORDER BY SUM(oi.LINE_TOTAL) DESC
+			LIMIT ?
+		`;
+		topProductsParams.push(limit);
+
+		const [topProducts] = await pool.execute(topProductsQuery, topProductsParams);
+		
+		if (!topProducts || topProducts.length === 0) {
+			return [];
+		}
+
+		const productIds = topProducts
+			.map(p => p && p.IDNo ? parseInt(p.IDNo, 10) : null)
+			.filter(id => id !== null && !isNaN(id));
+		
+		if (productIds.length === 0) {
+			return [];
+		}
+
+		const placeholders = productIds.map(() => '?').join(',');
+
+		// Get daily sales for these top products
+		// Group by order date (o.ENCODED_DT) to match the date filter
+		let query = `
+			SELECT 
+				DATE(o.ENCODED_DT) as date,
+				m.IDNo as menu_id,
+				m.MENU_NAME,
+				COALESCE(SUM(oi.LINE_TOTAL), 0) as daily_revenue
+			FROM order_items oi
+			INNER JOIN orders o ON o.IDNo = oi.ORDER_ID
+			INNER JOIN menu m ON m.IDNo = oi.MENU_ID
+			WHERE m.IDNo IN (${placeholders})
+			${dateFilter}
+		`;
+
+		const dailyParams = [...productIds, ...params];
+		if (branchId) {
+			query += ` AND o.BRANCH_ID = ?`;
+			dailyParams.push(branchId);
+		}
+
+		query += `
+			GROUP BY DATE(o.ENCODED_DT), m.IDNo, m.MENU_NAME
+			ORDER BY date ASC, m.IDNo ASC
+		`;
+
+		const [rows] = await pool.execute(query, dailyParams);
+		return rows;
+	}
+
 	// Get table utilization report
 	static async getTableUtilizationReport(startDate = null, endDate = null, branchId = null) {
 		let dateFilter = '';
