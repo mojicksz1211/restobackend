@@ -148,7 +148,7 @@ class DashboardModel {
 		return rows;
 	}
 
-	static async getPaymentMethodsSummary(branchId = null) {
+	static async getPaymentMethodsSummary(branchId = null, startDate = null, endDate = null) {
 		let query = `
 			SELECT 
 				PAYMENT_METHOD,
@@ -156,10 +156,28 @@ class DashboardModel {
 				COALESCE(SUM(AMOUNT_PAID), 0) as payment_amount
 			FROM billing
 			WHERE STATUS IN (1, 2)
-			AND DATE(ENCODED_DT) = CURDATE()
 		`;
 		
 		const params = [];
+		
+		if (startDate && endDate) {
+			if (startDate === endDate) {
+				query += ` AND DATE(ENCODED_DT) = ?`;
+				params.push(startDate);
+			} else {
+				query += ` AND DATE(ENCODED_DT) BETWEEN ? AND ?`;
+				params.push(startDate, endDate);
+			}
+		} else if (startDate) {
+			query += ` AND DATE(ENCODED_DT) = ?`;
+			params.push(startDate);
+		} else if (endDate) {
+			query += ` AND DATE(ENCODED_DT) = ?`;
+			params.push(endDate);
+		} else {
+			query += ` AND DATE(ENCODED_DT) = CURDATE()`;
+		}
+		
 		if (branchId) {
 			query += ` AND BRANCH_ID = ?`;
 			params.push(branchId);

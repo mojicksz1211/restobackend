@@ -136,7 +136,9 @@ class DashboardController {
 	static async getPaymentMethodsSummary(req, res) {
 		try {
 			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
-			const summary = await DashboardModel.getPaymentMethodsSummary(branchId);
+			const startDate = req.query.start_date || null;
+			const endDate = req.query.end_date || null;
+			const summary = await DashboardModel.getPaymentMethodsSummary(branchId, startDate, endDate);
 			return ApiResponse.success(res, { summary }, 'Payment methods summary retrieved successfully');
 		} catch (error) {
 			console.error('Error fetching payment methods summary:', error);
