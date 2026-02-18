@@ -502,8 +502,7 @@ class ReportsModel {
 
 	// Get sales by category report (from sales_category_report table)
 	// Columns: category, sales_quantity, net_sales, unit_cost, total_revenue
-	// Note: startDate, endDate, and branchId parameters are accepted for API consistency but not currently used
-	// as the table doesn't have date/branch columns. These can be implemented when the table structure is extended.
+	// Accepts start_date, end_date, branch_id for future extension when view has those columns
 	static async getSalesCategoryReport(startDate = null, endDate = null, branchId = null) {
 		const query = `
 			SELECT 
@@ -521,7 +520,8 @@ class ReportsModel {
 
 	// Import sales category data (insert into sales_category_report table)
 	// Expects array of { category, sales_quantity, net_sales, unit_cost, total_revenue }
-	// Uses REPLACE INTO to update existing categories or insert new ones
+	// Uses INSERT ... ON DUPLICATE KEY UPDATE to handle duplicates (if category has unique key)
+	// Falls back to REPLACE INTO if no unique key exists
 	static async importSalesCategoryReport(rows) {
 		if (!rows || rows.length === 0) {
 			return { inserted: 0, message: 'No data to import' };
@@ -535,10 +535,25 @@ class ReportsModel {
 			const unitCost = parseFloat(row.unit_cost || 0) || 0;
 			const totalRevenue = parseFloat(row.total_revenue || 0) || 0;
 
-			await pool.execute(
-				`REPLACE INTO sales_category_report (category, sales_quantity, net_sales, unit_cost, total_revenue) VALUES (?, ?, ?, ?, ?)`,
-				[category, salesQuantity, netSales, unitCost, totalRevenue]
-			);
+			try {
+				// Try INSERT ... ON DUPLICATE KEY UPDATE first (if category has unique key)
+				await pool.execute(
+					`INSERT INTO sales_category_report (category, sales_quantity, net_sales, unit_cost, total_revenue) 
+					 VALUES (?, ?, ?, ?, ?)
+					 ON DUPLICATE KEY UPDATE 
+					 sales_quantity = VALUES(sales_quantity),
+					 net_sales = VALUES(net_sales),
+					 unit_cost = VALUES(unit_cost),
+					 total_revenue = VALUES(total_revenue)`,
+					[category, salesQuantity, netSales, unitCost, totalRevenue]
+				);
+			} catch (err) {
+				// Fallback to REPLACE INTO if ON DUPLICATE KEY UPDATE fails
+				await pool.execute(
+					`REPLACE INTO sales_category_report (category, sales_quantity, net_sales, unit_cost, total_revenue) VALUES (?, ?, ?, ?, ?)`,
+					[category, salesQuantity, netSales, unitCost, totalRevenue]
+				);
+			}
 			inserted++;
 		}
 		return { inserted };
