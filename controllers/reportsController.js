@@ -288,6 +288,58 @@ class ReportsController {
 			return ApiResponse.error(res, 'Failed to import sales category report', 500, error.message);
 		}
 	}
+
+	// Get goods sales report (from goods_sales_report table)
+	static async getGoodsSalesReport(req, res) {
+		try {
+			const { start_date, end_date } = req.query;
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			const report = await ReportsModel.getGoodsSalesReport(start_date, end_date, branchId);
+
+			return ApiResponse.success(res, {
+				start_date: start_date || null,
+				end_date: end_date || null,
+				branch_id: branchId,
+				data: report
+			}, 'Goods sales report retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching goods sales report:', error);
+			return ApiResponse.error(res, 'Failed to fetch goods sales report', 500, error.message);
+		}
+	}
+
+	// Import goods sales data (POST - insert into goods_sales_report table)
+	static async importGoodsSalesReport(req, res) {
+		try {
+			const { data } = req.body;
+			
+			if (!Array.isArray(data) || data.length === 0) {
+				return ApiResponse.badRequest(res, 'No data to import. Expected array of { goods, category, sales_quantity, discounts, net_sales, unit_cost, total_revenue }');
+			}
+			
+			const result = await ReportsModel.importGoodsSalesReport(data);
+			return ApiResponse.success(res, result, `Successfully imported ${result.inserted} goods sales record(s)`);
+		} catch (error) {
+			console.error('Error importing goods sales report:', error);
+			return ApiResponse.error(res, 'Failed to import goods sales report', 500, error.message);
+		}
+	}
+
+	// Validate imported data - check if totals tally across different tables
+	static async validateImportedData(req, res) {
+		try {
+			const { branch_id, start_date, end_date } = req.query;
+			const branchId = req.session?.branch_id || branch_id || req.user?.branch_id || null;
+
+			const validation = await ReportsModel.validateImportedData(branchId, start_date || null, end_date || null);
+
+			return ApiResponse.success(res, validation, 'Data validation completed');
+		} catch (error) {
+			console.error('Error validating imported data:', error);
+			return ApiResponse.error(res, 'Failed to validate imported data', 500, error.message);
+		}
+	}
 }
 
 module.exports = ReportsController;

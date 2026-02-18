@@ -70,6 +70,18 @@ router.get("/reports/sales-category", authenticate, ReportsController.getSalesCa
 // Body: { data: [{ category, sales_quantity, net_sales, unit_cost, total_revenue }, ...] }
 router.post("/reports/sales-category/import", authenticate, ReportsController.importSalesCategoryReport);
 
+// GET - Goods sales report (from goods_sales_report table)
+// Query: ?start_date=...&end_date=...&branch_id=...
+router.get("/reports/goods-sales", authenticate, ReportsController.getGoodsSalesReport);
+
+// POST - Import goods sales data into goods_sales_report table
+// Body: { data: [{ goods, category, sales_quantity, discounts, net_sales, unit_cost, total_revenue }, ...] }
+router.post("/reports/goods-sales/import", authenticate, ReportsController.importGoodsSalesReport);
+
+// GET - Validate imported data (check if totals tally across tables)
+// Query: ?branch_id=...&start_date=...&end_date=...
+router.get("/reports/validate-imported-data", authenticate, ReportsController.validateImportedData);
+
 // ============================================
 // EXPORT
 // ============================================

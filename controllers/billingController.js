@@ -9,6 +9,7 @@ const BillingModel = require('../models/billingModel');
 const OrderModel = require('../models/orderModel');
 const TableModel = require('../models/tableModel');
 const OrderItemsModel = require('../models/orderItemsModel');
+const ReportsModel = require('../models/reportsModel');
 const socketService = require('../utils/socketService');
 const ApiResponse = require('../utils/apiResponse');
 
@@ -103,6 +104,30 @@ class BillingController {
 					await OrderModel.updateStatus(id, 1, req.session.user_id);
 					if (order.TABLE_ID) {
 						await TableModel.updateStatus(order.TABLE_ID, 1);
+					}
+					
+					// Sync order to sales_hourly_summary for dashboard charts
+					try {
+						await ReportsModel.syncOrderToSalesHourlySummary(id);
+					} catch (syncError) {
+						console.error('Error syncing order to sales_hourly_summary:', syncError);
+						// Don't fail the request if sync fails
+					}
+					
+					// Sync order to sales_category_report for Sales by Category
+					try {
+						await ReportsModel.syncOrderToSalesCategoryReport(id);
+					} catch (syncError) {
+						console.error('Error syncing order to sales_category_report:', syncError);
+						// Don't fail the request if sync fails
+					}
+					
+					// Sync order to goods_sales_report for Sales by Product
+					try {
+						await ReportsModel.syncOrderToGoodsSalesReport(id);
+					} catch (syncError) {
+						console.error('Error syncing order to goods_sales_report:', syncError);
+						// Don't fail the request if sync fails
 					}
 				} else if (newStatus === 2) {
 					// PARTIAL PAID: Mark Order as CONFIRMED (2)

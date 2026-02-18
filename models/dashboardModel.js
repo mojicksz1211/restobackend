@@ -8,20 +8,47 @@
 const pool = require('../config/db');
 
 class DashboardModel {
-	// Get today's revenue - Sum of AMOUNT_PAID from billing where status is PAID and date is today
+	// Get today's revenue - Sum of AMOUNT_PAID from billing and total_sales from sales_hourly_summary where date is today
+	// Includes both billing table data and imported sales_hourly_summary data
 	static async getTodaysRevenue(branchId = null) {
-		let query = `
+		const params = [];
+		const summaryParams = [];
+		
+		let billingQuery = `
 			SELECT COALESCE(SUM(AMOUNT_PAID), 0) as total_revenue
 			FROM billing
 			WHERE STATUS IN (1, 2)
 			AND DATE(ENCODED_DT) = CURDATE()
 		`;
-		const params = [];
+		
 		if (branchId) {
-			query += ` AND BRANCH_ID = ?`;
+			billingQuery += ` AND BRANCH_ID = ?`;
 			params.push(branchId);
 		}
-		const [rows] = await pool.execute(query, params);
+		
+		let summaryQuery = `
+			SELECT COALESCE(SUM(total_sales), 0) as total_revenue
+			FROM sales_hourly_summary
+			WHERE DATE(sale_datetime) = CURDATE()
+		`;
+		
+		if (branchId) {
+			summaryQuery += ` AND (branch_id = ? OR branch_id IS NULL)`;
+			summaryParams.push(branchId);
+		}
+		
+		// Combine both queries
+		let query = `
+			SELECT COALESCE(SUM(total_revenue), 0) as total_revenue
+			FROM (
+				${billingQuery}
+				UNION ALL
+				${summaryQuery}
+			) AS combined_data
+		`;
+		
+		const allParams = [...params, ...summaryParams];
+		const [rows] = await pool.execute(query, allParams);
 		return parseFloat(rows[0]?.total_revenue || 0);
 	}
 

@@ -964,6 +964,17 @@ class ApiController {
 				} catch (e) {
 					console.error(`[${timestamp}] [TRANSACTION ERROR] Could not record to payment_transactions table: ${e.message}`);
 				}
+
+				// 4. Sync order to sales_hourly_summary, sales_category_report, and product_sales_summary for dashboard charts
+				try {
+					const ReportsModel = require('../models/reportsModel');
+					await ReportsModel.syncOrderToSalesHourlySummary(order_id);
+					await ReportsModel.syncOrderToSalesCategoryReport(order_id);
+					await ReportsModel.syncOrderToProductSalesSummary(order_id);
+				} catch (syncError) {
+					console.error(`[${timestamp}] [SYNC ERROR] Could not sync order to reports tables: ${syncError.message}`);
+					// Don't fail the request if sync fails
+				}
 			}
 
 			// Emit socket update
