@@ -38,6 +38,30 @@ router.get("/reports/tables", authenticate, ReportsController.getTableUtilizatio
 // Query: ?start_date=...&end_date=...&branch_id=...&employee_id=...
 router.get("/reports/employees", authenticate, ReportsController.getEmployeePerformanceReport);
 
+// GET - Sales hourly summary (Total Sales Detail modal)
+// Query: ?start_date=...&end_date=...&branch_id=...
+router.get("/reports/sales-hourly-summary", authenticate, ReportsController.getSalesHourlySummary);
+
+// POST - Import sales hourly summary into sales_hourly_summary table
+// Body: { data: [...], branch_id?: string }
+router.post("/reports/sales-hourly-summary/import", authenticate, ReportsController.importSalesHourlySummary);
+
+// GET - Receipts (Receipt Storage Box modal)
+// Query: ?start_date=...&end_date=...&employee_filter=...&search=...
+router.get("/reports/receipts", authenticate, ReportsController.getReceipts);
+
+// POST - Import receipts into receipts table
+// Body: { data: [{ receipt_number, receipt_date, employee_name, customer_name, transaction_type, total_amount }, ...] }
+router.post("/reports/receipts/import", authenticate, ReportsController.importReceipts);
+
+// GET - Discount report (from discount_report table)
+// Query: ?start_date=...&end_date=...&branch_id=...
+router.get("/reports/discount", authenticate, ReportsController.getDiscountReport);
+
+// POST - Import discount data into discount_report table
+// Body: { data: [{ name, discount_applied, point_discount_amount }, ...] }
+router.post("/reports/discount/import", authenticate, ReportsController.importDiscountReport);
+
 // ============================================
 // EXPORT
 // ============================================

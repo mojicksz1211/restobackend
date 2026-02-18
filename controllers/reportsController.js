@@ -144,6 +144,115 @@ class ReportsController {
 			return ApiResponse.error(res, 'Failed to fetch employee performance report', 500, error.message);
 		}
 	}
+
+	// Get sales hourly summary (Total Sales Detail modal)
+	static async getSalesHourlySummary(req, res) {
+		try {
+			const { start_date, end_date } = req.query;
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			const report = await ReportsModel.getSalesHourlySummary(start_date, end_date, branchId);
+
+			return ApiResponse.success(res, {
+				start_date: start_date || null,
+				end_date: end_date || null,
+				branch_id: branchId,
+				data: report
+			}, 'Sales hourly summary retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching sales hourly summary:', error);
+			return ApiResponse.error(res, 'Failed to fetch sales hourly summary', 500, error.message);
+		}
+	}
+
+	// Import sales hourly summary (POST)
+	static async importSalesHourlySummary(req, res) {
+		try {
+			const { data } = req.body;
+			const branchId = req.session?.branch_id || req.body.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			if (!Array.isArray(data) || data.length === 0) {
+				return ApiResponse.badRequest(res, 'No data to import. Expected array of { sale_datetime, total_sales, refund, discount, net_sales, product_unit_price, gross_profit }');
+			}
+			const result = await ReportsModel.importSalesHourlySummary(data, branchId);
+			return ApiResponse.success(res, result, `Successfully imported ${result.inserted} hourly sales record(s)`);
+		} catch (error) {
+			console.error('Error importing sales hourly summary:', error);
+			return ApiResponse.error(res, 'Failed to import sales hourly summary', 500, error.message);
+		}
+	}
+
+	// Get receipts (Receipt Storage Box modal)
+	static async getReceipts(req, res) {
+		try {
+			const { start_date, end_date, employee_filter, search } = req.query;
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			const report = await ReportsModel.getReceipts(start_date, end_date, branchId, employee_filter || null, search || null);
+
+			return ApiResponse.success(res, {
+				start_date: start_date || null,
+				end_date: end_date || null,
+				branch_id: branchId,
+				data: report
+			}, 'Receipts retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching receipts:', error);
+			return ApiResponse.error(res, 'Failed to fetch receipts', 500, error.message);
+		}
+	}
+
+	// Import receipts (POST)
+	static async importReceipts(req, res) {
+		try {
+			const { data } = req.body;
+
+			if (!Array.isArray(data) || data.length === 0) {
+				return ApiResponse.badRequest(res, 'No data to import. Expected array of { receipt_number, receipt_date, employee_name, customer_name, transaction_type, total_amount }');
+			}
+			const result = await ReportsModel.importReceipts(data);
+			const msg = result.skipped ? `Imported ${result.inserted} receipt(s). Skipped ${result.skipped} duplicate(s).` : `Successfully imported ${result.inserted} receipt(s)`;
+			return ApiResponse.success(res, result, msg);
+		} catch (error) {
+			console.error('Error importing receipts:', error);
+			return ApiResponse.error(res, 'Failed to import receipts', 500, error.message);
+		}
+	}
+
+	// Get discount report (from discount_report table)
+	static async getDiscountReport(req, res) {
+		try {
+			const { start_date, end_date } = req.query;
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			const report = await ReportsModel.getDiscountReport(start_date, end_date, branchId);
+
+			return ApiResponse.success(res, {
+				start_date: start_date || null,
+				end_date: end_date || null,
+				branch_id: branchId,
+				data: report
+			}, 'Discount report retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching discount report:', error);
+			return ApiResponse.error(res, 'Failed to fetch discount report', 500, error.message);
+		}
+	}
+
+	// Import discount data (POST - insert into discount_report table)
+	static async importDiscountReport(req, res) {
+		try {
+			const { data } = req.body;
+			if (!Array.isArray(data) || data.length === 0) {
+				return ApiResponse.badRequest(res, 'No data to import. Expected array of { name, discount_applied, point_discount_amount }');
+			}
+			const result = await ReportsModel.importDiscountReport(data);
+			return ApiResponse.success(res, result, `Successfully imported ${result.inserted} discount record(s)`);
+		} catch (error) {
+			console.error('Error importing discount report:', error);
+			return ApiResponse.error(res, 'Failed to import discount report', 500, error.message);
+		}
+	}
 }
 
 module.exports = ReportsController;

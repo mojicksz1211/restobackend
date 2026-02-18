@@ -324,6 +324,181 @@ class ReportsModel {
 		const [rows] = await pool.execute(query, params);
 		return rows;
 	}
+
+	// Get sales hourly summary (from sales_hourly_summary table)
+	// Columns: id, branch_id, sale_datetime, total_sales, refund, discount, net_sales, product_unit_price, gross_profit
+	static async getSalesHourlySummary(startDate = null, endDate = null, branchId = null) {
+		const params = [];
+		let dateFilter = '';
+		let branchFilter = '';
+
+		if (startDate && endDate) {
+			dateFilter = 'AND DATE(sale_datetime) BETWEEN ? AND ?';
+			params.push(startDate, endDate);
+		}
+
+		if (branchId) {
+			branchFilter = 'AND branch_id = ?';
+			params.push(branchId);
+		}
+
+		const query = `
+			SELECT 
+				sale_datetime as hour,
+				COALESCE(total_sales, 0) as total_sales,
+				COALESCE(refund, 0) as refund,
+				COALESCE(discount, 0) as discount,
+				COALESCE(net_sales, 0) as net_sales,
+				COALESCE(product_unit_price, 0) as product_unit_price,
+				COALESCE(gross_profit, 0) as gross_profit
+			FROM sales_hourly_summary
+			WHERE 1=1
+			${dateFilter}
+			${branchFilter}
+			ORDER BY sale_datetime DESC
+		`;
+		const [rows] = await pool.execute(query, params);
+		return rows;
+	}
+
+	// Import sales hourly summary (insert into sales_hourly_summary table)
+	// Expects array of { sale_datetime, total_sales, refund, discount, net_sales, product_unit_price, gross_profit }
+	// branch_id is optional - use provided value or null
+	static async importSalesHourlySummary(rows, branchId = null) {
+		if (!rows || rows.length === 0) {
+			return { inserted: 0, message: 'No data to import' };
+		}
+		let inserted = 0;
+		for (const row of rows) {
+			let saleDatetime = row.sale_datetime || row.hour;
+			if (!saleDatetime) continue;
+			// Normalize to MySQL DATETIME format (YYYY-MM-DD HH:mm:ss)
+			if (typeof saleDatetime === 'string' && saleDatetime.includes('T')) {
+				saleDatetime = saleDatetime.replace('T', ' ').slice(0, 19);
+			}
+			const totalSales = parseFloat(row.total_sales) || 0;
+			const refund = parseFloat(row.refund) || 0;
+			const discount = parseFloat(row.discount) || 0;
+			const netSales = parseFloat(row.net_sales) || totalSales - refund - discount;
+			const productUnitPrice = parseFloat(row.product_unit_price) || 0;
+			const grossProfit = parseFloat(row.gross_profit) || netSales;
+
+			await pool.execute(
+				`INSERT INTO sales_hourly_summary (branch_id, sale_datetime, total_sales, refund, discount, net_sales, product_unit_price, gross_profit)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+				[branchId || null, saleDatetime, totalSales, refund, discount, netSales, productUnitPrice, grossProfit]
+			);
+			inserted++;
+		}
+		return { inserted };
+	}
+
+	// Get receipts (from receipts table)
+	// Columns: receipt_number, receipt_date, employee_name, customer_name, transaction_type, total_amount
+	static async getReceipts(startDate = null, endDate = null, branchId = null, employeeFilter = null, search = null) {
+		const params = [];
+		let dateFilter = '';
+		let employeeFilterClause = '';
+		let searchClause = '';
+
+		if (startDate && endDate) {
+			dateFilter = 'AND DATE(receipt_date) BETWEEN ? AND ?';
+			params.push(startDate, endDate);
+		}
+
+		if (employeeFilter && employeeFilter !== 'all') {
+			employeeFilterClause = 'AND employee_name = ?';
+			params.push(employeeFilter);
+		}
+
+		if (search && search.trim()) {
+			const term = `%${search.trim()}%`;
+			searchClause = 'AND (receipt_number LIKE ? OR employee_name LIKE ? OR customer_name LIKE ? OR CAST(transaction_type AS CHAR) LIKE ?)';
+			params.push(term, term, term, term);
+		}
+
+		const query = `
+			SELECT receipt_number, receipt_date, employee_name, customer_name, transaction_type, total_amount
+			FROM receipts
+			WHERE 1=1
+			${dateFilter}
+			${employeeFilterClause}
+			${searchClause}
+			ORDER BY receipt_date DESC
+		`;
+		const [rows] = await pool.execute(query, params);
+		return rows;
+	}
+
+	// Import receipts (insert into receipts table)
+	// Expects array of { receipt_number, receipt_date, employee_name, customer_name, transaction_type, total_amount }
+	// Uses INSERT IGNORE to skip duplicates (receipt_number has UNIQUE key)
+	static async importReceipts(rows) {
+		if (!rows || rows.length === 0) {
+			return { inserted: 0, skipped: 0, message: 'No data to import' };
+		}
+		let inserted = 0;
+		let skipped = 0;
+		for (const row of rows) {
+			const receiptNumber = String(row.receipt_number || '').trim();
+			if (!receiptNumber) continue;
+			let receiptDate = row.receipt_date || (row.date && row.time ? `${row.date} ${row.time.length === 5 ? row.time + ':00' : row.time}` : row.date) || null;
+			if (!receiptDate) continue;
+			if (typeof receiptDate === 'string' && receiptDate.includes('T')) {
+				receiptDate = receiptDate.replace('T', ' ').slice(0, 19);
+			}
+			const employeeName = String(row.employee_name || row.employee || '').trim() || null;
+			const customerName = String(row.customer_name || row.customer || '').trim() || null;
+			// transaction_type: 1 = sales, 2 = refund
+			const typeRaw = row.transaction_type ?? row.type ?? 1;
+			const transactionType = [1, 2, '1', '2'].includes(typeRaw)
+				? parseInt(typeRaw, 10)
+				: /^(refund|2|환불)$/i.test(String(typeRaw).trim()) ? 2 : 1;
+			const totalAmount = parseFloat(row.total_amount || row.total) || 0;
+
+			const [result] = await pool.execute(
+				`INSERT IGNORE INTO receipts (receipt_number, receipt_date, employee_name, customer_name, transaction_type, total_amount)
+				 VALUES (?, ?, ?, ?, ?, ?)`,
+				[receiptNumber, receiptDate, employeeName, customerName, transactionType, totalAmount]
+			);
+			if (result.affectedRows > 0) {
+				inserted++;
+			} else {
+				skipped++;
+			}
+		}
+		return { inserted, skipped };
+	}
+
+	// Get discount report (from discount_report table/view)
+	// Columns: name, discount_applied, point_discount_amount
+	// Accepts start_date, end_date, branch_id for future extension when view has those columns
+	static async getDiscountReport(startDate = null, endDate = null, branchId = null) {
+		const query = `SELECT name, discount_applied, point_discount_amount FROM discount_report`;
+		const [rows] = await pool.execute(query);
+		return rows;
+	}
+
+	// Import discount data (insert into discount_report table)
+	// Expects array of { name, discount_applied, point_discount_amount }
+	static async importDiscountReport(rows) {
+		if (!rows || rows.length === 0) {
+			return { inserted: 0, message: 'No data to import' };
+		}
+		let inserted = 0;
+		for (const row of rows) {
+			const name = String(row.name || '').trim();
+			const discountApplied = parseFloat(row.discount_applied) || 0;
+			const pointDiscountAmount = parseFloat(row.point_discount_amount) || 0;
+			if (!name) continue;
+			await pool.execute(
+				`INSERT INTO discount_report (name, discount_applied, point_discount_amount) VALUES (?, ?, ?)`,
+				[name, discountApplied, pointDiscountAmount]
+			);
+			inserted++;
+		}
+		return { inserted };
+	}
 }
 
 module.exports = ReportsModel;
