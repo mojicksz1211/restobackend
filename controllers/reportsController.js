@@ -253,6 +253,41 @@ class ReportsController {
 			return ApiResponse.error(res, 'Failed to import discount report', 500, error.message);
 		}
 	}
+
+	// Get sales by category report (from sales_category_report table)
+	static async getSalesCategoryReport(req, res) {
+		try {
+			const { start_date, end_date } = req.query;
+			const branchId = req.session?.branch_id || req.query.branch_id || req.user?.branch_id || null;
+
+			const report = await ReportsModel.getSalesCategoryReport(start_date, end_date, branchId);
+
+			return ApiResponse.success(res, {
+				start_date: start_date || null,
+				end_date: end_date || null,
+				branch_id: branchId,
+				data: report
+			}, 'Sales by category report retrieved successfully');
+		} catch (error) {
+			console.error('Error fetching sales by category report:', error);
+			return ApiResponse.error(res, 'Failed to fetch sales by category report', 500, error.message);
+		}
+	}
+
+	// Import sales category data (POST - insert into sales_category_report table)
+	static async importSalesCategoryReport(req, res) {
+		try {
+			const { data } = req.body;
+			if (!Array.isArray(data) || data.length === 0) {
+				return ApiResponse.badRequest(res, 'No data to import. Expected array of { category, sales_quantity, net_sales, unit_cost, total_revenue }');
+			}
+			const result = await ReportsModel.importSalesCategoryReport(data);
+			return ApiResponse.success(res, result, `Successfully imported ${result.inserted} sales category record(s)`);
+		} catch (error) {
+			console.error('Error importing sales category report:', error);
+			return ApiResponse.error(res, 'Failed to import sales category report', 500, error.message);
+		}
+	}
 }
 
 module.exports = ReportsController;

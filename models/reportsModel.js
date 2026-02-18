@@ -499,6 +499,50 @@ class ReportsModel {
 		}
 		return { inserted };
 	}
+
+	// Get sales by category report (from sales_category_report table)
+	// Columns: category, sales_quantity, net_sales, unit_cost, total_revenue
+	// Note: startDate, endDate, and branchId parameters are accepted for API consistency but not currently used
+	// as the table doesn't have date/branch columns. These can be implemented when the table structure is extended.
+	static async getSalesCategoryReport(startDate = null, endDate = null, branchId = null) {
+		const query = `
+			SELECT 
+				category,
+				COALESCE(sales_quantity, 0) as sales_quantity,
+				COALESCE(net_sales, 0) as net_sales,
+				COALESCE(unit_cost, 0) as unit_cost,
+				COALESCE(total_revenue, 0) as total_revenue
+			FROM sales_category_report
+			ORDER BY total_revenue DESC, category ASC
+		`;
+		const [rows] = await pool.execute(query);
+		return rows;
+	}
+
+	// Import sales category data (insert into sales_category_report table)
+	// Expects array of { category, sales_quantity, net_sales, unit_cost, total_revenue }
+	// Uses REPLACE INTO to update existing categories or insert new ones
+	static async importSalesCategoryReport(rows) {
+		if (!rows || rows.length === 0) {
+			return { inserted: 0, message: 'No data to import' };
+		}
+		let inserted = 0;
+		for (const row of rows) {
+			const category = String(row.category || '').trim();
+			if (!category) continue;
+			const salesQuantity = parseInt(row.sales_quantity || row.quantity || 0, 10) || 0;
+			const netSales = parseFloat(row.net_sales || 0) || 0;
+			const unitCost = parseFloat(row.unit_cost || 0) || 0;
+			const totalRevenue = parseFloat(row.total_revenue || 0) || 0;
+
+			await pool.execute(
+				`REPLACE INTO sales_category_report (category, sales_quantity, net_sales, unit_cost, total_revenue) VALUES (?, ?, ?, ?, ?)`,
+				[category, salesQuantity, netSales, unitCost, totalRevenue]
+			);
+			inserted++;
+		}
+		return { inserted };
+	}
 }
 
 module.exports = ReportsModel;

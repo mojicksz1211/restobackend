@@ -62,6 +62,14 @@ router.get("/reports/discount", authenticate, ReportsController.getDiscountRepor
 // Body: { data: [{ name, discount_applied, point_discount_amount }, ...] }
 router.post("/reports/discount/import", authenticate, ReportsController.importDiscountReport);
 
+// GET - Sales by category report (from sales_category_report table)
+// Query: ?start_date=...&end_date=...&branch_id=...
+router.get("/reports/sales-category", authenticate, ReportsController.getSalesCategoryReport);
+
+// POST - Import sales category data into sales_category_report table
+// Body: { data: [{ category, sales_quantity, net_sales, unit_cost, total_revenue }, ...] }
+router.post("/reports/sales-category/import", authenticate, ReportsController.importSalesCategoryReport);
+
 // ============================================
 // EXPORT
 // ============================================
