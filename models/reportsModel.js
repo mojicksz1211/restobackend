@@ -231,15 +231,24 @@ class ReportsModel {
 		let dateFilter = '';
 		const params = [];
 
+		// Convert to Asia/Manila timezone (UTC+8) for accurate date extraction
+		// This ensures orders created on Feb 19 in local time show as Feb 19, not Feb 18
+		const localTimeField = `COALESCE(
+			CONVERT_TZ(o.ENCODED_DT, @@session.time_zone, '+08:00'),
+			DATE_ADD(o.ENCODED_DT, INTERVAL 8 HOUR)
+		)`;
+		
 		if (startDate && endDate) {
-			dateFilter = 'AND DATE(o.ENCODED_DT) BETWEEN ? AND ?';
+			// Use DATE() with timezone adjustment to ensure proper date comparison
+			// Convert to local time (UTC+8 for Philippines) before extracting date
+			dateFilter = `AND DATE(${localTimeField}) >= DATE(?) AND DATE(${localTimeField}) <= DATE(?)`;
 			params.push(startDate, endDate);
 		} else {
 			// Default to last 30 days
 			const end = new Date();
 			const start = new Date();
 			start.setDate(start.getDate() - 29);
-			dateFilter = 'AND DATE(o.ENCODED_DT) BETWEEN ? AND ?';
+			dateFilter = `AND DATE(${localTimeField}) >= DATE(?) AND DATE(${localTimeField}) <= DATE(?)`;
 			params.push(start.toISOString().slice(0, 10), end.toISOString().slice(0, 10));
 		}
 
@@ -287,9 +296,12 @@ class ReportsModel {
 
 		// Get daily sales for these top products (only paid orders)
 		// Group by order date (o.ENCODED_DT) to match the date filter
+		// Convert to local time (UTC+8 for Philippines) before extracting date
+		// Use DATE_FORMAT to return string 'YYYY-MM-DD' instead of Date object
+		// This ensures orders created on Feb 19 show as Feb 19, not Feb 18
 		let query = `
 			SELECT 
-				DATE(o.ENCODED_DT) as date,
+				DATE_FORMAT(${localTimeField}, '%Y-%m-%d') as date,
 				m.IDNo as menu_id,
 				m.MENU_NAME,
 				COALESCE(SUM(oi.LINE_TOTAL), 0) as daily_revenue
@@ -309,7 +321,7 @@ class ReportsModel {
 		}
 
 		query += `
-			GROUP BY DATE(o.ENCODED_DT), m.IDNo, m.MENU_NAME
+			GROUP BY DATE(${localTimeField}), m.IDNo, m.MENU_NAME
 			ORDER BY date ASC, m.IDNo ASC
 		`;
 
@@ -1170,6 +1182,7 @@ class ReportsModel {
 	// Get sales by category report (from sales_category_report table + actual orders)
 	// Columns: category, sales_quantity, total_sales, refund_quantity, refund_amount, discounts, net_sales
 	// Accepts start_date, end_date, branch_id for future extension when view has those columns
+	// FIX: When date range is provided, only use actual orders to avoid double-counting synced orders
 	static async getSalesCategoryReport(startDate = null, endDate = null, branchId = null) {
 		const params = [];
 		const orderParams = [];
@@ -1186,21 +1199,8 @@ class ReportsModel {
 			orderParams.push(branchId);
 		}
 
-		// Get data from sales_category_report (imported data)
-		const summaryQuery = `
-			SELECT 
-				category,
-				COALESCE(sales_quantity, 0) as sales_quantity,
-				COALESCE(total_sales, 0) as total_sales,
-				COALESCE(refund_quantity, 0) as refund_quantity,
-				COALESCE(refund_amount, 0) as refund_amount,
-				COALESCE(discounts, 0) as discounts,
-				COALESCE(net_sales, 0) as net_sales
-			FROM sales_category_report
-		`;
-		const [summaryRows] = await pool.execute(summaryQuery);
-
 		// Get data from actual orders (paid orders only)
+		// This is the source of truth for orders within the date range
 		const ordersQuery = `
 			SELECT 
 				COALESCE(c.CAT_NAME, 'Uncategorized') as category,
@@ -1232,31 +1232,49 @@ class ReportsModel {
 		`;
 		const [orderRows] = await pool.execute(ordersQuery, orderParams);
 
-		// Combine data: merge summary data with actual orders data
+		// If date range is provided, only use actual orders (to avoid double-counting synced orders)
+		// If no date range, combine with sales_category_report for imported historical data
 		const dataMap = new Map();
 		
-		// Add summary data
-		summaryRows.forEach(row => {
-			const category = row.category || 'Uncategorized';
-			if (!dataMap.has(category)) {
-				dataMap.set(category, {
-					category: category,
-					sales_quantity: 0,
-					total_sales: 0,
-					refund_quantity: 0,
-					refund_amount: 0,
-					discounts: 0,
-					net_sales: 0
-				});
-			}
-			const data = dataMap.get(category);
-			data.sales_quantity += parseInt(row.sales_quantity) || 0;
-			data.total_sales += parseFloat(row.total_sales) || 0;
-			data.refund_quantity += parseInt(row.refund_quantity) || 0;
-			data.refund_amount += parseFloat(row.refund_amount) || 0;
-			data.discounts += parseFloat(row.discounts) || 0;
-			data.net_sales += parseFloat(row.net_sales) || 0;
-		});
+		if (!startDate || !endDate) {
+			// No date range: include imported data from sales_category_report
+			// Get data from sales_category_report (imported data)
+			const summaryQuery = `
+				SELECT 
+					category,
+					COALESCE(sales_quantity, 0) as sales_quantity,
+					COALESCE(total_sales, 0) as total_sales,
+					COALESCE(refund_quantity, 0) as refund_quantity,
+					COALESCE(refund_amount, 0) as refund_amount,
+					COALESCE(discounts, 0) as discounts,
+					COALESCE(net_sales, 0) as net_sales
+				FROM sales_category_report
+			`;
+			const [summaryRows] = await pool.execute(summaryQuery);
+			
+			// Add summary data (imported historical data)
+			summaryRows.forEach(row => {
+				const category = row.category || 'Uncategorized';
+				if (!dataMap.has(category)) {
+					dataMap.set(category, {
+						category: category,
+						sales_quantity: 0,
+						total_sales: 0,
+						refund_quantity: 0,
+						refund_amount: 0,
+						discounts: 0,
+						net_sales: 0
+					});
+				}
+				const data = dataMap.get(category);
+				data.sales_quantity += parseInt(row.sales_quantity) || 0;
+				data.total_sales += parseFloat(row.total_sales) || 0;
+				data.refund_quantity += parseInt(row.refund_quantity) || 0;
+				data.refund_amount += parseFloat(row.refund_amount) || 0;
+				data.discounts += parseFloat(row.discounts) || 0;
+				data.net_sales += parseFloat(row.net_sales) || 0;
+			});
+		}
 
 		// Add/merge actual orders data
 		orderRows.forEach(row => {
