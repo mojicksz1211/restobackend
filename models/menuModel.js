@@ -6,10 +6,12 @@
 // ============================================
 
 const pool = require('../config/db');
+const InventoryModel = require('./inventoryModel');
 
 class MenuModel {
 	// Get all active menus with category name
 	static async getAll(branchId = null) {
+		await InventoryModel.ensureSchema();
 		let query = `
 			SELECT 
 				m.IDNo,
@@ -45,7 +47,11 @@ class MenuModel {
 		query += ` ORDER BY m.IDNo ASC`;
 
 		const [rows] = await pool.execute(query, params);
-		return rows;
+		const mappings = await InventoryModel.getMappingsByMenuIds(rows.map((row) => row.IDNo));
+		return InventoryModel.calculateMenuInventoryMetrics(rows, mappings).map((row) => ({
+			...row,
+			EFFECTIVE_AVAILABLE: Number(row.IS_AVAILABLE) === 1 && Number(row.INVENTORY_AVAILABLE) === 1 ? 1 : 0,
+		}));
 	}
 
 	// Get menu by ID
@@ -183,6 +189,7 @@ class MenuModel {
 
 	// Get menus filtered by category (for API)
 	static async getByCategory(categoryId = null, branchId = null) {
+		await InventoryModel.ensureSchema();
 		let query = `
 			SELECT 
 				m.IDNo,
@@ -214,7 +221,11 @@ class MenuModel {
 		query += ` ORDER BY m.IDNo ASC`;
 		
 		const [rows] = await pool.execute(query, params);
-		return rows;
+		const mappings = await InventoryModel.getMappingsByMenuIds(rows.map((row) => row.IDNo));
+		return InventoryModel.calculateMenuInventoryMetrics(rows, mappings).map((row) => ({
+			...row,
+			EFFECTIVE_AVAILABLE: Number(row.IS_AVAILABLE) === 1 && Number(row.INVENTORY_AVAILABLE) === 1 ? 1 : 0,
+		}));
 	}
 }
 

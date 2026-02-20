@@ -11,6 +11,7 @@ const OrderModel = require('../models/orderModel');
 const OrderItemsModel = require('../models/orderItemsModel');
 const BillingModel = require('../models/billingModel');
 const TableModel = require('../models/tableModel');
+const InventoryDeductionService = require('../services/inventoryDeductionService');
 const pool = require('../config/db');
 const argon2 = require('argon2');
 const crypto = require('crypto');
@@ -348,7 +349,12 @@ class ApiController {
 				description: menu.MENU_DESCRIPTION || null,
 				image: menu.MENU_IMG ? baseUrl + menu.MENU_IMG : null,
 				price: parseFloat(menu.MENU_PRICE || 0),
-				is_available: menu.IS_AVAILABLE === 1
+				is_available: (menu.EFFECTIVE_AVAILABLE ?? menu.IS_AVAILABLE) === 1,
+				inventory_tracked: menu.INVENTORY_TRACKED === 1,
+				inventory_available: menu.INVENTORY_AVAILABLE === 1,
+				inventory_stock: menu.INVENTORY_STOCK !== null && menu.INVENTORY_STOCK !== undefined
+					? parseFloat(menu.INVENTORY_STOCK)
+					: null
 			}));
 
 			// Apply translation - Descriptions ALWAYS translate, Menu/Category names only if not Korean
@@ -918,7 +924,11 @@ class ApiController {
 				});
 			}
 
-			await OrderModel.updateStatus(order_id, targetStatus, user_id);
+			if (targetStatus === 1) {
+				await InventoryDeductionService.settleOrderWithInventory(Number(order_id), user_id);
+			} else {
+				await OrderModel.updateStatus(order_id, targetStatus, user_id);
+			}
 
 			const paymentMethod = payment_method || 'CASH';
 

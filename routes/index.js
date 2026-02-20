@@ -14,6 +14,7 @@ module.exports = [
     require('./categoryRoutes'),          // Category routes
     require('./dashboardRoutes'),         // Dashboard routes
     require('./employeeRoutes'),          // Employee routes
+	require('./inventoryRoutes'),         // Inventory routes
     require('./menuRoutes'),              // Menu routes
     require('./notificationRoutes'),     // Notification routes
     require('./orderRoutes'),             // Order routes

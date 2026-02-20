@@ -10,6 +10,7 @@ const OrderItemsModel = require('../models/orderItemsModel');
 const BillingModel = require('../models/billingModel');
 const TableModel = require('../models/tableModel');
 const NotificationModel = require('../models/notificationModel');
+const InventoryDeductionService = require('../services/inventoryDeductionService');
 const socketService = require('../utils/socketService');
 const ApiResponse = require('../utils/apiResponse');
 
@@ -164,7 +165,10 @@ class OrderController {
 				user_id: req.session?.user_id || req.user?.user_id
 			};
 
-			const updated = await OrderModel.update(id, payload);
+			if (payload.STATUS === 1) {
+				await InventoryDeductionService.settleOrderWithInventory(Number(id), payload.user_id);
+			}
+			const updated = payload.STATUS === 1 ? true : await OrderModel.update(id, payload);
 			// Only replace order items if ORDER_ITEMS is explicitly provided in the request
 			if (req.body.ORDER_ITEMS !== undefined) {
 				const items = Array.isArray(req.body.ORDER_ITEMS) ? req.body.ORDER_ITEMS : [];
@@ -502,14 +506,21 @@ class OrderController {
 				return ApiResponse.notFound(res, 'Order');
 			}
 
-			const updated = await OrderModel.updateStatus(id, parseInt(status), user_id);
+			const parsedStatus = parseInt(status);
+			let updated = false;
+			if (parsedStatus === 1) {
+				await InventoryDeductionService.settleOrderWithInventory(Number(id), user_id);
+				updated = true;
+			} else {
+				updated = await OrderModel.updateStatus(id, parsedStatus, user_id);
+			}
 			if (!updated) {
 				return ApiResponse.error(res, 'Failed to update order status', 500);
 			}
 
 			// Handle table status if order is settled or cancelled
 			const TableModel = require('../models/tableModel');
-			if (parseInt(status) === 1 || parseInt(status) === -1) {
+			if (parsedStatus === 1 || parsedStatus === -1) {
 				// Order is SETTLED (1) or CANCELLED (-1) -> Set table to AVAILABLE (1)
 				if (order.TABLE_ID) {
 					await TableModel.updateStatus(order.TABLE_ID, 1);
@@ -528,7 +539,7 @@ class OrderController {
 				items: orderItems
 			});
 
-			return ApiResponse.success(res, { order_id: parseInt(id), status: parseInt(status) }, 'Order status updated successfully');
+			return ApiResponse.success(res, { order_id: parseInt(id), status: parsedStatus }, 'Order status updated successfully');
 		} catch (error) {
 			console.error('Error updating order status:', error);
 			return ApiResponse.error(res, 'Failed to update order status', 500, error.message);
