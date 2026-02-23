@@ -15,5 +15,10 @@ router.delete('/inventory/materials/:id', authenticate, InventoryController.dele
 
 router.get('/inventory/menu/:menuId/mappings', authenticate, InventoryController.getMenuMappings);
 router.put('/inventory/menu/:menuId/mappings', authenticate, InventoryController.saveMenuMappings);
+router.get('/inventory/stock-ins', authenticate, InventoryController.getStockIns);
+router.post('/inventory/stock-ins', authenticate, InventoryController.createStockIn);
+router.put('/inventory/stock-ins/:id', authenticate, InventoryController.updateStockIn);
+router.delete('/inventory/stock-ins/:id', authenticate, InventoryController.deleteStockIn);
+router.get('/inventory/audit-trail', authenticate, InventoryController.getAuditTrail);
 
 module.exports = router;

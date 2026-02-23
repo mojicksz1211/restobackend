@@ -1,4 +1,5 @@
 const InventoryModel = require('../models/inventoryModel');
+const ExpenseIngestionService = require('../services/expenseIngestionService');
 const ApiResponse = require('../utils/apiResponse');
 
 function resolveBranchId(req) {
@@ -6,6 +7,32 @@ function resolveBranchId(req) {
 	if (raw === null || raw === undefined || raw === '' || raw === 'all') return null;
 	const parsed = Number(raw);
 	return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatDatePht(value) {
+	if (!value) return '';
+	if (typeof value === 'string') {
+		const trimmed = value.trim();
+		if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+		const parsed = new Date(trimmed);
+		if (Number.isNaN(parsed.getTime())) return trimmed.slice(0, 10);
+		return new Intl.DateTimeFormat('en-CA', {
+			timeZone: 'Asia/Manila',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+		}).format(parsed);
+	}
+	if (value instanceof Date) {
+		if (Number.isNaN(value.getTime())) return '';
+		return new Intl.DateTimeFormat('en-CA', {
+			timeZone: 'Asia/Manila',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+		}).format(value);
+	}
+	return String(value).slice(0, 10);
 }
 
 class InventoryController {
@@ -38,7 +65,8 @@ class InventoryController {
 				DESCRIPTION: req.body.DESCRIPTION || req.body.description,
 				user_id: userId,
 			});
-			return ApiResponse.created(res, { id }, 'Product created successfully');
+			const created = await InventoryModel.getProductById(id);
+			return ApiResponse.created(res, { id, product: created }, 'Product created successfully');
 		} catch (error) {
 			return ApiResponse.error(res, 'Failed to create product', 500, error.message);
 		}
@@ -108,7 +136,8 @@ class InventoryController {
 				DESCRIPTION: req.body.DESCRIPTION || req.body.description,
 				user_id: userId,
 			});
-			return ApiResponse.created(res, { id }, 'Material created successfully');
+			const created = await InventoryModel.getMaterialById(id);
+			return ApiResponse.created(res, { id, material: created }, 'Material created successfully');
 		} catch (error) {
 			return ApiResponse.error(res, 'Failed to create material', 500, error.message);
 		}
@@ -183,6 +212,147 @@ class InventoryController {
 			return ApiResponse.success(res, null, 'Menu mappings updated successfully');
 		} catch (error) {
 			return ApiResponse.error(res, 'Failed to save menu mappings', 500, error.message);
+		}
+	}
+
+	static async getStockIns(req, res) {
+		try {
+			const branchId = resolveBranchId(req);
+			const rows = await InventoryModel.getStockIns(branchId);
+			const mapped = rows.map((row) => ({
+				id: row.IDNo,
+				branch_id: row.BRANCH_ID,
+				resource_type: row.RESOURCE_TYPE,
+				resource_id: row.RESOURCE_ID,
+				resource_name: row.PRODUCT_NAME || row.MATERIAL_NAME || '',
+				resource_unit: row.RESOURCE_UNIT || '',
+				qty_added: Number(row.QTY_ADDED || 0),
+				prev_stock: row.PREV_STOCK !== null && row.PREV_STOCK !== undefined ? Number(row.PREV_STOCK) : null,
+				new_stock: row.NEW_STOCK !== null && row.NEW_STOCK !== undefined ? Number(row.NEW_STOCK) : null,
+				unit_cost: Number(row.UNIT_COST || 0),
+				prev_unit_cost: row.PREV_UNIT_COST !== null && row.PREV_UNIT_COST !== undefined ? Number(row.PREV_UNIT_COST) : null,
+				new_unit_cost: row.NEW_UNIT_COST !== null && row.NEW_UNIT_COST !== undefined ? Number(row.NEW_UNIT_COST) : null,
+				total_cost: Number(row.TOTAL_COST || 0),
+				supplier_name: row.SUPPLIER_NAME || '',
+				reference_no: row.REFERENCE_NO || '',
+				note: row.NOTE || '',
+				stock_in_date: formatDatePht(row.STOCK_IN_DATE),
+				encoded_dt: row.ENCODED_DT,
+			}));
+			return ApiResponse.success(res, mapped, 'Stock-in records retrieved successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to fetch stock-in records', 500, error.message);
+		}
+	}
+
+	static async createStockIn(req, res) {
+		try {
+			const branchId = resolveBranchId(req);
+			if (!branchId) return ApiResponse.badRequest(res, 'Branch ID is required');
+			const userId = req.session?.user_id || req.user?.user_id || null;
+			const resourceType = req.body.resource_type || req.body.RESOURCE_TYPE;
+			const resourceId = req.body.resource_id ?? req.body.RESOURCE_ID;
+			const qtyAdded = req.body.qty_added ?? req.body.QTY_ADDED;
+			const unitCost = req.body.unit_cost ?? req.body.UNIT_COST;
+			if (resourceType !== 'product' && resourceType !== 'material') {
+				return ApiResponse.badRequest(res, 'resource_type must be product or material');
+			}
+			const result = await InventoryModel.createStockIn({
+				BRANCH_ID: branchId,
+				RESOURCE_TYPE: resourceType,
+				RESOURCE_ID: resourceId,
+				QTY_ADDED: qtyAdded,
+				UNIT_COST: unitCost,
+				SUPPLIER_NAME: req.body.supplier_name || req.body.SUPPLIER_NAME,
+				REFERENCE_NO: req.body.reference_no || req.body.REFERENCE_NO,
+				NOTE: req.body.note || req.body.NOTE,
+				STOCK_IN_DATE: req.body.stock_in_date || req.body.STOCK_IN_DATE,
+				user_id: userId,
+			});
+			await ExpenseIngestionService.recordStockInExpense(result, userId);
+			return ApiResponse.created(res, { id: result.stockInId }, 'Stock-in recorded successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to create stock-in record', 500, error.message);
+		}
+	}
+
+	static async getAuditTrail(req, res) {
+		try {
+			const branchId = resolveBranchId(req);
+			const rows = await InventoryModel.getAuditTrail(branchId, {
+				resourceType: req.query.resource_type || null,
+				resourceId: req.query.resource_id || null,
+				search: req.query.search || null,
+			});
+			const mapped = rows.map((row) => ({
+				event_id: row.EVENT_ID,
+				event_type: row.EVENT_TYPE,
+				branch_id: row.BRANCH_ID,
+				resource_type: row.RESOURCE_TYPE,
+				resource_id: row.RESOURCE_ID,
+				resource_name: row.RESOURCE_NAME || '',
+				resource_unit: row.RESOURCE_UNIT || '',
+				event_date: formatDatePht(row.EVENT_DATE),
+				event_dt: row.EVENT_DT,
+				qty_change: Number(row.QTY_CHANGE || 0),
+				stock_before: row.STOCK_BEFORE !== null && row.STOCK_BEFORE !== undefined ? Number(row.STOCK_BEFORE) : null,
+				stock_after: row.STOCK_AFTER !== null && row.STOCK_AFTER !== undefined ? Number(row.STOCK_AFTER) : null,
+				cost_before: row.COST_BEFORE !== null && row.COST_BEFORE !== undefined ? Number(row.COST_BEFORE) : null,
+				cost_after: row.COST_AFTER !== null && row.COST_AFTER !== undefined ? Number(row.COST_AFTER) : null,
+				txn_unit_cost: row.TXN_UNIT_COST !== null && row.TXN_UNIT_COST !== undefined ? Number(row.TXN_UNIT_COST) : null,
+				txn_total_cost: row.TXN_TOTAL_COST !== null && row.TXN_TOTAL_COST !== undefined ? Number(row.TXN_TOTAL_COST) : null,
+				supplier_name: row.SUPPLIER_NAME || '',
+				reference_no: row.REFERENCE_NO || '',
+				note: row.NOTE || '',
+				active: Number(row.ACTIVE || 0) === 1,
+			}));
+			return ApiResponse.success(res, mapped, 'Inventory audit trail retrieved successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to fetch inventory audit trail', 500, error.message);
+		}
+	}
+
+	static async updateStockIn(req, res) {
+		try {
+			const { id } = req.params;
+			const userId = req.session?.user_id || req.user?.user_id || null;
+			const resourceType = req.body.resource_type || req.body.RESOURCE_TYPE;
+			const resourceId = req.body.resource_id ?? req.body.RESOURCE_ID;
+			const qtyAdded = req.body.qty_added ?? req.body.QTY_ADDED;
+			const unitCost = req.body.unit_cost ?? req.body.UNIT_COST;
+			if (resourceType !== 'product' && resourceType !== 'material') {
+				return ApiResponse.badRequest(res, 'resource_type must be product or material');
+			}
+			const updated = await InventoryModel.updateStockIn(id, {
+				RESOURCE_TYPE: resourceType,
+				RESOURCE_ID: resourceId,
+				QTY_ADDED: qtyAdded,
+				UNIT_COST: unitCost,
+				SUPPLIER_NAME: req.body.supplier_name || req.body.SUPPLIER_NAME,
+				REFERENCE_NO: req.body.reference_no || req.body.REFERENCE_NO,
+				NOTE: req.body.note || req.body.NOTE,
+				STOCK_IN_DATE: req.body.stock_in_date || req.body.STOCK_IN_DATE,
+				user_id: userId,
+			});
+			if (updated.oldResourceType && updated.oldResourceType !== updated.resourceType) {
+				await ExpenseIngestionService.disableStockInExpense(updated.stockInId, updated.oldResourceType, userId);
+			}
+			await ExpenseIngestionService.recordStockInExpense(updated, userId);
+			return ApiResponse.success(res, null, 'Stock-in updated successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to update stock-in record', 500, error.message);
+		}
+	}
+
+	static async deleteStockIn(req, res) {
+		try {
+			const { id } = req.params;
+			const userId = req.session?.user_id || req.user?.user_id || null;
+			const deleted = await InventoryModel.deleteStockIn(id, userId);
+			await ExpenseIngestionService.disableStockInExpense(deleted.stockInId, deleted.resourceType, userId);
+			return ApiResponse.success(res, null, 'Stock-in deleted successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to delete stock-in record', 500, error.message);
 		}
 	}
 }
