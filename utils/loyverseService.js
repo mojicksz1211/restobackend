@@ -21,6 +21,7 @@ class LoyverseService {
 		this.defaultBranchId = parseInt(process.env.LOYVERSE_DEFAULT_BRANCH_ID) || 1;
 		this.syncInterval = parseInt(process.env.LOYVERSE_SYNC_INTERVAL) || 10000; // 30 seconds default
 		this.autoSyncLimit = parseInt(process.env.LOYVERSE_AUTO_SYNC_LIMIT) || 500;
+		this.syncSince = process.env.LOYVERSE_SYNC_SINCE || '';
 		// Safety limits (0 = no limit). Useful when you have very large datasets.
 		this.maxSyncReceipts = parseInt(process.env.LOYVERSE_SYNC_MAX_RECEIPTS) || 0;
 		this.maxSyncPages = parseInt(process.env.LOYVERSE_SYNC_MAX_PAGES) || 0;
@@ -91,6 +92,14 @@ class LoyverseService {
 				hasMore: !!response.data.cursor
 			};
 		} catch (error) {
+			const status = error?.response?.status;
+			if (status === 401) {
+				// Most common cause: invalid/expired access token or wrong value (e.g. using app secret instead of access token)
+				throw new Error(
+					'Failed to fetch receipts: Unauthorized (401). ' +
+					'Check LOYVERSE_ACCESS_TOKEN in .env (must be an OAuth access_token with RECEIPTS_READ scope).'
+				);
+			}
 			throw new Error(`Failed to fetch receipts: ${error.message}`);
 		}
 	}
@@ -425,8 +434,15 @@ class LoyverseService {
 				this.maxSyncPages ||
 				0;
 
+			const rawSince = options.since || options.from || options.start || null;
+			const forcedSince = rawSince ? new Date(rawSince) : null;
+			const validForcedSince = forcedSince && !Number.isNaN(forcedSince.getTime()) ? forcedSince : null;
+
+			const envSince = this.syncSince ? new Date(this.syncSince) : null;
+			const validEnvSince = envSince && !Number.isNaN(envSince.getTime()) ? envSince : null;
+
 			const lastUpdatedAt = incremental
-				? await LoyverseSyncStateModel.getLastUpdatedAt(targetBranchId)
+				? (validForcedSince || await LoyverseSyncStateModel.getLastUpdatedAt(targetBranchId) || validEnvSince)
 				: null;
 			let maxUpdatedAtSeen = lastUpdatedAt;
 
@@ -510,7 +526,13 @@ class LoyverseService {
 
 			// Persist checkpoint for incremental realtime polling
 			if (incremental) {
-				await LoyverseSyncStateModel.setLastUpdatedAt(targetBranchId, maxUpdatedAtSeen || new Date());
+				// Only advance the checkpoint when we actually observed a timestamp (or already had one).
+				// This avoids accidentally setting it to "now" when the API returns no receipts,
+				// which would cause older receipts to be skipped forever.
+				const checkpoint = maxUpdatedAtSeen || lastUpdatedAt;
+				if (checkpoint) {
+					await LoyverseSyncStateModel.setLastUpdatedAt(targetBranchId, checkpoint);
+				}
 			}
 
 			// Extra progress info for clients
@@ -546,6 +568,11 @@ class LoyverseService {
 				console.log(`[Loyverse Sync] Auto-sync completed at ${new Date().toISOString()}`);
 			} catch (error) {
 				console.error(`[Loyverse Sync] Auto-sync error:`, error.message);
+				// If token is invalid, stop auto-sync to avoid spamming logs / calls until fixed
+				if (String(error?.message || '').includes('Unauthorized (401)')) {
+					console.error('[Loyverse Sync] Stopping auto-sync due to 401. Fix LOYVERSE_ACCESS_TOKEN then restart auto-sync.');
+					this.stopAutoSync();
+				}
 			}
 		}, syncInterval);
 

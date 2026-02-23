@@ -15,6 +15,7 @@ require('dotenv').config();
 
 const compression = require('compression');
 const cors = require('cors');
+const loyverseService = require('./utils/loyverseService');
 const app = express();
 app.use(compression());
 
@@ -206,6 +207,21 @@ const server = app.listen(app.get('port'), function () {
   console.log('Server started on port ' + app.get('port'));
   console.log('API Server running at http://localhost:' + app.get('port'));
   console.log('Root endpoint: http://localhost:' + app.get('port') + '/');
+
+  // Optional: auto-start Loyverse polling sync on boot
+  const autoSyncEnabled = String(process.env.LOYVERSE_AUTO_SYNC || '').toLowerCase() === 'true';
+  if (autoSyncEnabled) {
+    try {
+      const branchIdRaw = process.env.LOYVERSE_DEFAULT_BRANCH_ID;
+      const branchId = branchIdRaw ? parseInt(branchIdRaw, 10) : null;
+      const intervalRaw = process.env.LOYVERSE_SYNC_INTERVAL;
+      const interval = intervalRaw ? parseInt(intervalRaw, 10) : null;
+      loyverseService.startAutoSync(Number.isFinite(branchId) ? branchId : null, Number.isFinite(interval) ? interval : null);
+      console.log('[Loyverse Sync] Auto-sync enabled on boot');
+    } catch (e) {
+      console.error('[Loyverse Sync] Failed to start auto-sync on boot:', e?.message || e);
+    }
+  }
 });
 
 // Initialize Socket.io

@@ -16,6 +16,7 @@ module.exports = [
     require('./employeeRoutes'),          // Employee routes
 	require('./expenseRoutes'),           // Expense routes
 	require('./inventoryRoutes'),         // Inventory routes
+	require('./loyverseRoutes'),          // Loyverse sync routes
     require('./menuRoutes'),              // Menu routes
     require('./notificationRoutes'),     // Notification routes
     require('./orderRoutes'),             // Order routes

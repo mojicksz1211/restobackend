@@ -25,18 +25,27 @@ LOYVERSE_DEFAULT_BRANCH_ID=1
 LOYVERSE_SYNC_INTERVAL=10000
 LOYVERSE_AUTO_SYNC=true
 LOYVERSE_AUTO_SYNC_LIMIT=500
+LOYVERSE_SYNC_SINCE=
 LOYVERSE_SYNC_MAX_RECEIPTS=0
 LOYVERSE_SYNC_MAX_PAGES=0
 ```
 
+If you lost your `.env` values, you can also use the template file:
+- `restobackend/env.example` (copy lines into your real `.env`)
+
 **Configuration Details:**
 - `LOYVERSE_ACCESS_TOKEN`: Your Loyverse OAuth access token (get from OAuth flow)
 - `LOYVERSE_DEFAULT_BRANCH_ID`: Default branch ID to assign synced orders (optional)
-- `LOYVERSE_SYNC_INTERVAL`: Sync interval in milliseconds (default: 30000 = 30 seconds)
-- `LOYVERSE_AUTO_SYNC`: Set to `true` to enable automatic background syncing
+- `LOYVERSE_SYNC_INTERVAL`: Sync interval in milliseconds
+- `LOYVERSE_AUTO_SYNC`: Set to `true` to auto-start background syncing when the backend boots
 - `LOYVERSE_AUTO_SYNC_LIMIT`: Receipts per sync call during auto-sync (default: 500, max: 1000)
+- `LOYVERSE_SYNC_SINCE`: Optional ISO string/date. If `loyverse_sync_state` has no checkpoint yet, incremental sync will start from this date instead of pulling your entire history.
 - `LOYVERSE_SYNC_MAX_RECEIPTS`: Safety cap for manual/auto sync runs (0 = unlimited)
 - `LOYVERSE_SYNC_MAX_PAGES`: Safety cap for manual/auto sync runs (0 = unlimited)
+
+> **Important**
+> - Loyverse syncing runs only while the backend server is running. If the server/PC is off, syncing pauses.
+> - The admin UI also supports manual CSV imports into reporting tables (e.g. `sales_hourly_summary`). If you enable Loyverse API sync into `orders`/`billing` **and** also import the same Loyverse sales via CSV, charts can **double-count**.
 
 ## Getting Your Access Token
 
@@ -102,6 +111,14 @@ Copy the `access_token` from the response and add it to your `.env` file.
 {
   "branch_id": 1,
   "limit": 50
+}
+```
+- **Backfill option** (optional): Override the incremental checkpoint for a one-time backfill.
+
+```json
+{
+  "incremental": true,
+  "since": "2026-02-21T00:00:00.000Z"
 }
 ```
 - **Response**:
@@ -188,6 +205,19 @@ The system checks for existing orders by `ORDER_NO` before inserting:
 
 ### Issue: "Access token not configured"
 **Solution:** Add `LOYVERSE_ACCESS_TOKEN` to your `.env` file
+
+### Issue: "Failed to fetch receipts: Unauthorized (401)"
+**Meaning:** Invalid/expired token, or you pasted the wrong value.
+
+**Common mistakes:**
+- Using **App secret** (from Loyverse Developer Portal) as `LOYVERSE_ACCESS_TOKEN` → this will always 401.
+- Using an **old/expired** access token.
+- Missing scope (must include `RECEIPTS_READ`).
+
+**Solution:**
+1. Re-run the OAuth flow (authorize URL) and exchange the `code` for a new `access_token`.
+2. Paste the **access_token** into `LOYVERSE_ACCESS_TOKEN` in `restobackend/.env`.
+3. Restart backend (or restart auto-sync).
 
 ### Issue: "Menu item not found" warnings
 **Solution:** 

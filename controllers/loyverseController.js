@@ -34,8 +34,9 @@ class LoyverseController {
 			const maxReceipts = req.body.max_receipts ?? req.body.maxReceipts ?? req.query.max_receipts ?? req.query.maxReceipts;
 			const maxPages = req.body.max_pages ?? req.body.maxPages ?? req.query.max_pages ?? req.query.maxPages;
 			const incremental = req.body.incremental ?? req.body.realtime ?? req.query.incremental ?? req.query.realtime;
+			const since = req.body.since ?? req.body.from ?? req.query.since ?? req.query.from;
 
-			const stats = await loyverseService.syncAllReceipts(branchId, limit, { maxReceipts, maxPages, incremental });
+			const stats = await loyverseService.syncAllReceipts(branchId, limit, { maxReceipts, maxPages, incremental, since });
 			
 			return ApiResponse.success(res, {
 				stats,
