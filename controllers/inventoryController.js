@@ -178,6 +178,73 @@ class InventoryController {
 		}
 	}
 
+	static async getProductCategories(req, res) {
+		try {
+			const branchId = resolveBranchId(req);
+			const rows = await InventoryModel.getProductCategories(branchId);
+			return ApiResponse.success(res, rows, 'Product categories retrieved successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to fetch product categories', 500, error.message);
+		}
+	}
+
+	static async createProductCategory(req, res) {
+		try {
+			const branchId = resolveBranchId(req);
+			if (!branchId) return ApiResponse.badRequest(res, 'Branch ID is required');
+			const userId = req.session?.user_id || req.user?.user_id || null;
+
+			const id = await InventoryModel.createProductCategory({
+				BRANCH_ID: branchId,
+				CATEGORY_NAME: req.body.CATEGORY_NAME || req.body.name,
+				STATUS: req.body.STATUS || req.body.status,
+				user_id: userId,
+			});
+
+			const created = await InventoryModel.getProductCategories(branchId);
+			return ApiResponse.created(res, { id, categories: created }, 'Product category created successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to create product category', 500, error.message);
+		}
+	}
+
+	static async updateProductCategory(req, res) {
+		try {
+			const { id } = req.params;
+			const branchId = resolveBranchId(req);
+			const userId = req.session?.user_id || req.user?.user_id || null;
+
+			const ok = await InventoryModel.updateProductCategory(id, {
+				CATEGORY_NAME: req.body.CATEGORY_NAME || req.body.name,
+				STATUS: req.body.STATUS || req.body.status,
+				user_id: userId,
+			});
+
+			if (!ok) return ApiResponse.notFound(res, 'Product category');
+
+			const rows = await InventoryModel.getProductCategories(branchId);
+			return ApiResponse.success(res, rows, 'Product category updated successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to update product category', 500, error.message);
+		}
+	}
+
+	static async deleteProductCategory(req, res) {
+		try {
+			const { id } = req.params;
+			const branchId = resolveBranchId(req);
+			const userId = req.session?.user_id || req.user?.user_id || null;
+
+			const ok = await InventoryModel.deleteProductCategory(id, userId);
+			if (!ok) return ApiResponse.notFound(res, 'Product category');
+
+			const rows = await InventoryModel.getProductCategories(branchId);
+			return ApiResponse.success(res, rows, 'Product category deleted successfully');
+		} catch (error) {
+			return ApiResponse.error(res, 'Failed to delete product category', 500, error.message);
+		}
+	}
+
 	static async getMenuMappings(req, res) {
 		try {
 			const { menuId } = req.params;

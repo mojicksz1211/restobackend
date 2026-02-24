@@ -202,11 +202,12 @@ app.use((err, req, res, next) => {
 	});
 });
 
-// Start the server
-const server = app.listen(app.get('port'), function () {
-  console.log('Server started on port ' + app.get('port'));
-  console.log('API Server running at http://localhost:' + app.get('port'));
-  console.log('Root endpoint: http://localhost:' + app.get('port') + '/');
+// Start the server - listen on 0.0.0.0 so other PCs on the network can connect
+const port = app.get('port');
+const server = app.listen(port, '0.0.0.0', function () {
+  console.log('Server started on port ' + port);
+  console.log('API Server: http://localhost:' + port + ' (local)');
+  console.log('Network:    http://<this-pc-ip>:' + port + ' (e.g. from other PCs)');
 
   // Optional: auto-start Loyverse polling sync on boot
   const autoSyncEnabled = String(process.env.LOYVERSE_AUTO_SYNC || '').toLowerCase() === 'true';

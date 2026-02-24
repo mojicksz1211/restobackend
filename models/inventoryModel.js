@@ -13,6 +13,22 @@ class InventoryModel {
 
 		InventoryModel._schemaPromise = (async () => {
 			await pool.execute(`
+				CREATE TABLE IF NOT EXISTS inventory_product_categories (
+					IDNo INT AUTO_INCREMENT PRIMARY KEY,
+					BRANCH_ID INT NOT NULL,
+					CATEGORY_NAME VARCHAR(120) NOT NULL,
+					STATUS VARCHAR(20) NOT NULL DEFAULT 'Active',
+					ACTIVE TINYINT(1) NOT NULL DEFAULT 1,
+					ENCODED_BY INT NULL,
+					ENCODED_DT DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					EDITED_BY INT NULL,
+					EDITED_DT DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+					INDEX idx_inv_prod_cat_branch (BRANCH_ID),
+					INDEX idx_inv_prod_cat_status (STATUS)
+				)
+			`);
+
+			await pool.execute(`
 				CREATE TABLE IF NOT EXISTS inventory_products (
 					IDNo INT AUTO_INCREMENT PRIMARY KEY,
 					BRANCH_ID INT NOT NULL,
@@ -253,6 +269,113 @@ class InventoryModel {
 		const removedValue = qtyOut * costOut;
 		const nextValue = Math.max(0, currentValue - removedValue);
 		return Number((nextValue / nextStock).toFixed(2));
+	}
+
+	// ============================
+	// Product Categories
+	// ============================
+
+	static async getProductCategories(branchId = null) {
+		await InventoryModel.ensureSchema();
+
+		let query = `
+			SELECT
+				c.IDNo,
+				c.BRANCH_ID,
+				c.CATEGORY_NAME,
+				c.STATUS,
+				c.ACTIVE,
+				(
+					SELECT COUNT(*)
+					FROM inventory_products p
+					WHERE p.BRANCH_ID = c.BRANCH_ID
+					  AND p.CATEGORY_NAME = c.CATEGORY_NAME
+					  AND p.ACTIVE = 1
+				) +
+				(
+					SELECT COUNT(*)
+					FROM inventory_materials m
+					WHERE m.BRANCH_ID = c.BRANCH_ID
+					  AND m.CATEGORY_NAME = c.CATEGORY_NAME
+					  AND m.ACTIVE = 1
+				) AS PRODUCTS_COUNT
+			FROM inventory_product_categories c
+			WHERE c.ACTIVE = 1
+		`;
+
+		const params = [];
+
+		if (branchId !== null && branchId !== undefined) {
+			query += ` AND c.BRANCH_ID = ?`;
+			params.push(branchId);
+		}
+
+		query += ` ORDER BY c.CATEGORY_NAME ASC`;
+
+		const [rows] = await pool.execute(query, params);
+		return rows;
+	}
+
+	static async createProductCategory(data) {
+		await InventoryModel.ensureSchema();
+		const { BRANCH_ID, CATEGORY_NAME, STATUS = STATUS_ACTIVE, user_id } = data;
+
+		const [result] = await pool.execute(
+			`
+			INSERT INTO inventory_product_categories (
+				BRANCH_ID,
+				CATEGORY_NAME,
+				STATUS,
+				ACTIVE,
+				ENCODED_BY
+			) VALUES (?, ?, ?, 1, ?)
+		`,
+			[BRANCH_ID, CATEGORY_NAME.trim(), InventoryModel.normalizeStatus(STATUS), user_id || null]
+		);
+
+		return result.insertId;
+	}
+
+	static async updateProductCategory(id, data) {
+		await InventoryModel.ensureSchema();
+		const { CATEGORY_NAME, STATUS, user_id } = data;
+
+		const [result] = await pool.execute(
+			`
+			UPDATE inventory_product_categories
+			SET
+				CATEGORY_NAME = ?,
+				STATUS = ?,
+				EDITED_BY = ?,
+				EDITED_DT = CURRENT_TIMESTAMP
+			WHERE IDNo = ? AND ACTIVE = 1
+		`,
+			[
+				CATEGORY_NAME.trim(),
+				STATUS ? InventoryModel.normalizeStatus(STATUS) : STATUS_ACTIVE,
+				user_id || null,
+				id,
+			]
+		);
+
+		return result.affectedRows > 0;
+	}
+
+	static async deleteProductCategory(id, user_id) {
+		await InventoryModel.ensureSchema();
+
+		const [result] = await pool.execute(
+			`
+			UPDATE inventory_product_categories
+			SET ACTIVE = 0,
+				EDITED_BY = ?,
+				EDITED_DT = CURRENT_TIMESTAMP
+			WHERE IDNo = ?
+		`,
+			[user_id || null, id]
+		);
+
+		return result.affectedRows > 0;
 	}
 
 	static _todayInPht() {

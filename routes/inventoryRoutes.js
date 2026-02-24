@@ -13,6 +13,11 @@ router.post('/inventory/materials', authenticate, InventoryController.createMate
 router.put('/inventory/materials/:id', authenticate, InventoryController.updateMaterial);
 router.delete('/inventory/materials/:id', authenticate, InventoryController.deleteMaterial);
 
+router.get('/inventory/product-categories', authenticate, InventoryController.getProductCategories);
+router.post('/inventory/product-categories', authenticate, InventoryController.createProductCategory);
+router.put('/inventory/product-categories/:id', authenticate, InventoryController.updateProductCategory);
+router.delete('/inventory/product-categories/:id', authenticate, InventoryController.deleteProductCategory);
+
 router.get('/inventory/menu/:menuId/mappings', authenticate, InventoryController.getMenuMappings);
 router.put('/inventory/menu/:menuId/mappings', authenticate, InventoryController.saveMenuMappings);
 router.get('/inventory/stock-ins', authenticate, InventoryController.getStockIns);
